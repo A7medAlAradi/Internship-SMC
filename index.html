@@ -957,14 +957,9 @@ function loadScript(src){return new Promise((res,rej)=>{if(window.XLSX)return re
 async function handleUploadFile(file){
   UP.errors=[];
   try{
-    let rows;
-    if(/\.xlsx?$/i.test(file.name)){
-      await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
-      const wb=XLSX.read(await file.arrayBuffer(),{type:'array'});
-      rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:''});
-    }else rows=parseCSV(await file.text());
-    const a=analyzeSheet(rows);UP.items=a.items;UP.errors=a.errors;
-  }catch(e){UP.items=[];UP.errors=['That file could not be read. Try saving it as a CSV file.'];}
+    const sheets=await readSheetFile(file);
+    const a=analyzeSheet((sheets[0]||{rows:[]}).rows);UP.items=a.items;UP.errors=a.errors;
+  }catch(e){UP.items=[];UP.errors=[e&&e.message?e.message:'That file could not be read. Try saving it as a CSV file.'];}
   paintUpload();
 }
 async function runUpload(){
@@ -1223,7 +1218,7 @@ function viewOncall(){
   const fair='<section class="panel"><h2>Who has done what in '+fmtYm(ym)+'</h2><p class="hint" style="margin:0 0 8px">Sorted with the lightest load first, to keep the rota fair. Totals count every rota the intern is on this month.</p>'+(sh.length?'<div class="scroll" style="max-height:340px"><table class="tbl"><thead><tr><th>Intern</th><th>Here</th><th>All rotas</th><th>Weekend and holiday</th></tr></thead><tbody>'+sh.map(x=>{
     const split=entryAt(x.it,ym)&&entryAt(x.it,ym).dept==='SSS',wkLim=split?CFG.wkHalfWarn*2:CFG.wkMonthWarn,max=split?CFG.shiftHalfMax*2:CFG.shiftMonthMax;
     return'<tr><td>'+internLink(x.it.id)+'</td><td>'+x.here+'</td><td>'+x.total+' <span class="muted small">of '+max+'</span>'+(x.total>=max?' <span class="tag mute">full</span>':'')+'</td><td>'+x.wk+(x.wk>wkLim?' <span class="tag warn">over</span>':'')+'</td></tr>';}).join('')+'</tbody></table></div>':'<p class="muted" style="margin:0">No interns are placed here this month.</p>')+'</section>';
-  return head(e.role==='intern'?'On-call':'On-call rota',esc(UNIT_NAME[unit])+' rota. '+esc(ROTA_HELP[unit]||'')+'.'+(edit?'':' You can view this rota but not change it.')+(e.role!=='intern'?' You can also fill it in on the “'+esc(ROTA_TAB[unit]||'')+'” tab of the Google Sheet.':''),'')+tabs+nav+
+  return head(e.role==='intern'?'On-call':'On-call rota',esc(UNIT_NAME[unit])+' rota. '+esc(ROTA_HELP[unit]||'')+'.'+(edit?'':' You can view this rota but not change it.')+(e.role!=='intern'?' You can also fill it in on the “'+esc(ROTA_TAB[unit]||'')+'” tab of the Google Sheet.':''),(e.role!=='intern'&&editableRotas().length)?'<button class="btn" data-act="rota-import">Import from Excel</button>':'')+tabs+nav+
   '<div class="cols" style="grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr)"><div><div class="cal">'+cells+'</div><p class="hint">Friday, Saturday and flagged holidays are shaded. A split surgical month changes placement on the 16th.</p></div><div>'+panel+'</div></div>'+(e.role==='intern'?'':'<div style="margin-top:16px">'+fair+'</div>');
 }
 function dayPanel(unit,date,edit){
@@ -1324,6 +1319,261 @@ async function clearSample(){
 }
 function viewActivity(){
   return head('Activity','The latest 100 changes, with who made them.')+(S.log.length?'<div class="scroll" style="max-height:78vh"><table class="tbl"><thead><tr><th>When</th><th>Who</th><th>What</th></tr></thead><tbody>'+S.log.map(l=>'<tr><td class="small" style="white-space:nowrap">'+fmtTs(l.at)+'</td><td>'+esc(whoName(l.by))+'</td><td>'+esc(l.text)+'</td></tr>').join('')+'</tbody></table></div>':emptyBox('Nothing has been recorded yet.'));
+}
+/* ============ Reading spreadsheet files (xlsx built in, csv, old xls via a helper) ============ */
+async function inflateRaw(bytes){
+  const ds=new DecompressionStream('deflate-raw'),w=ds.writable.getWriter();w.write(bytes);w.close();
+  return new Uint8Array(await new Response(ds.readable).arrayBuffer());
+}
+async function unzip(buf){
+  const u8=new Uint8Array(buf),dv=new DataView(buf);let e=-1;
+  for(let i=u8.length-22;i>=Math.max(0,u8.length-65557);i--){if(dv.getUint32(i,true)===0x06054b50){e=i;break;}}
+  if(e<0)throw new Error('not a zip');
+  const n=dv.getUint16(e+10,true),files={};let p=dv.getUint32(e+16,true);
+  for(let k=0;k<n;k++){
+    if(dv.getUint32(p,true)!==0x02014b50)break;
+    const method=dv.getUint16(p+10,true),csize=dv.getUint32(p+20,true),nl=dv.getUint16(p+28,true),el=dv.getUint16(p+30,true),cl=dv.getUint16(p+32,true),lho=dv.getUint32(p+42,true);
+    files[new TextDecoder().decode(u8.subarray(p+46,p+46+nl))]={method,csize,lho};p+=46+nl+el+cl;
+  }
+  return{files,async read(name){
+    const f=files[name];if(!f)return null;
+    const nl=dv.getUint16(f.lho+26,true),el=dv.getUint16(f.lho+28,true),start=f.lho+30+nl+el,data=u8.subarray(start,start+f.csize);
+    return f.method===0?data:await inflateRaw(data);
+  }};
+}
+function xlsxColIndex(ref){let n=0;const m=/^[A-Z]+/.exec(ref);for(const ch of m[0])n=n*26+(ch.charCodeAt(0)-64);return n-1;}
+function xlsxSerialToIso(n){if(!(n>=1))return'';const d=new Date(Math.round((n-25569)*864e5));return d.getUTCFullYear()+'-'+pad(d.getUTCMonth()+1)+'-'+pad(d.getUTCDate());}
+function xlsxIsDateFormat(id,custom){
+  if([14,15,16,17,18,19,20,21,22,45,46,47].includes(id)||(id>=27&&id<=36)||(id>=50&&id<=58))return true;
+  const code=custom[id];if(!code)return false;
+  const s=code.replace(/"[^"]*"/g,'').replace(/\[[^\]]*\]/g,'').replace(/\\./g,'');
+  return /[dmy]/i.test(s)&&!/general/i.test(s);
+}
+async function readXlsx(buf){
+  const z=await unzip(buf),dec=new TextDecoder(),parse=s=>new DOMParser().parseFromString(s,'application/xml');
+  const txt=async n=>{const b=await z.read(n);return b?dec.decode(b):null;};
+  const wbx=await txt('xl/workbook.xml');if(!wbx)throw new Error('not an xlsx');
+  const wb=parse(wbx),rels=parse(await txt('xl/_rels/workbook.xml.rels')),target={};
+  Array.from(rels.getElementsByTagName('Relationship')).forEach(r=>{target[r.getAttribute('Id')]=r.getAttribute('Target');});
+  const shared=[],ssx=await txt('xl/sharedStrings.xml');
+  if(ssx)Array.from(parse(ssx).getElementsByTagName('si')).forEach(si=>{shared.push(Array.from(si.getElementsByTagName('t')).filter(t=>t.parentNode.nodeName!=='rPh').map(t=>t.textContent).join(''));});
+  const custom={},xfs=[],stx=await txt('xl/styles.xml');
+  if(stx){const st=parse(stx);Array.from(st.getElementsByTagName('numFmt')).forEach(n=>{custom[+n.getAttribute('numFmtId')]=n.getAttribute('formatCode');});
+    const cx=st.getElementsByTagName('cellXfs')[0];if(cx)Array.from(cx.getElementsByTagName('xf')).forEach(x=>xfs.push(+x.getAttribute('numFmtId')||0));}
+  const out=[];
+  for(const sh of Array.from(wb.getElementsByTagName('sheet'))){
+    const rid=sh.getAttribute('r:id')||sh.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships','id');
+    let t=target[rid]||'';t=t.replace(/^\//,'');if(!t.startsWith('xl/'))t='xl/'+t;
+    const sx=await txt(t);if(!sx)continue;
+    const rows=[];
+    Array.from(parse(sx).getElementsByTagName('c')).forEach(c=>{
+      const ref=c.getAttribute('r');if(!ref)return;
+      const ci=xlsxColIndex(ref),ri=+/\d+/.exec(ref)[0]-1,ty=c.getAttribute('t'),v=c.getElementsByTagName('v')[0];let val='';
+      if(ty==='s')val=v?shared[+v.textContent]||'':'';
+      else if(ty==='inlineStr')val=Array.from(c.getElementsByTagName('t')).map(x=>x.textContent).join('');
+      else if(ty==='b')val=!!v&&v.textContent==='1';
+      else if(ty==='str')val=v?v.textContent:'';
+      else if(ty==='e')val='';
+      else if(v&&v.textContent!==''){const num=Number(v.textContent);val=xlsxIsDateFormat(xfs[+c.getAttribute('s')||0]||0,custom)?xlsxSerialToIso(num):num;}
+      while(rows.length<=ri)rows.push([]);const row=rows[ri];while(row.length<=ci)row.push('');row[ci]=val;
+    });
+    out.push({name:sh.getAttribute('name'),rows:rows.map(r=>r||[])});
+  }
+  return out;
+}
+async function readSheetFile(file){
+  const name=file.name||'';
+  if(/\.xlsx$/i.test(name)||/spreadsheetml/.test(file.type||'')){
+    if(typeof DecompressionStream==='undefined')throw new Error('This browser can’t read Excel files. Save the sheet as a CSV file and upload that instead.');
+    return await readXlsx(await file.arrayBuffer());
+  }
+  if(/\.xls$/i.test(name)){
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+    const wb=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});
+    return wb.SheetNames.map(n=>({name:n,rows:XLSX.utils.sheet_to_json(wb.Sheets[n],{header:1,raw:true,defval:''}).map(r=>r.map(c=>c instanceof Date?c.getFullYear()+'-'+pad(c.getMonth()+1)+'-'+pad(c.getDate()):c))}));
+  }
+  return[{name:name.replace(/\.[^.]+$/,''),rows:parseCSV(await file.text())}];
+}
+
+/* ============ Rota import: reading dates, names and rotas ============ */
+const MON3={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+function ymd(y,m,d){y=+y;m=+m;d=+d;if(y<100)y+=2000;if(m<1||m>12||d<1||d>31||y<2000||y>2100)return'';const t=new Date(Date.UTC(y,m-1,d));return t.getUTCMonth()===m-1?y+'-'+pad(m)+'-'+pad(d):'';}
+function parseAnyDate(v){
+  if(v instanceof Date)return ymd(v.getFullYear(),v.getMonth()+1,v.getDate());
+  if(typeof v==='number')return v>20000&&v<80000?xlsxSerialToIso(v):'';
+  const s=String(v==null?'':v).trim();if(!s)return'';
+  let m=s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);if(m)return ymd(m[1],m[2],m[3]);
+  m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/);
+  if(m){let a=+m[1],b=+m[2];return +b>12&&a<=12?ymd(m[3],a,b):ymd(m[3],b,a);}
+  m=s.match(/^(?:[A-Za-z]+,?\s+)?(\d{1,2})(?:st|nd|rd|th)?[\s\-]+([A-Za-z]{3})[A-Za-z]*\.?,?[\s\-]+(\d{2,4})$/);
+  if(m&&MON3[m[2].toLowerCase()])return ymd(m[3],MON3[m[2].toLowerCase()],m[1]);
+  m=s.match(/^(?:[A-Za-z]+,?\s+)?([A-Za-z]{3})[A-Za-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})$/);
+  if(m&&MON3[m[1].toLowerCase()])return ymd(m[3],MON3[m[1].toLowerCase()],m[2]);
+  return'';
+}
+function rotaFromText(t){
+  const s=String(t||'').toLowerCase();
+  if(/neuro/.test(s))return'NEURO';
+  if(/ortho|\bort\b/.test(s))return'ORT';
+  if(/medic|\bmed\b|\bmss\b/.test(s))return'MEDICAL';
+  if(/surg|\bgs\b|\bsss\b/.test(s))return'SURGICAL';
+  if(/pediat|paediat|\bped|child/.test(s))return'PED';
+  if(/\bobg\b|obst|gyn|\bobs\b/.test(s))return'OBG';
+  if(/emerg|\ber\b|\bed\b|a&e|accident/.test(s))return'EM';
+  return'';
+}
+function normName(s){return String(s||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\b(dr|mr|mrs|ms)\.?\s/g,'').replace(/[.,'’\-]/g,' ').replace(/\s+/g,' ').trim();}
+function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,j)=>j);for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c;}return p[n];}
+function buildNameIndex(){
+  const exact={},list=[];
+  Object.values(S.interns).forEach(it=>{if(!it.name)return;const k=normName(it.name);(exact[k]=exact[k]||[]).push(it.id);list.push({id:it.id,key:k,tokens:k.split(' ')});});
+  return{exact,list};
+}
+function matchIntern(text,idx){
+  const k=normName(text);if(!k)return{id:null,reason:''};
+  const ex=idx.exact[k];
+  if(ex&&ex.length===1)return{id:ex[0]};
+  if(ex&&ex.length>1)return{id:null,reason:'Two interns have this name; it can’t be told apart.'};
+  const tk=k.split(' '),sub=idx.list.filter(x=>tk.every(t=>x.tokens.includes(t)));
+  if(sub.length===1&&tk.length>=2)return{id:sub[0].id};
+  let best=null,bd=99;idx.list.forEach(x=>{const d=lev(k,x.key);if(d<bd){bd=d;best=x;}});
+  const sug=best&&bd<=Math.max(2,Math.floor(k.length*.22))?S.interns[best.id].name:'';
+  return{id:null,reason:sub.length>1?'More than one intern matches this name.':'No intern has this name.',suggest:sug};
+}
+function splitNames(cell){
+  if(cell==null||typeof cell==='number'||typeof cell==='boolean')return[];
+  return String(cell).split(/[;\n\r/&+،,]|\s+and\s+/i).map(s=>s.trim()).filter(s=>s&&!/^[-–—.]+$/.test(s));
+}
+function classifyHeader(h){
+  const cols={date:-1,need:-1,rota:-1,skip:[],names:[]};
+  h.forEach((c,i)=>{
+    const s=String(c==null?'':c).trim();
+    if(cols.date<0&&/^(date|التاريخ)\b/i.test(s)){cols.date=i;return;}
+    if(/^(week\s*)?day$|^dow$|^weekday$|^note|^comment|^remark|^shift$|^time$/i.test(s)){cols.skip.push(i);return;}
+    if(cols.need<0&&/^(needed|need|required|no\.?|count|interns? needed|number)$/i.test(s)){cols.need=i;return;}
+    if(cols.rota<0&&/^(rota|department|dept|unit|rotation|service)$/i.test(s)){cols.rota=i;return;}
+    cols.names.push(i);
+  });
+  return cols;
+}
+function extractRota(sheets){
+  const entries=[],notes=[];
+  sheets.forEach(sh=>{
+    const rows=sh.rows||[];if(!rows.some(r=>r.some(c=>String(c).trim())))return;
+    const sheetRota=rotaFromText(sh.name);
+    let hr=-1;for(let i=0;i<Math.min(rows.length,15);i++){if(rows[i].some(c=>/^(date|التاريخ)\b/i.test(String(c==null?'':c).trim()))){hr=i;break;}}
+    let cols,start;
+    if(hr>=0){cols=classifyHeader(rows[hr]);start=hr+1;}
+    else{
+      const width=Math.max(...rows.map(r=>r.length)),score=Array(width).fill(0);
+      rows.slice(0,40).forEach(r=>r.forEach((c,i)=>{if(parseAnyDate(c))score[i]++;}));
+      const di=score.indexOf(Math.max(...score));
+      if(!(score[di]>=2)){notes.push('Sheet “'+sh.name+'”: no Date column found.');return;}
+      cols={date:di,need:-1,rota:-1,skip:[],names:[]};for(let i=0;i<width;i++)if(i!==di)cols.names.push(i);start=0;
+    }
+    if(cols.date<0){notes.push('Sheet “'+sh.name+'”: no Date column found.');return;}
+    let last='';
+    for(let i=start;i<rows.length;i++){
+      const r=rows[i],names=[];cols.names.forEach(ci=>splitNames(r[ci]).forEach(n=>names.push(n)));
+      let date=parseAnyDate(r[cols.date]);
+      if(!date){if(names.length&&last)date=last;else{if(names.length||String(r[cols.date]||'').trim())notes.push('Sheet “'+sh.name+'” row '+(i+1)+': the date “'+String(r[cols.date]).trim()+'” was not understood.');continue;}}
+      last=date;
+      const needRaw=cols.need>=0?r[cols.need]:'',need=needRaw===''||needRaw==null||isNaN(Number(needRaw))?null:Math.max(0,Math.round(Number(needRaw)));
+      const hint=(cols.rota>=0?rotaFromText(r[cols.rota]):'')||sheetRota||'';
+      if(!names.length&&need==null)continue;
+      entries.push({sheet:sh.name,row:i+1,date,need,names,hint,hintText:cols.rota>=0?String(r[cols.rota]||''):''});
+    }
+  });
+  return{entries,notes};
+}
+
+/* ============ Rota import: checking against the rules, then saving ============ */
+function planRotaImport(entries,mode,defaultRota){
+  const idx=buildNameIndex(),saved=S.oncall,sim=clone(S.oncall);
+  S.oncall=sim;
+  const issues=[],stat={ready:0,skipped:0,warned:0,already:0};const touched=new Set();
+  const doc=(rota,ym)=>{const key=ocKey(rota,ym);return sim[key]=sim[key]||{id:key,unit:rota,ym,days:{}};};
+  try{
+    const ents=entries.map(e=>Object.assign({},e,{rota:e.hint||defaultRota}));
+    if(mode==='replace'){
+      const seen=new Set();
+      ents.forEach(e=>{if(!ONCALL_UNITS.includes(e.rota)||!canRota(e.rota))return;const k=e.rota+e.date;if(seen.has(k))return;seen.add(k);const d=doc(e.rota,ymOf(e.date)),dk=dayKey(e.date);if(d.days[dk])d.days[dk].ids=[];});
+    }
+    ents.forEach(e=>{
+      const where='Row '+e.row+(e.sheet?' of “'+e.sheet+'”':''),label=fmtDate(e.date);
+      if(!ONCALL_UNITS.includes(e.rota)){issues.push({lvl:'skip',where,date:label,name:e.names.join(', '),msg:'The rota “'+(e.hintText||'')+'” is not recognised.'});stat.skipped+=e.names.length||1;return;}
+      if(!canRota(e.rota)){issues.push({lvl:'skip',where,date:label,name:e.names.join(', '),msg:'You can’t change the '+UNIT_NAME[e.rota]+' rota.'});stat.skipped+=e.names.length||1;return;}
+      const d=doc(e.rota,ymOf(e.date)),dk=dayKey(e.date),day=d.days[dk]=d.days[dk]||{need:null,ids:[]};
+      day.ids=day.ids||[];touched.add(d.id);
+      if(e.need!=null)day.need=e.need;
+      e.names.forEach(nm=>{
+        const m=matchIntern(nm,idx);
+        if(!m.id){issues.push({lvl:'skip',where,date:label,name:nm,msg:m.reason+(m.suggest?' Did you mean “'+m.suggest+'”?':'')});stat.skipped++;return;}
+        const ck=assignCheck(e.rota,m.id,e.date);
+        if(ck.block.length){
+          if(ck.block[0]==='Already on this day.'){stat.already++;return;}
+          issues.push({lvl:'skip',where,date:label,name:S.interns[m.id].name,msg:ck.block[0]});stat.skipped++;return;
+        }
+        day.ids.push(m.id);stat.ready++;
+        ck.warn.forEach(w=>{issues.push({lvl:'warn',where,date:label,name:S.interns[m.id].name,msg:w});stat.warned++;});
+      });
+      if(day.need==null||day.need<day.ids.length)day.need=Math.max(day.need==null?CFG.defaultNeed:day.need,day.ids.length);
+    });
+  }finally{S.oncall=saved;}
+  const docs=[...touched].map(k=>sim[k]);
+  return{docs,issues,stat,days:new Set(entries.map(e=>e.date)).size};
+}
+
+/* ============ Rota import: the window ============ */
+let RI=null;
+function editableRotas(){return ONCALL_UNITS.filter(canRota);}
+function openRotaImport(){
+  const rotas=editableRotas();if(!rotas.length)return;
+  RI={raw:null,notes:[],rota:ONCALL_UNITS.includes(UI.ocUnit)&&canRota(UI.ocUnit)?UI.ocUnit:rotas[0],mode:'add',file:''};
+  openModal('<h2>Import a rota from Excel</h2>'+
+    '<p class="hint" style="margin-top:0">Upload an Excel (.xlsx) or CSV file with a <b>Date</b> column and the intern names in the other columns (one name per cell, or several in a cell separated by “;”). Optional columns: <b>Needed</b> and <b>Rota</b>. A workbook can have one sheet per rota, named like the rota (Medical, Surgical and so on). Nothing is saved until you press Import.</p>'+
+    '<div class="grid2"><div><label for="ri-rota">Rota for rows that don’t say which</label><select id="ri-rota" style="width:100%">'+rotas.map(r=>'<option value="'+r+'"'+(r===RI.rota?' selected':'')+'>'+esc(UNIT_NAME[r])+'</option>').join('')+'</select></div>'+
+    '<div><label>If a day already has people</label><label class="inline" style="display:flex;margin:6px 0"><input type="radio" name="ri-mode" value="add" checked>Add to them</label><label class="inline" style="display:flex;margin:6px 0"><input type="radio" name="ri-mode" value="replace">Replace them with the file</label></div></div>'+
+    '<label for="ri-file">File</label><input type="file" id="ri-file" accept=".xlsx,.xls,.csv,.tsv,.txt">'+
+    '<div class="row" style="margin-top:8px"><button class="btn sm" data-act="ri-template">Download a template for this month</button></div>'+
+    '<div id="ri-result"></div><div class="foot"><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="ri-go" id="ri-go" disabled>Import</button></div>',true);
+}
+async function handleRotaFile(file){
+  try{
+    const sheets=await readSheetFile(file),x=extractRota(sheets);
+    RI.raw=x.entries;RI.notes=x.notes;RI.file=file.name;
+  }catch(e){RI.raw=null;RI.notes=[e&&e.message?e.message:'That file could not be read. Try saving it as a CSV file.'];}
+  paintRI();
+}
+function paintRI(){
+  const box=$('ri-result'),go=$('ri-go');if(!box)return;
+  if(!RI.raw){box.innerHTML=RI.notes.map(n=>'<div class="note bad">'+esc(n)+'</div>').join('');if(go)go.disabled=true;return;}
+  RI.plan=planRotaImport(RI.raw,RI.mode,RI.rota);
+  const p=RI.plan,st=p.stat;
+  let h='';
+  if(!RI.raw.length)h+='<div class="note bad">No rota rows were found in this file. Check it has a Date column, or download the template.</div>';
+  h+=RI.notes.slice(0,8).map(n=>'<div class="note warn">'+esc(n)+'</div>').join('');
+  if(RI.raw.length){
+    h+='<div class="note '+(st.skipped?'warn':'ok')+'"><b>'+st.ready+'</b> assignments ready across <b>'+p.days+'</b> days'+(st.skipped?', <b>'+st.skipped+'</b> skipped':'')+(st.warned?', <b>'+st.warned+'</b> with a warning':'')+(st.already?'; '+st.already+' were already on the rota':'')+'.</div>';
+    if(p.issues.length)h+='<div class="scroll" style="max-height:34vh"><table class="tbl"><thead><tr><th></th><th>Where</th><th>Date</th><th>Name</th><th>What</th></tr></thead><tbody>'+p.issues.slice(0,200).map(i=>'<tr><td><span class="tag '+(i.lvl==='skip'?'bad':'warn')+'">'+(i.lvl==='skip'?'Skipped':'Warning')+'</span></td><td>'+esc(i.where)+'</td><td>'+esc(i.date)+'</td><td>'+esc(i.name)+'</td><td>'+esc(i.msg)+'</td></tr>').join('')+'</tbody></table></div>'+(p.issues.length>200?'<p class="hint">Showing the first 200.</p>':'');
+    if(st.skipped)h+='<p class="hint">Skipped rows are left out. Fix them in the file and upload again, or add those people on the rota page.</p>';
+  }
+  box.innerHTML=h;
+  if(go){go.disabled=!(st.ready||p.docs.length&&RI.mode==='replace');go.textContent='Import '+st.ready+' assignments';}
+}
+async function runRotaImport(){
+  if(!RI||!RI.plan)return;
+  const p=RI.plan;closeModal();
+  await putMany('oncall',p.docs.map(d=>[d.id,strip(d)]));
+  logEv('Imported a rota from '+(RI.file||'a file')+': '+plural(p.stat.ready,'assignment'));
+  toast(plural(p.stat.ready,'assignment')+' imported'+(p.stat.skipped?'; '+p.stat.skipped+' skipped.':'.'));
+  UI.ocDay=null;
+}
+function rotaTemplate(){
+  const rota=RI?RI.rota:(UI.ocUnit||'MEDICAL'),ym=UI.ocYm||ymOf(todayStr());
+  const need=['NEURO','ORT'].includes(rota)?1:CFG.defaultNeed,rows=[['Date','Weekday','Needed','Intern 1','Intern 2','Intern 3','Intern 4']];
+  for(let d=1;d<=dim(ym);d++){const date=ym+'-'+pad(d);rows.push([date,DAYS[dow(date)],need,'','','','']);}
+  return saveCsv('rota-template-'+rota+'-'+ym+'.csv',rows);
 }
 /* ============ Shell, render, events ============ */
 function shell(content){
@@ -1471,6 +1721,9 @@ const ACT={
   sgmonth:el=>{const n=+el.dataset.n;UI.sgYm=n===0?ymOf(todayStr()):ymAdd(UI.sgYm||ymOf(todayStr()),n);},
   'setup-save':()=>saveSetup(),
   'clear-sample':()=>clearSample(),
+  'rota-import':()=>openRotaImport(),
+  'ri-go':()=>runRotaImport(),
+  'ri-template':()=>rotaTemplate(),
   login:()=>doLogin($('lg-phone').value,$('lg-code').value),
   logout:()=>doLogout(),
   retry:()=>{LOADERR='';return refresh();},
@@ -1490,6 +1743,9 @@ document.addEventListener('click',ev=>{
 });
 document.addEventListener('change',ev=>{
   const t=ev.target;
+  if(t.id==='ri-file'){if(t.files[0])handleRotaFile(t.files[0]);return;}
+  if(t.id==='ri-rota'){RI.rota=t.value;paintRI();return;}
+  if(t.name==='ri-mode'){RI.mode=t.value;paintRI();return;}
   if(t.dataset&&t.dataset.bind){const k=t.dataset.bind;if(k==='preview')setPreview(t.value);else UI[k]=t.value;scheduleRender();return;}
   if(t.dataset&&t.dataset.peDept!==undefined){const i=+t.dataset.peDept;PE.plan[i].dept=t.value;delete PE.plan[i].sub;paintPE();return;}
   if(t.dataset&&t.dataset.peSub!==undefined){const i=+t.dataset.peSub;if(t.value)PE.plan[i].sub=t.value;else delete PE.plan[i].sub;paintPE();return;}
