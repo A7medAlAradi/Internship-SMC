@@ -195,6 +195,7 @@ const HUE={MED:212,MSS:262,GS:28,SSS:318,NEURO:290,MEDICAL:212,SURGICAL:28,ORT:1
 const ONCALL_UNITS=['MEDICAL','SURGICAL','NEURO','ORT','PED','OBG','EM'];
 const ROTA_MEMBERS={MEDICAL:['MED','MSS'],SURGICAL:['GS','SSS'],NEURO:['NEURO'],ORT:['ORT'],PED:['PED'],OBG:['OBG'],EM:['EM']};
 const ROTA_HELP={MEDICAL:'Interns on Medicine and Medical subspecialty (MSS)',SURGICAL:'Interns on General surgery and Surgical subspecialty (SSS)',NEURO:'Interns doing Neurosurgery',ORT:'Interns on Orthopedics',PED:'Interns on Pediatrics',OBG:'Interns on Obstetrics and gynecology',EM:'Interns on Emergency'};
+const ROTA_TAB={MEDICAL:'Rota Medical',SURGICAL:'Rota Surgical',NEURO:'Rota Neurosurgery',ORT:'Rota Orthopedics',PED:'Rota Pediatrics',OBG:'Rota OBG',EM:'Rota Emergency'};
 function rotaOf(unit){for(const r of ONCALL_UNITS){if(ROTA_MEMBERS[r].includes(unit))return r;}return null;}
 /* groups of rotations that share coordinators */
 const COVER_GROUPS=[{id:'MEDICAL',short:'Medical',name:'Medical (Medicine and Medical subspecialty)',members:['MED','MSS']},{id:'SURGICAL',short:'Surgical',name:'Surgical (General surgery and Surgical subspecialty)',members:['GS','SSS']},{id:'NEURO',name:'Neurosurgery',members:['NEURO']},{id:'ORT',name:'Orthopedics',members:['ORT']},{id:'PED',name:'Pediatrics',members:['PED']},{id:'OBG',name:'Obstetrics and gynecology',members:['OBG']},{id:'EM',name:'Emergency',members:['EM']}];
@@ -1222,7 +1223,7 @@ function viewOncall(){
   const fair='<section class="panel"><h2>Who has done what in '+fmtYm(ym)+'</h2><p class="hint" style="margin:0 0 8px">Sorted with the lightest load first, to keep the rota fair. Totals count every rota the intern is on this month.</p>'+(sh.length?'<div class="scroll" style="max-height:340px"><table class="tbl"><thead><tr><th>Intern</th><th>Here</th><th>All rotas</th><th>Weekend and holiday</th></tr></thead><tbody>'+sh.map(x=>{
     const split=entryAt(x.it,ym)&&entryAt(x.it,ym).dept==='SSS',wkLim=split?CFG.wkHalfWarn*2:CFG.wkMonthWarn,max=split?CFG.shiftHalfMax*2:CFG.shiftMonthMax;
     return'<tr><td>'+internLink(x.it.id)+'</td><td>'+x.here+'</td><td>'+x.total+' <span class="muted small">of '+max+'</span>'+(x.total>=max?' <span class="tag mute">full</span>':'')+'</td><td>'+x.wk+(x.wk>wkLim?' <span class="tag warn">over</span>':'')+'</td></tr>';}).join('')+'</tbody></table></div>':'<p class="muted" style="margin:0">No interns are placed here this month.</p>')+'</section>';
-  return head(e.role==='intern'?'On-call':'On-call rota',esc(UNIT_NAME[unit])+' rota. '+esc(ROTA_HELP[unit]||'')+'.'+(edit?'':' You can view this rota but not change it.'),'')+tabs+nav+
+  return head(e.role==='intern'?'On-call':'On-call rota',esc(UNIT_NAME[unit])+' rota. '+esc(ROTA_HELP[unit]||'')+'.'+(edit?'':' You can view this rota but not change it.')+(e.role!=='intern'?' You can also fill it in on the “'+esc(ROTA_TAB[unit]||'')+'” tab of the Google Sheet.':''),'')+tabs+nav+
   '<div class="cols" style="grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr)"><div><div class="cal">'+cells+'</div><p class="hint">Friday, Saturday and flagged holidays are shaded. A split surgical month changes placement on the 16th.</p></div><div>'+panel+'</div></div>'+(e.role==='intern'?'':'<div style="margin-top:16px">'+fair+'</div>');
 }
 function dayPanel(unit,date,edit){
