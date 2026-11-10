@@ -631,9 +631,11 @@ function cleanMobile(raw){
   if(/^\d{8}$/.test(pick))return{phone:pick,flag:''};
   return{phone:pick,flag:pick?'Not an 8-digit number, please check':'No number'};
 }
+
+const APP_VERSION='4.1';
 /* ============ Client state ============ */
 const API={url:'',token:null,clientId:''};
-let ME={role:'loading'},PREVIEW=null,VER='0',LOADED=false,LOADERR='',SAVING=0;
+let ME={role:'loading'},PREVIEW=null,SERVER_VER='',VER='0',LOADED=false,LOADERR='',SAVING=0;
 const UI={route:'',gridYm:null,q:'',fBlock:'',fCohort:'',fGroup:'',fAffil:'',tab:'grid',ocUnit:null,ocYm:null,ocDay:null,reqF:'open',reqT:'',chkBlock:'MED',chkOpen:false,sgYm:null,sel:{},intQ:'',lPhone:'',lCode:'',lMsg:'',pmenu:false,more:false,ocViewBy:{}};
 
 /* ============ Talking to the Google script ============ */
@@ -652,7 +654,7 @@ async function loadAll(){
   const d=j.data;
   S.interns=d.interns||{};S.people=d.people||{};S.requests=d.requests||{};S.checklists=d.checklists||{};S.surgery=d.surgery||{};S.oncall=d.oncall||{};
   S.eshift=d.eshift||{};S.sheetIssues=d.sheetIssues||[];S.config=d.config||null;CFG=mergeCfg(S.config);S.holidays=d.holidays||[];S.log=d.log||[];
-  ME=Object.assign({},j.me);VER=j.v;LOADED=true;LOADERR='';
+  ME=Object.assign({},j.me);VER=j.v;SERVER_VER=j.ver||'';LOADED=true;LOADERR='';
   if(PREVIEW){const ok=PREVIEW.role==='intern'?S.interns[PREVIEW.internId]:S.people[PREVIEW.personId];if(!ok)PREVIEW=null;}
   scheduleRender();
 }
@@ -1532,7 +1534,7 @@ function viewSetup(){
   '<div class="cols" style="margin-top:16px"><section class="panel"><h2>Lists</h2><p class="hint" style="margin-top:0">One item per line.</p><label for="cf-intake">Intake start month (every new intern starts here)</label><input type="month" id="cf-intake" value="'+esc(c.intakeYm||'')+'" style="width:auto"><p class="hint">The group then sets their 12 months. If this is empty, the current month is used.</p><label for="cf-neuro">Subspecialty with its own coordinators and rota</label><input type="text" id="cf-neuro" value="'+esc(c.neuroSpec||'')+'"><p class="hint">Must match its name in the list below. Interns doing it are placed on their own rota.</p><label for="cf-sub">Medical subspecialties</label><textarea id="cf-sub">'+esc(c.medSubs.join('\n'))+'</textarea><label for="cf-spec">Surgical subspecialties</label><textarea id="cf-spec">'+esc(c.surgSpecs.join('\n'))+'</textarea><label for="cf-ele">Electives interns can choose</label><textarea id="cf-ele">'+esc(c.electives.join('\n'))+'</textarea></section>'+
   '<section class="panel"><h2>Surgical wards by position</h2><p class="hint" style="margin-top:0">One line per position, first position first. Used for 2, 3 and 4 interns on a day.</p>'+['2','3','4'].map(k=>'<label for="cf-w'+k+'">'+k+' interns</label><textarea id="cf-w'+k+'" rows="'+k+'">'+esc(((c.wards||{})[k]||[]).join('\n'))+'</textarea>').join('')+'</section>'+
   '<section class="panel"><h2>National holidays</h2>'+(hol.length?'<ul class="list">'+hol.map(h=>'<li><span>'+fmtDateY(h.d)+' '+esc(h.label||'')+'</span><button class="btn sm" data-act="hol-del-setup" data-d="'+h.d+'">Remove</button></li>').join('')+'</ul>':'<p class="muted" style="margin:0">None flagged. Flag holidays from the on-call calendar.</p>')+
-  '<h2 style="margin-top:20px">Who can sign in</h2><p class="small" style="margin:0">Only people listed in the Staff or Interns tab of your Google Sheet. Each person signs in with their contact number and personal access code. Use “Download access codes” on the Interns and Coordinators pages to hand them out. Training members are listed in the Staff tab with the role “training”.</p>'+(Object.keys(S.interns).length?'':'<div class="note info" style="margin-top:14px"><b>The board is empty.</b> Add interns from the Interns page, or load sample data to try it out.<div style="margin-top:8px"><button class="btn sm" data-act="load-sample">Load sample data</button></div></div>')+
+  '<h2 style="margin-top:20px">Who can sign in</h2><p class="small" style="margin:0">Only people listed in the Staff or Interns tab of your Google Sheet. Each person signs in with their contact number and personal access code. Use “Download access codes” on the Interns and Coordinators pages to hand them out. Training members are listed in the Staff tab with the role “training”.</p><p class="hint">Page version '+APP_VERSION+'. Google script version '+(SERVER_VER||'older than 4.1')+'.</p>'+(Object.keys(S.interns).length?'':'<div class="note info" style="margin-top:14px"><b>The board is empty.</b> Add interns from the Interns page, or load sample data to try it out.<div style="margin-top:8px"><button class="btn sm" data-act="load-sample">Load sample data</button></div></div>')+
   (sampleCount()?'<div class="note warn" style="margin-top:14px"><b>Sample data is loaded</b> ('+sampleCount()+' sample interns with their coordinators, requests and rotas). Clear it before you add the real list.<div style="margin-top:8px"><button class="btn bad sm" data-act="clear-sample">Clear sample data</button></div></div>':'')+'</section></div>';
 }
 function readLines(id){return $(id).value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);}
@@ -1887,7 +1889,7 @@ function shell(content){
     if(e0().role==='training'&&n.g!==g){g=n.g;if(n.g!=='Home')navHtml+='<div class="navgroup">'+esc(g)+'</div>';}
     navHtml+='<a href="#'+n.r+'" class="'+((UI.route===n.r||(n.alt&&n.alt(UI.route)))?'on':'')+'">'+esc(n.t)+(n.badge?'<span class="badge">'+n.badge+'</span>':'')+'</a>';
   });
-  return topbarHtml()+'<div class="app"><aside class="side"><div class="brand">Internship board<small>Rotations and on-call</small></div>'+meBox()+'<nav class="nav" aria-label="Main">'+navHtml+'</nav>'+previewBox()+'</aside><main class="main" id="main">'+previewBanner()+content+'</main></div>'+bottomBarHtml()+moreSheetHtml();
+  return topbarHtml()+'<div class="app"><aside class="side"><div class="brand">Internship board<small>Rotations and on-call</small></div>'+meBox()+'<nav class="nav" aria-label="Main">'+navHtml+'</nav>'+previewBox()+'</aside><main class="main" id="main">'+previewBanner()+verBanner()+content+'</main></div>'+bottomBarHtml()+moreSheetHtml();
 }
 function e0(){return E();}
 
@@ -2242,20 +2244,22 @@ async function runBulkGroup(){
 }
 function analyzeSheet(rows){
   if(!rows.length)return{errors:['The sheet is empty.'],items:[]};
-  const hdr=rows[0].map(h=>String(h).trim().toLowerCase()),find=re=>hdr.findIndex(h=>re.test(h));
-  const ci={name:find(/name/),phone:find(/phone|contact|mobile|number|tel/),email:find(/mail/),group:find(/group/)};
-  if(ci.name<0||ci.phone<0||ci.group<0)return{errors:['The first row needs headings. Expected: Name, Contact number, Email, Group.'],items:[]};
-  const seen=new Set(),items=[];
-  rows.slice(1).forEach((r,i)=>{
-    const g=k=>ci[k]>=0?String(r[ci[k]]==null?'':r[ci[k]]).trim():'';
-    const name=g('name'),phone=g('phone'),email=g('email'),grp=g('group').toLowerCase().replace(/^group\s*/,''),errs=[];
-    if(!name&&!phone&&!grp)return;
-    if(!name)errs.push('Name is missing');
-    const k=phoneKey(phone);
-    if(!k)errs.push('Contact number is missing or too short');else if(seen.has(k))errs.push('Number repeated in this sheet');else if(phoneTaken(phone))errs.push('Number already in the system');
-    if(!GROUPS.includes(grp))errs.push('Group must be one of '+GROUPS.map(grpLabel).join(', '));
+  const fh=findHeader(rows);
+  if(!fh)return{errors:['I could not find the heading row. It needs at least Name and Mobile (and Group for a simple list).'],items:[]};
+  const {hi,col}=fh,seen=new Set(),items=[];let group='';
+  if(col.group<0)return{errors:['I could not find a Group column. A simple list needs the headings Name, Mobile, Email and Group. Your batch sheet with month columns also works.'],items:[]};
+  rows.slice(hi+1).forEach((r,i)=>{
+    const g=k=>col[k]>=0?String(r[col[k]]==null?'':r[col[k]]).trim():'';
+    const name=g('name'),phone=g('mob'),email=g('email'),graw=g('group');
+    if(/^group$/i.test(graw)||/^name$/i.test(name)){group='';return;}
+    if(graw)group=graw.toLowerCase().replace(/^group\s*/,'');
+    if(!name&&!phone)return;
+    const errs=[];if(!name)errs.push('Name is missing');
+    const cm=cleanMobile(phone),k=phoneKey(cm.phone);
+    if(!k)errs.push('Mobile number is missing or too short');else if(seen.has(k))errs.push('Number repeated in this sheet');else if(phoneTaken(cm.phone))errs.push('Number already in the system');
+    if(!GROUPS.includes(group))errs.push('Group must be one of '+GROUPS.map(grpLabel).join(', '));
     if(k)seen.add(k);
-    items.push({line:i+2,name,phone,email,group:GROUPS.includes(grp)?grp:'',errs});
+    items.push({line:hi+i+2,name:cleanName(name)||name,phone:cm.phone,email:email.toLowerCase(),group:GROUPS.includes(group)?group:'',errs});
   });
   return{errors:[],items};
 }
@@ -2362,12 +2366,17 @@ async function savePartPE(){
 }
 
 /* ---------- importing the batch sheet (group blocks, month columns) ---------- */
+function findHeader(rows){
+  for(let hi=0;hi<Math.min(rows.length,30);hi++){
+    const H=rows[hi].map(c=>String(c==null?'':c).trim()),low=H.map(h=>h.toLowerCase());
+    const name=low.findIndex(h=>/^name/.test(h)),mob=low.findIndex(h=>/mobile|phone|contact/.test(h));
+    if(name>=0&&mob>=0)return{hi,H,low,col:{name,mob,email:low.findIndex(h=>/e-?mail/.test(h)),idno:low.findIndex(h=>/^id\s*no|^id$/.test(h)),group:low.findIndex(h=>/^group$/.test(h)),tag:low.findIndex(h=>/^(tag|affil)/.test(h))}};
+  }
+  return null;
+}
 function analyzeBatch(rows){
-  const hi=rows.findIndex(r=>/^group$/i.test(String(r[0]==null?'':r[0]).trim()));
-  if(hi<0)return null;
-  const H=rows[hi].map(c=>String(c==null?'':c).trim()),low=H.map(h=>h.toLowerCase());
-  const col={name:low.findIndex(h=>/^name/.test(h)),idno:low.findIndex(h=>/^id\s*no|^id$/.test(h)),mob:low.findIndex(h=>/mobile|phone|contact/.test(h)),email:low.findIndex(h=>/e-?mail/.test(h))};
-  if(col.name<0||col.mob<0)return null;
+  const fh=findHeader(rows);if(!fh)return null;
+  const {hi,H,col}=fh;
   const mcols=[];H.forEach((h,i)=>{const m=MONS3.indexOf(h.slice(0,3).toLowerCase());if(m>=0&&/^[A-Za-z]/.test(h)&&i>col.name)mcols.push({i,m:m+1,y:(h.match(/(20\d\d)/)||[])[1]||''});});
   if(mcols.length<3)return null;
   const title=rows.slice(0,hi).map(r=>r.join(' ')).join(' '),ty=(title.match(/(20\d\d)/)||[])[1];
@@ -2375,14 +2384,15 @@ function analyzeBatch(rows){
   mcols.forEach((c,k)=>{c.ym=ymAdd(ym0,k);});
   const issues=[],own=[],part=[];let group='';
   for(let r=hi+1;r<rows.length;r++){
-    const row=rows[r],a=String(row[0]==null?'':row[0]).trim();
-    if(/^group$/i.test(a)){group='';continue;}
-    const rawName=String(row[col.name]==null?'':row[col.name]);if(!rawName.trim()||/^name$/i.test(rawName.trim()))continue;
+    const row=rows[r],a=col.group>=0?String(row[col.group]==null?'':row[col.group]).trim():'';
+    const rawName=String(row[col.name]==null?'':row[col.name]);
+    if(/^group$/i.test(a)||/^name$/i.test(rawName.trim())){group='';continue;}
+    if(!rawName.trim())continue;
     if(a)group=a.toLowerCase().replace(/^group\s*/,'');
     const cells=mcols.map(c=>parseMonthCell(row[c.i])),entries=[];
     cells.forEach((p,k)=>{if(!p)return;const e={ym:mcols[k].ym,dept:p.dept};if(p.sub)e.sub=p.sub;if(p.note)e.note=p.note;if(p.repeat)e.repeat=true;entries.push({e,orth:!!p.orthFirst});});
     const first12=cells.slice(0,12).filter(Boolean).length;
-    (first12>=12?own:part).push({line:r+1,idno:col.idno>=0?String(row[col.idno]==null?'':row[col.idno]).trim():'',name:cleanName(rawName),tag:affilFromName(rawName),mob:cleanMobile(row[col.mob]),email:col.email>=0?String(row[col.email]||'').trim().toLowerCase():'',group,entries});
+    (first12>=12?own:part).push({line:r+1,idno:col.idno>=0?String(row[col.idno]==null?'':row[col.idno]).trim():'',name:cleanName(rawName),tag:(col.tag>=0&&AFFIL.includes(String(row[col.tag]||'').trim().toUpperCase()))?String(row[col.tag]).trim().toUpperCase():affilFromName(rawName),mob:cleanMobile(row[col.mob]),email:col.email>=0?String(row[col.email]||'').trim().toLowerCase():'',group,entries});
   }
   const res={kind:'batch',ym0,own:[],ext:[],issues,rowsRead:own.length+part.length,partRows:part.length};
   const seen=new Set(Object.values(S.interns).map(i=>phoneKey(i.phone)).filter(Boolean));
@@ -2396,7 +2406,7 @@ function analyzeBatch(rows){
     seen.add(k);
     if(x.mob.flag)issues.push({lvl:'warn',where:'Row '+x.line,name:x.name,msg:x.mob.flag+' ('+x.mob.phone+')'});
     const sss=x.entries.find(y=>y.e.dept==='SSS');
-    res.own.push({name:x.name,phone:x.mob.phone,email:x.email,affil:'SMC',group:x.group,ver:planVersion({group:x.group,plan}),startYm:plan[0].ym,plan,orth:!!(sss&&sss.orth),idno:x.idno,line:x.line});
+    res.own.push({name:x.name,phone:x.mob.phone,email:x.email,affil:(x.tag==='OLD'?'OLD':'SMC'),group:x.group,ver:planVersion({group:x.group,plan}),startYm:plan[0].ym,plan,orth:!!(sss&&sss.orth),idno:x.idno,line:x.line});
   });
   const people=[];
   part.forEach(x=>{
@@ -2465,6 +2475,11 @@ async function runBatchUpload(){
   await putMany('interns',items);Object.values(S.interns).forEach(i=>{delete i._idno;});if(surg.length)await putMany('surgery',surg);
   logEv('Imported the batch sheet: '+B.own.length+' SMC and '+B.ext.length+' part-time interns');
   toast('Imported '+B.own.length+' SMC interns and '+B.ext.length+' part-time interns.');
+}
+
+function verBanner(){
+  if(ME.role!=='training'||(SERVER_VER===APP_VERSION))return'';
+  return'<div class="note warn"><b>The page and the Google script are different versions.</b> This page is version '+esc(APP_VERSION)+' and the Google script is '+(SERVER_VER?'version '+esc(SERVER_VER):'older than 4.1')+'. Paste the newest <b>Code.gs</b> into Apps Script, deploy a new version, and refresh this page with Ctrl+Shift+R.</div>';
 }
 /* ============ Shell, render, events ============ */
 function routeContent(){
