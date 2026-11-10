@@ -235,6 +235,14 @@ button.shift{cursor:pointer}
   .bar input[type=search]{width:100%}
   .toast{bottom:calc(76px + env(safe-area-inset-bottom,0px))}
 }
+
+.afl{display:inline-block;font-size:.68rem;font-weight:700;border-radius:4px;padding:0 6px;line-height:1.55;letter-spacing:.02em;border:1px solid transparent;vertical-align:middle}
+.afl.a-SMC{background:transparent;border-color:var(--line);color:var(--ink2)}
+.afl.a-INH{background:hsl(320 var(--cbs) var(--cbl));color:hsl(320 var(--cfs) var(--cfl))}
+.afl.a-AMH{background:hsl(48 var(--cbs) var(--cbl));color:hsl(48 var(--cfs) var(--cfl))}
+.afl.a-KSA{background:hsl(125 var(--cbs) var(--cbl));color:hsl(125 var(--cfs) var(--cfl))}
+.afl.a-EXT{background:hsl(270 var(--cbs) var(--cbl));color:hsl(270 var(--cfs) var(--cfl))}
+.afl.a-OLD{background:var(--line);color:var(--ink2)}
 </style>
 </head>
 <body>
@@ -245,12 +253,12 @@ button.shift{cursor:pointer}
 <script>
 /* ============ Constants ============ */
 const BLOCKS=['MED','MSS','GS','SSS','PED','OBG','ELE','EM'];
-const BLOCK_NAME={MED:'Medicine',MSS:'Medical subspecialty',GS:'General surgery',SSS:'Surgical subspecialty and orthopedics',PED:'Pediatrics',OBG:'Obstetrics and gynecology',ELE:'Elective',EM:'Emergency',FROZEN:'Frozen'};
-const BLOCK_SHORT={MED:'MED',MSS:'MSS',GS:'GS',SSS:'SSS',PED:'PED',OBG:'OBG',ELE:'ELE',EM:'EM',FROZEN:'Frozen'};
+const BLOCK_NAME={OTHER:'Other rotation',MED:'Medicine',MSS:'Medical subspecialty',GS:'General surgery',SSS:'Surgical subspecialty and orthopedics',PED:'Pediatrics',OBG:'Obstetrics and gynecology',ELE:'Elective',EM:'Emergency',FROZEN:'Frozen'};
+const BLOCK_SHORT={OTHER:'OTH',MED:'MED',MSS:'MSS',GS:'GS',SSS:'SSS',PED:'PED',OBG:'OBG',ELE:'ELE',EM:'EM',FROZEN:'Frozen'};
 const UNITS=['MED','MSS','GS','SSS','NEURO','ORT','PED','OBG','ELE','EM'];
 const UNIT_NAME={MED:'Medicine',MSS:'Medical subspecialty',GS:'General surgery',SSS:'Surgical subspecialty',NEURO:'Neurosurgery',MEDICAL:'Medical',SURGICAL:'Surgical',ORT:'Orthopedics',PED:'Pediatrics',OBG:'Obstetrics and gynecology',ELE:'Elective',EM:'Emergency'};
 const BLOCK_UNITS={MED:['MED'],MSS:['MSS'],GS:['GS'],SSS:['SSS','NEURO','ORT'],PED:['PED'],OBG:['OBG'],ELE:['ELE'],EM:['EM']};
-const HUE={MED:212,MSS:262,GS:28,SSS:318,NEURO:290,MEDICAL:212,SURGICAL:28,ORT:100,PED:145,OBG:178,ELE:52,EM:4,FROZEN:210};
+const HUE={OTHER:200,MED:212,MSS:262,GS:28,SSS:318,NEURO:290,MEDICAL:212,SURGICAL:28,ORT:100,PED:145,OBG:178,ELE:52,EM:4,FROZEN:210};
 const ONCALL_UNITS=['MEDICAL','SURGICAL','NEURO','ORT','PED','OBG'];
 const ROTA_MEMBERS={MEDICAL:['MED','MSS'],SURGICAL:['GS','SSS'],NEURO:['NEURO'],ORT:['ORT'],PED:['PED'],OBG:['OBG']};
 const ROTA_HELP={MEDICAL:'Interns on Medicine and Medical subspecialty (MSS)',SURGICAL:'Interns on General surgery and Surgical subspecialty (SSS)',NEURO:'Interns doing Neurosurgery',ORT:'Interns on Orthopedics',PED:'Interns on Pediatrics',OBG:'Interns on Obstetrics and gynecology'};
@@ -258,7 +266,7 @@ const ROTA_TAB={MEDICAL:'Rota Medical',SURGICAL:'Rota Surgical',NEURO:'Rota Neur
 const ROTA_TITLE={MEDICAL:'Medical',SURGICAL:'Surgical',NEURO:'Neurosurgery',ORT:'Orthopedics',PED:'Pediatrics',OBG:'OBG',EMERGENCY:'Emergency'};
 const SHIFTS={O:'Off',M:'Morning',E:'Evening',N:'Night'};
 const SWAP_PAIRS=[['EM','MSS'],['ELE','SSS']];
-const TEMPLATES={'1a':['MED','MED','PED','PED','EM','MSS','GS','GS','OBG','OBG','SSS','ELE'],'1b':['MSS','EM','MED','MED','PED','PED','ELE','SSS','GS','GS','OBG','OBG'],'1c':['PED','PED','MSS','EM','MED','MED','OBG','OBG','ELE','SSS','GS','GS'],'2a':['GS','GS','OBG','OBG','SSS','ELE','MED','MED','PED','PED','EM','MSS'],'2b':['OBG','OBG','SSS','ELE','GS','GS','EM','MSS','MED','MED','PED','PED'],'2c':['ELE','SSS','GS','GS','OBG','OBG','PED','PED','MSS','EM','MED','MED']};
+const TEMPLATES={'1a':['MED','MED','PED','PED','EM','MSS','GS','GS','OBG','OBG','ELE','SSS'],'1b':['MSS','EM','MED','MED','PED','PED','ELE','SSS','GS','GS','OBG','OBG'],'1c':['PED','PED','MSS','EM','MED','MED','OBG','OBG','ELE','SSS','GS','GS'],'2a':['GS','GS','OBG','OBG','SSS','ELE','MED','MED','PED','PED','EM','MSS'],'2b':['OBG','OBG','SSS','ELE','GS','GS','EM','MSS','MED','MED','PED','PED'],'2c':['ELE','SSS','GS','GS','OBG','OBG','PED','PED','MSS','EM','MED','MED']};
 function rotaOf(unit){for(const r of ONCALL_UNITS){if(ROTA_MEMBERS[r].includes(unit))return r;}return null;}
 /* groups of rotations that share coordinators */
 const COVER_GROUPS=[{id:'MEDICAL',short:'Medical',name:'Medical (Medicine and Medical subspecialty)',members:['MED','MSS']},{id:'SURGICAL',short:'Surgical',name:'Surgical (General surgery and Surgical subspecialty)',members:['GS','SSS']},{id:'NEURO',name:'Neurosurgery',members:['NEURO']},{id:'ORT',name:'Orthopedics',members:['ORT']},{id:'PED',name:'Pediatrics',members:['PED']},{id:'OBG',name:'Obstetrics and gynecology',members:['OBG']},{id:'EM',name:'Emergency',members:['EM']}];
@@ -352,7 +360,7 @@ function internStatus(it,ym){
   ym=ym||ymOf(todayStr());
   if(ymIdx(ym)<ymIdx(planStart(it)))return{k:'future',text:'Starts '+fmtYm(planStart(it))};
   if(ymIdx(ym)>ymIdx(planEnd(it)))return{k:'done',text:'Completed'};
-  const e=entryAt(it,ym);if(!e)return{k:'future',text:'—'};
+  const e=entryAt(it,ym);if(!e)return{k:'off',text:ymIdx(ym)<ymIdx(planStart(it))?'Not started':'Not with us this month'};
   if(e.dept==='FROZEN')return{k:'frozen',text:'Frozen',block:'FROZEN'};
   return{k:'active',text:BLOCK_NAME[e.dept],block:e.dept,entry:e};
 }
@@ -392,7 +400,7 @@ function rotationUsed(it,ym,exceptId){
 }
 function leaveWarnings(r){
   const w=[];if(r.kind!=='annual')return w;
-  const it=S.interns[r.internId];if(!it)return w;
+  const it=S.interns[r.internId];if(!it||!patternApplies(it))return w;
   const days=dayCount(r.from,r.to),used=annualUsed(r.internId,r.id);
   if(used+days>CFG.annualDays)w.push('Over the yearly balance: '+(used+days)+' of '+CFG.annualDays+' days (this request adds '+days+').');
   const span=blockSpan(it,ymOf(r.from));
@@ -567,10 +575,66 @@ function titleYm(t){
   const m=String(t||'').match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/i);
   if(!m)return'';const i=FULL_MONTHS_C.findIndex(x=>x.toLowerCase()===m[1].toLowerCase());return m[2]+'-'+pad(i+1);
 }
+
+/* ============ Affiliation tags and part-time schedules ============ */
+const AFFIL=['SMC','INH','AMH','KSA','EXT','OLD'];
+const AFFIL_NAME={SMC:'Our interns',INH:'Ibn Al Nafees',AMH:'AMH',KSA:'KSA',EXT:'External',OLD:'Old intern repeating'};
+const affilOf=it=>(it&&AFFIL.includes(it.affil))?it.affil:'SMC';
+const patternApplies=it=>affilOf(it)==='SMC';
+function validateIntern(it){
+  if(!it.plan||!it.plan.length)return patternApplies(it)?validatePlan(it.plan):{ok:true,errors:[]};
+  if(patternApplies(it))return validatePlan(it.plan);
+  const errs=[];it.plan.forEach(e=>{if(!BLOCKS.includes(e.dept)&&e.dept!=='FROZEN'&&e.dept!=='OTHER')errs.push('Unknown rotation “'+e.dept+'” in '+fmtYm(e.ym)+'.');});
+  return{ok:!errs.length,errors:errs};
+}
+/* how a month is written in the sheet (your own words) and read back */
+const WORD={MED:'Med',PED:'Ped',EM:'A/E',MSS:'M.S',GS:'G. Surg',OBG:'Gyne',ELE:'E',SSS:'S.S /Ortho',FROZEN:'FROZEN',OTHER:''};
+function monthCellText(e,orthFirst){
+  if(!e)return'';
+  let w=WORD[e.dept];if(w===undefined)w=e.dept;
+  if(e.dept==='SSS'&&orthFirst)w='Ortho /S.S';
+  if(e.repeat)w+='*';
+  let t=w;if(e.sub&&(e.dept==='MSS'||e.dept==='ELE'))t+=' ('+e.sub+')';
+  if(e.note)t+=(t?'\n':'')+e.note;
+  return t;
+}
+function parseMonthCell(raw){
+  const text=String(raw==null?'':raw).replace(/\u00a0/g,' ').trim();if(!text)return null;
+  const lines=text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean),first=lines[0],low=first.toLowerCase();
+  let dept='',orthFirst=false,rest=first,repeat=false;
+  const m=(re,d)=>{const x=low.match(re);if(x){dept=d;rest=first.slice(x[0].length);return true;}return false;};
+  if(/^frozen\b/.test(low)){dept='FROZEN';rest='';}
+  else if(!(m(/^a\/e\b/,'EM')||m(/^m\.?\s?s\b/,'MSS')||m(/^g\.?\s*surg\b/,'GS')||m(/^(gyne|obg)\b/,'OBG')||m(/^ped\b/,'PED')||m(/^med\b/,'MED')||m(/^ortho\s*\/\s*s\.?s\b/,'SSS')||m(/^s\.?s\s*\/\s*ortho\b/,'SSS')||m(/^surg\s*smc\b/,'SSS')||m(/^s\.?s\b/,'SSS')||m(/^elective\b/,'ELE')||m(/^e(?=[\s(]|$)/,'ELE')))dept='OTHER';
+  if(dept==='SSS'&&/^ortho/.test(low))orthFirst=true;
+  if(/^\S+\*/.test(first)&&dept&&dept!=='OTHER'){repeat=true;rest=rest.replace(/^\*/,'');}
+  if(dept==='OTHER'){return{dept,note:lines.join(' / ')};}
+  let sub='',note='';
+  const b=rest.match(/\(([^)]*)\)/);
+  if(b){sub=b[1].trim();rest=rest.replace(b[0],'');}
+  rest=rest.replace(/^\*/,'').trim();
+  let tail=lines.slice(1);
+  if(!sub&&tail.length){const b2=tail[0].match(/^\(([^)]*)\)\s*(.*)$/);if(b2){sub=b2[1].trim();tail=[b2[2]].concat(tail.slice(1));}}
+  const extra=[rest].concat(tail).map(s=>s.trim()).filter(Boolean);
+  if(dept==='SSS'&&sub)extra.unshift(sub),sub='';
+  note=extra.join(' / ');
+  const out={dept};if(sub&&(dept==='MSS'||dept==='ELE'))out.sub=sub;else if(sub)note=(note?sub+' / '+note:sub);
+  if(note)out.note=note;if(orthFirst)out.orthFirst=true;if(repeat)out.repeat=true;
+  return out;
+}
+function cleanName(s){return String(s==null?'':s).replace(/\(([^)]*)\)/g,' ').replace(/\s+/g,' ').trim();}
+function affilFromName(s){const m=String(s||'').match(/\(([^)]*)\)/);if(!m)return'';const t=m[1].toUpperCase();if(/NAFEES|NAFIS|INH/.test(t))return'INH';if(/^AMH\b/.test(t))return'AMH';if(/KSA|SAUDI/.test(t))return'KSA';return'';}
+function cleanMobile(raw){
+  const s=String(raw==null?'':raw);const groups=(s.match(/\d[\d\s]{6,}\d/g)||[]).map(x=>x.replace(/\s/g,''));
+  let pick=groups.find(g=>/^[3689]\d{7}$/.test(g))||groups[0]||s.replace(/\D/g,'');
+  if(/^966\d{9}$/.test(pick))return{phone:'+'+pick,flag:'Saudi number, please check'};
+  if(/^5\d{8}$/.test(pick))return{phone:'+966'+pick,flag:'Saudi number, please check'};
+  if(/^\d{8}$/.test(pick))return{phone:pick,flag:''};
+  return{phone:pick,flag:pick?'Not an 8-digit number, please check':'No number'};
+}
 /* ============ Client state ============ */
 const API={url:'',token:null,clientId:''};
 let ME={role:'loading'},PREVIEW=null,VER='0',LOADED=false,LOADERR='',SAVING=0;
-const UI={route:'',gridYm:null,q:'',fBlock:'',fCohort:'',fGroup:'',tab:'grid',ocUnit:null,ocYm:null,ocDay:null,reqF:'open',reqT:'',chkBlock:'MED',chkOpen:false,sgYm:null,sel:{},intQ:'',lPhone:'',lCode:'',lMsg:'',pmenu:false,more:false,ocViewBy:{}};
+const UI={route:'',gridYm:null,q:'',fBlock:'',fCohort:'',fGroup:'',fAffil:'',tab:'grid',ocUnit:null,ocYm:null,ocDay:null,reqF:'open',reqT:'',chkBlock:'MED',chkOpen:false,sgYm:null,sel:{},intQ:'',lPhone:'',lCode:'',lMsg:'',pmenu:false,more:false,ocViewBy:{}};
 
 /* ============ Talking to the Google script ============ */
 async function call(action,body){
@@ -748,7 +812,7 @@ function computeIssues(scope){
   const out=[],today=todayStr(),ym0=ymOf(today);
   const inB=b=>!scope||BLOCK_UNITS[b].some(u=>scope.includes(u));
   const inU=u=>!scope||(ROTA_MEMBERS[u]||[u]).some(x=>scope.includes(x));
-  if(!scope)Object.values(S.interns).forEach(it=>{const v=validatePlan(it.plan);if(!v.ok)out.push({lvl:'bad',text:it.name+'’s plan breaks the rotation pattern. '+v.errors[0],to:'intern-'+it.id});});
+  if(!scope)Object.values(S.interns).forEach(it=>{const v=validateIntern(it);if(!v.ok)out.push({lvl:'bad',text:it.name+'’s plan breaks the rotation pattern. '+v.errors[0],to:'intern-'+it.id});});
   for(let k=0;k<3;k++){
     const ym=ymAdd(ym0,k),counts={};
     Object.values(S.interns).forEach(it=>{const e=entryAt(it,ym);if(e&&e.dept!=='FROZEN')counts[e.dept]=(counts[e.dept]||0)+1;});
@@ -940,6 +1004,7 @@ function filteredInterns(months){
     if(q&&!(it.name.toLowerCase().includes(q)||String(it.phone||'').includes(q)))return false;
     if(UI.fCohort&&planStart(it)!==UI.fCohort)return false;
     if(UI.fGroup&&it.group!==UI.fGroup)return false;
+    if(UI.fAffil&&affilOf(it)!==UI.fAffil)return false;
     if(UI.fBlock&&!months.some(m=>{const e=entryAt(it,m);return e&&e.dept===UI.fBlock;}))return false;
     return true;
   }).sort((a,b)=>planStart(a)<planStart(b)?-1:planStart(a)>planStart(b)?1:a.name.localeCompare(b.name));
@@ -968,7 +1033,7 @@ function viewRotations(){
     return head('Rotations','How many interns are on each rotation in each calendar month.',actions)+bar+'<div class="note info small">There is no upper limit on interns per rotation. A cell turns blue only if you set a minimum for that rotation in Setup.</div><div class="scroll gw"><table class="rota cap"><thead><tr><th class="stick">Rotation</th>'+months.map(m=>'<th class="'+(m===cur?'cur':'')+'">'+fmtYmShort(m)+'</th>').join('')+'</tr></thead><tbody>'+rows+tot+'</tbody></table></div>';
   }
   const list=filteredInterns(months);
-  const rows=list.map(it=>'<tr><td class="stick"><a href="#intern-'+it.id+'">'+esc(it.name)+'</a><small>'+(it.group?'Group '+esc(grpLabel(it.group))+', ':'')+'started '+fmtYm(planStart(it))+'</small></td>'+months.map(m=>{const e=entryAt(it,m),ix=it.plan.findIndex(x=>x.ym===m);return'<td title="'+esc(entryTitle(e,m,it))+'">'+cellChip(e,it)+(tr&&ix>=0&&canSwapAt(it.plan,ix)?'<button class="sw" data-act="swap-pair" data-id="'+it.id+'" data-i="'+ix+'" title="Swap with the next month" aria-label="Swap with the next month">⇄</button>':'')+'</td>';}).join('')+(tr?'<td><button class="btn sm" data-act="edit-plan" data-id="'+it.id+'">Edit</button></td>':'')+'</tr>').join('');
+  const rows=list.map(it=>'<tr><td class="stick"><a href="#intern-'+it.id+'">'+esc(it.name)+'</a><small>'+(affilOf(it)!=='SMC'?affilTag(affilOf(it))+' ':'')+(it.group?'Group '+esc(grpLabel(it.group))+', ':'')+(it.plan.length?'from '+fmtYm(planStart(it)):'no months yet')+'</small></td>'+months.map(m=>{const e=entryAt(it,m),ix=it.plan.findIndex(x=>x.ym===m);return'<td title="'+esc(entryTitle(e,m,it))+'">'+cellChip(e,it)+(tr&&ix>=0&&canSwapAt(it.plan,ix)?'<button class="sw" data-act="swap-pair" data-id="'+it.id+'" data-i="'+ix+'" title="Swap with the next month" aria-label="Swap with the next month">⇄</button>':'')+'</td>';}).join('')+(tr?'<td><button class="btn sm" data-act="edit-plan" data-id="'+it.id+'">Edit</button></td>':'')+'</tr>').join('');
   return head('Rotations',tr?'Plan each intern’s twelve months. Plans must follow the pattern before they can be saved.':'Read-only view of every intern’s plan.',actions)+bar+legend+
     (list.length?'<div class="scroll gw" style="max-height:72vh"><table class="rota"><thead><tr><th class="stick">Intern ('+list.length+')</th>'+months.map(m=>'<th class="'+(m===cur?'cur':'')+'">'+fmtYmShort(m)+'</th>').join('')+(tr?'<th></th>':'')+'</tr></thead><tbody>'+rows+'</tbody></table></div>':emptyBox('No interns match these filters.'));
 }
@@ -1194,7 +1259,7 @@ function viewProfile(id){
     return'<tr><td>'+chip(b,BLOCK_NAME[b])+'<div class="small muted">'+fmtYmShort(first)+(first!==last?' to '+fmtYmShort(last):'')+'</div></td>'+cells+'</tr>';
   }).join('');
   const reqBtns=(self||(PREVIEW&&PREVIEW.role==='intern'&&PREVIEW.internId===id))?'<div class="row" style="margin-bottom:12px"><button class="btn pri sm" data-act="new-leave">Request leave</button><button class="btn sm" data-act="new-elective">Request elective</button><button class="btn sm" data-act="new-freeze">Request a freeze</button></div>':'';
-  return head(it.name,'<a href="'+telHref(it.phone)+'">'+esc(it.phone)+'</a>'+(it.email?' &nbsp; <a href="mailto:'+esc(it.email)+'">'+esc(it.email)+'</a>':'')+' &nbsp; '+(it.group?'Group '+esc(grpLabel(it.group))+' &nbsp; ':'')+'Started '+fmtYm(planStart(it)),actions)+
+  return head(it.name,'<a href="'+telHref(it.phone)+'">'+esc(it.phone)+'</a>'+(it.email?' &nbsp; <a href="mailto:'+esc(it.email)+'">'+esc(it.email)+'</a>':'')+' &nbsp; '+affilTag(affilOf(it))+' &nbsp; '+(it.group?'Group '+esc(grpLabel(it.group))+' &nbsp; ':''),actions)+
   (tr?codeBox('interns',it):'')+
   '<div class="cols"><section class="panel"><h2>Now</h2><p style="margin:0 0 8px">'+(st.block?chip(st.block,st.text):'<span class="tag mute">'+esc(st.text)+'</span>')+(place&&st.block==='SSS'?' in '+esc(UNIT_NAME[place])+' this half of the month':'')+'</p>'+
     (st.k==='active'&&st.block==='SSS'&&!(sg&&sg.spec)?'<div class="note warn small">The surgical subspecialty has not been assigned yet.</div>':'')+
@@ -2143,13 +2208,13 @@ async function applyGroupChange(rebuild){
 }
 function viewInterns(){
   const q=UI.intQ.trim().toLowerCase();
-  const list=Object.values(S.interns).filter(it=>(!q||it.name.toLowerCase().includes(q)||String(it.phone||'').includes(q)||String(it.email||'').toLowerCase().includes(q))&&(!UI.fGroup||it.group===UI.fGroup)).sort((a,b)=>a.name.localeCompare(b.name));
+  const list=Object.values(S.interns).filter(it=>(!q||it.name.toLowerCase().includes(q)||String(it.phone||'').includes(q)||String(it.email||'').toLowerCase().includes(q))&&(!UI.fGroup||it.group===UI.fGroup)&&(!UI.fAffil||affilOf(it)===UI.fAffil)).sort((a,b)=>a.name.localeCompare(b.name));
   const nsel=Object.keys(UI.sel).filter(k=>UI.sel[k]&&S.interns[k]).length;
-  const rows=list.slice(0,300).map(it=>{const st=internStatus(it);return'<tr><td><input type="checkbox" data-act="sel" data-id="'+it.id+'"'+(UI.sel[it.id]?' checked':'')+' aria-label="Select '+esc(it.name)+'"></td><td><a href="#intern-'+it.id+'">'+esc(it.name)+'</a></td><td>'+esc(grpLabel(it.group))+'</td><td>'+(st.block?chip(st.block,st.text):'<span class="muted">'+esc(st.text)+'</span>')+'</td><td><a href="'+telHref(it.phone)+'">'+esc(it.phone)+'</a></td><td>'+esc(it.email||'')+'</td><td>'+esc(it.accessCode||'')+'</td></tr>';}).join('');
+  const rows=list.slice(0,300).map(it=>{const st=internStatus(it);return'<tr><td><input type="checkbox" data-act="sel" data-id="'+it.id+'"'+(UI.sel[it.id]?' checked':'')+' aria-label="Select '+esc(it.name)+'"></td><td><a href="#intern-'+it.id+'">'+esc(it.name)+'</a></td><td>'+esc(grpLabel(it.group))+'</td><td>'+affilTag(affilOf(it))+'</td><td>'+(st.block?chip(st.block,st.text):'<span class="muted">'+esc(st.text)+'</span>')+'</td><td><a href="'+telHref(it.phone)+'">'+esc(it.phone)+'</a></td><td>'+esc(it.email||'')+'</td><td>'+esc(it.accessCode||'')+'</td></tr>';}).join('');
   const bulk=nsel?'<div class="note info row"><b>'+nsel+' selected</b><span class="sp"></span><button class="btn sm" data-act="bulk-tpl">Apply group template</button><button class="btn sm" data-act="bulk-group">Set group</button><button class="btn sm" data-act="sel-none">Clear</button></div>':'';
   return head('Interns',plural(Object.keys(S.interns).length,'intern')+' in the system.','<button class="btn pri" data-act="add-intern">Add intern</button><button class="btn" data-act="upload-open">Upload a sheet</button>')+
-  '<div class="bar"><input type="search" id="iq" data-bind="intQ" placeholder="Search name, number or email" value="'+esc(UI.intQ)+'" aria-label="Search interns"><select data-bind="fGroup" aria-label="Group filter"><option value="">All groups</option>'+GROUPS.map(g=>'<option value="'+g+'"'+(UI.fGroup===g?' selected':'')+'>Group '+grpLabel(g)+'</option>').join('')+'</select><button class="btn" data-act="sel-all">Select all shown</button><span class="sp"></span><button class="btn" data-act="export-codes">Download access codes</button><button class="btn" data-act="export-int">Download CSV</button></div>'+bulk+
-  (list.length?'<div class="scroll" style="max-height:72vh"><table class="tbl stk"><thead><tr><th></th><th>Name</th><th>Group</th><th>This month</th><th>Contact number</th><th>Email</th><th>Access code</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+(list.length>300?'<p class="hint">Showing the first 300. Use search to narrow the list.</p>':''):emptyBox('No interns yet. Add one, or upload a sheet.'));
+  '<div class="bar"><input type="search" id="iq" data-bind="intQ" placeholder="Search name, number or email" value="'+esc(UI.intQ)+'" aria-label="Search interns"><select data-bind="fGroup" aria-label="Group filter"><option value="">All groups</option>'+GROUPS.map(g=>'<option value="'+g+'"'+(UI.fGroup===g?' selected':'')+'>Group '+grpLabel(g)+'</option>').join('')+'</select><select data-bind="fAffil" aria-label="Tag filter"><option value="">All tags</option>'+AFFIL.map(a=>'<option value="'+a+'"'+(UI.fAffil===a?' selected':'')+'>'+a+'</option>').join('')+'</select><button class="btn" data-act="sel-all">Select all shown</button><span class="sp"></span><button class="btn" data-act="export-codes">Download access codes</button><button class="btn" data-act="export-int">Download CSV</button></div>'+bulk+
+  (list.length?'<div class="scroll" style="max-height:72vh"><table class="tbl stk"><thead><tr><th></th><th>Name</th><th>Group</th><th>Tag</th><th>This month</th><th>Mobile</th><th>Email</th><th>Access code</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+(list.length>300?'<p class="hint">Showing the first 300. Use search to narrow the list.</p>':''):emptyBox('No interns yet. Add one, or upload a sheet.'));
 }
 function openBulkTpl(){
   const ids=Object.keys(UI.sel).filter(k=>UI.sel[k]&&S.interns[k]);if(!ids.length)return;
@@ -2212,6 +2277,7 @@ async function runUpload(){
 
 /* ---------- plan editor with the small swap arrows ---------- */
 function paintPE(){
+  if(PE.part)return paintPartPE();
   const it=S.interns[PE.id],v=validatePlan(PE.plan);
   let rows='';
   PE.plan.forEach((e,i)=>{
@@ -2232,6 +2298,173 @@ function paintPE(){
 function swapPair(id,i){
   const it=S.interns[id];if(!it||!canSwapAt(it.plan,i))return;
   return mut('interns',id,b=>{b.plan=swapPlanMonths(b.plan,i);return b;}).then(()=>{logEv('Swapped two months for '+it.name);});
+}
+
+/* =====================================================================
+   Tags, part-time schedules, and importing the real batch sheet
+   ===================================================================== */
+const MONS3=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+function affilTag(a){return'<span class="afl a-'+a+'" title="'+esc(AFFIL_NAME[a]||a)+'">'+esc(a)+'</span>';}
+function affilSelect(id,cur){return'<select id="'+id+'" style="width:100%">'+AFFIL.map(a=>'<option value="'+a+'"'+(a===cur?' selected':'')+'>'+a+' – '+esc(AFFIL_NAME[a])+'</option>').join('')+'</select>';}
+function internForm(it,withGroup){
+  it=it||{};
+  return'<label for="f-name">Full name</label><input type="text" id="f-name" value="'+esc(it.name||'')+'" autocomplete="off">'+
+  '<div class="grid2"><div><label for="f-phone">Mobile</label><input type="tel" id="f-phone" value="'+esc(it.phone||'')+'"></div><div><label for="f-email">Email</label><input type="email" id="f-email" value="'+esc(it.email||'')+'"></div></div>'+
+  (withGroup?'<div class="grid2"><div><label for="f-affil">Tag</label>'+affilSelect('f-affil',affilOf(it))+'</div><div><label for="f-group">Group (SMC interns)</label>'+groupSelect('f-group',it.group,!it.id)+'</div></div>':'');
+}
+function openAddIntern(){
+  openModal('<h2>Add an intern</h2><p class="hint" style="margin-top:0">For an SMC intern the group sets the 12 months, starting in <b>'+fmtYm(intakeMonth())+'</b> (the intake month in Setup). INH, AMH, KSA, EXT and OLD interns have a part-time schedule: add their months afterwards with Edit plan. The mobile number identifies the intern, so each number can be used once.</p>'+internForm(null,true)+'<div id="f-err"></div><div class="foot"><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="intern-save">Add intern</button></div>');
+}
+async function saveIntern(id){
+  const name=$('f-name').value.trim(),phone=$('f-phone').value.trim(),email=$('f-email').value.trim(),affil=$('f-affil').value,group=$('f-group').value,sm=affil==='SMC';
+  if(!name)return showErr('Enter the intern’s name.');
+  if(!phoneKey(phone))return showErr('Enter a valid mobile number.');
+  if(phoneTaken(phone,id))return showErr('That mobile number already belongs to someone else.');
+  if(sm&&!group)return showErr('Choose a group for an SMC intern.');
+  if(!id){
+    const nid=uid('i'),doc={name,phone,email,affil,accessCode:genCode(),createdAt:Date.now(),startYm:'',plan:[]};
+    if(sm){const ver=balanceVer(group,S.interns),start=intakeMonth();Object.assign(doc,{group,ver,startYm:start,plan:makeGroupPlan(group,start,ver)});}
+    await put('interns',nid,doc);logEv('Added intern '+name+' ('+affil+')');closeModal();toast(name+' was added'+(sm?' to Group '+grpLabel(group):'')+'.');return;
+  }
+  const it=S.interns[id];
+  if(sm&&it.group&&it.group!==group&&affilOf(it)==='SMC'){GC={id,name,phone,email,group,affil};return openGroupChange();}
+  await mut('interns',id,b=>{b.name=name;b.phone=phone;b.email=email;b.affil=affil;if(sm)b.group=group;else delete b.group;return b;});
+  logEv('Edited details for '+name);closeModal();toast('Saved.');
+}
+async function applyGroupChange(rebuild){
+  const g=GC;closeModal();GC=null;if(!g)return;
+  await mut('interns',g.id,b=>{b.name=g.name;b.phone=g.phone;b.email=g.email;b.affil=g.affil||'SMC';b.group=g.group;
+    if(rebuild){b.ver=balanceVer(g.group,S.interns,g.id);b.plan=makeGroupPlan(g.group,planStart(b),b.ver);}return b;});
+  logEv((rebuild?'Rebuilt the plan from group ':'Changed the label to group ')+grpLabel(g.group)+' for '+g.name);toast(rebuild?'Plan rebuilt from Group '+grpLabel(g.group)+'.':'Group label changed.');
+}
+
+/* ---------- part-time schedules (INH, AMH, KSA, EXT, OLD) ---------- */
+function openPlanEditor(id){
+  const it=S.interns[id];if(!it)return;
+  if(!patternApplies(it)){
+    let m0=intakeMonth();(it.plan||[]).forEach(e=>{if(ymIdx(e.ym)<ymIdx(m0))m0=e.ym;});
+    const plan=[];for(let i=0;i<15;i++){const ym=ymAdd(m0,i),e=(it.plan||[]).find(x=>x.ym===ym);plan.push(e?clone(e):{ym,dept:''});}
+    (it.plan||[]).forEach(e=>{if(!plan.find(p=>p.ym===e.ym))plan.push(clone(e));});
+    plan.sort((a,b)=>ymIdx(a.ym)-ymIdx(b.ym));
+    PE={id,plan,start:m0,part:true};openModal('',true);paintPE();return;
+  }
+  PE={id,plan:clone(it.plan),start:planStart(it),frozen:it.plan.some(e=>e.dept==='FROZEN'||e.repeat)};openModal('',true);paintPE();
+}
+function paintPartPE(){
+  const it=S.interns[PE.id];
+  const rows=PE.plan.map((e,i)=>'<tr><td>'+fmtYm(e.ym)+'</td><td><select data-pe-dept="'+i+'" aria-label="Rotation for '+fmtYm(e.ym)+'"><option value="">Not with us</option>'+BLOCKS.concat(['OTHER']).map(b=>'<option value="'+b+'"'+(e.dept===b?' selected':'')+'>'+BLOCK_NAME[b]+'</option>').join('')+'</select></td><td>'+(e.dept?'<input type="text" data-pe-note="'+i+'" value="'+esc(e.note||'')+'" placeholder="Note, for example “2 weeks”" aria-label="Note for '+fmtYm(e.ym)+'">':'')+'</td></tr>').join('');
+  $('modal').querySelector('.modal').innerHTML='<h2>Months with us: '+esc(it.name)+' '+affilTag(affilOf(it))+'</h2><p class="hint" style="margin-top:0">A part-time schedule has only the months this intern spends with us, so the 12-month pattern does not apply. Anything in the note appears under the rotation in the sheet.</p><div class="scroll" style="max-height:52vh"><table class="tbl"><tbody>'+rows+'</tbody></table></div><div class="foot"><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="pe-save">Save months</button></div>';
+}
+async function savePartPE(){
+  const id=PE.id,plan=PE.plan.filter(e=>e.dept).map(e=>{const x={ym:e.ym,dept:e.dept};if(e.note&&e.note.trim())x.note=e.note.trim();if(e.sub)x.sub=e.sub;if(e.repeat)x.repeat=true;return x;});
+  await mut('interns',id,b=>{b.plan=plan;b.startYm=plan.length?plan[0].ym:'';return b;});
+  logEv('Updated the months for '+S.interns[id].name);closeModal();toast('Saved.');
+}
+
+/* ---------- importing the batch sheet (group blocks, month columns) ---------- */
+function analyzeBatch(rows){
+  const hi=rows.findIndex(r=>/^group$/i.test(String(r[0]==null?'':r[0]).trim()));
+  if(hi<0)return null;
+  const H=rows[hi].map(c=>String(c==null?'':c).trim()),low=H.map(h=>h.toLowerCase());
+  const col={name:low.findIndex(h=>/^name/.test(h)),idno:low.findIndex(h=>/^id\s*no|^id$/.test(h)),mob:low.findIndex(h=>/mobile|phone|contact/.test(h)),email:low.findIndex(h=>/e-?mail/.test(h))};
+  if(col.name<0||col.mob<0)return null;
+  const mcols=[];H.forEach((h,i)=>{const m=MONS3.indexOf(h.slice(0,3).toLowerCase());if(m>=0&&/^[A-Za-z]/.test(h)&&i>col.name)mcols.push({i,m:m+1,y:(h.match(/(20\d\d)/)||[])[1]||''});});
+  if(mcols.length<3)return null;
+  const title=rows.slice(0,hi).map(r=>r.join(' ')).join(' '),ty=(title.match(/(20\d\d)/)||[])[1];
+  const y0=mcols[0].y||ty||intakeMonth().slice(0,4),ym0=y0+'-'+pad(mcols[0].m);
+  mcols.forEach((c,k)=>{c.ym=ymAdd(ym0,k);});
+  const issues=[],own=[],part=[];let group='';
+  for(let r=hi+1;r<rows.length;r++){
+    const row=rows[r],a=String(row[0]==null?'':row[0]).trim();
+    if(/^group$/i.test(a)){group='';continue;}
+    const rawName=String(row[col.name]==null?'':row[col.name]);if(!rawName.trim()||/^name$/i.test(rawName.trim()))continue;
+    if(a)group=a.toLowerCase().replace(/^group\s*/,'');
+    const cells=mcols.map(c=>parseMonthCell(row[c.i])),entries=[];
+    cells.forEach((p,k)=>{if(!p)return;const e={ym:mcols[k].ym,dept:p.dept};if(p.sub)e.sub=p.sub;if(p.note)e.note=p.note;if(p.repeat)e.repeat=true;entries.push({e,orth:!!p.orthFirst});});
+    const first12=cells.slice(0,12).filter(Boolean).length;
+    (first12>=12?own:part).push({line:r+1,idno:col.idno>=0?String(row[col.idno]==null?'':row[col.idno]).trim():'',name:cleanName(rawName),tag:affilFromName(rawName),mob:cleanMobile(row[col.mob]),email:col.email>=0?String(row[col.email]||'').trim().toLowerCase():'',group,entries});
+  }
+  const res={kind:'batch',ym0,own:[],ext:[],issues,rowsRead:own.length+part.length,partRows:part.length};
+  const seen=new Set(Object.values(S.interns).map(i=>phoneKey(i.phone)).filter(Boolean));
+  own.forEach(x=>{
+    if(!GROUPS.includes(x.group)){issues.push({lvl:'skip',where:'Row '+x.line,name:x.name,msg:'The group “'+x.group+'” is not 1A, 1B, 1C, 2A, 2B or 2C.'});return;}
+    const k=phoneKey(x.mob.phone);
+    if(!x.name||!k){issues.push({lvl:'skip',where:'Row '+x.line,name:x.name,msg:'Name or mobile number is missing.'});return;}
+    if(seen.has(k)){issues.push({lvl:'skip',where:'Row '+x.line,name:x.name,msg:'This mobile number is already in the system or used earlier in the sheet.'});return;}
+    const plan=x.entries.map(y=>y.e),v=validatePlan(plan);
+    if(!v.ok){issues.push({lvl:'skip',where:'Row '+x.line,name:x.name,msg:'The 12 months break the pattern: '+v.errors[0]});return;}
+    seen.add(k);
+    if(x.mob.flag)issues.push({lvl:'warn',where:'Row '+x.line,name:x.name,msg:x.mob.flag+' ('+x.mob.phone+')'});
+    const sss=x.entries.find(y=>y.e.dept==='SSS');
+    res.own.push({name:x.name,phone:x.mob.phone,email:x.email,affil:'SMC',group:x.group,ver:planVersion({group:x.group,plan}),startYm:plan[0].ym,plan,orth:!!(sss&&sss.orth),idno:x.idno,line:x.line});
+  });
+  const people=[];
+  part.forEach(x=>{
+    const k=phoneKey(x.mob.phone);
+    let p=people.find(q=>(x.email&&q.email===x.email)||(k&&q.key===k));
+    if(!p){p={name:x.name,email:x.email,key:k,phone:x.mob.phone,flag:x.mob.flag,tag:x.tag,idno:'',lines:[],map:{}};people.push(p);}
+    if(!p.idno&&x.idno)p.idno=x.idno;
+    if(!p.tag&&x.tag)p.tag=x.tag;p.lines.push(x.line);
+    x.entries.forEach(y=>{if(y.e.dept==='SSS'&&y.orth)p.orth=true;const ex=p.map[y.e.ym];if(ex&&ex.dept!==y.e.dept)issues.push({lvl:'warn',where:'Row '+x.line,name:x.name,msg:'Two different rotations in '+fmtYm(y.e.ym)+'; the first was kept.'});else if(!ex)p.map[y.e.ym]=y.e;});
+  });
+  people.forEach(p=>{
+    if(!p.name||!p.key){issues.push({lvl:'skip',where:'Row '+p.lines[0],name:p.name,msg:'Name or mobile number is missing.'});return;}
+    if(seen.has(p.key)){issues.push({lvl:'skip',where:'Row '+p.lines[0],name:p.name,msg:'This mobile number is already in the system or used earlier in the sheet.'});return;}
+    seen.add(p.key);
+    const plan=Object.values(p.map).sort((a,b)=>ymIdx(a.ym)-ymIdx(b.ym)),tag=p.tag||(/^\+966/.test(p.phone)?'KSA':'EXT');
+    if(p.flag)issues.push({lvl:'warn',where:'Row '+p.lines[0],name:p.name,msg:p.flag+' ('+p.phone+')'});
+    res.ext.push({name:p.name,phone:p.phone,email:p.email,affil:tag,startYm:plan.length?plan[0].ym:'',plan,rows:p.lines.length,orth:!!p.orth,idno:p.idno});
+  });
+  res.notes=[...res.own.concat(res.ext)].reduce((n,x)=>n+x.plan.filter(e=>e.note).length,0);
+  return res;
+}
+function paintUpload(){
+  const B=UP.batch;
+  if(B){
+    const ok=B.own.length+B.ext.length,byTag={};B.ext.forEach(x=>{byTag[x.affil]=(byTag[x.affil]||0)+1;});
+    const sample=Object.values(S.interns).some(i=>i.sample);
+    $('modal').querySelector('.modal').innerHTML='<h2>Import the batch sheet</h2><p class="hint" style="margin-top:0">Your sheet’s layout was recognised: group blocks, repeated headings and month columns from <b>'+fmtYm(B.ym0)+'</b>. Nothing is saved until you press Import. The ID No. column goes into the Google Sheet only: the app never reads, shows or keeps it.</p>'+
+      (sample?'<div class="note warn">Sample data is still loaded. Clear it first in Setup, or the sample interns will sit beside the real ones.</div>':'')+
+      '<div class="note ok"><b>'+B.own.length+'</b> SMC interns with their 12 months, and <b>'+B.ext.length+'</b> part-time interns ('+Object.keys(byTag).map(t=>byTag[t]+' '+t).join(', ')+') made from <b>'+B.partRows+'</b> rows. <b>'+B.notes+'</b> month notes are kept.</div>'+
+      (B.issues.length?'<div class="scroll" style="max-height:30vh"><table class="tbl"><thead><tr><th></th><th>Where</th><th>Name</th><th>What</th></tr></thead><tbody>'+B.issues.slice(0,200).map(i=>'<tr><td><span class="tag '+(i.lvl==='skip'?'bad':'warn')+'">'+(i.lvl==='skip'?'Skipped':'Check')+'</span></td><td>'+esc(i.where)+'</td><td>'+esc(i.name)+'</td><td>'+esc(i.msg)+'</td></tr>').join('')+'</tbody></table></div>':'<p class="muted small">No problems found.</p>')+
+      '<label for="up-file">Choose another file</label><input type="file" id="up-file" accept=".csv,.tsv,.txt,.xlsx,.xls">'+
+      '<div class="foot"><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="up-go"'+(ok?'':' disabled')+'>Import '+ok+' interns</button></div>';
+    return;
+  }
+  const ok=UP.items.filter(x=>!x.errs.length).length,bad=UP.items.length-ok;
+  $('modal').querySelector('.modal').innerHTML='<h2>Upload a sheet of interns</h2><p class="hint" style="margin-top:0">Upload your batch sheet (group blocks and month columns), or a simple list with the headings Name, Mobile, Email and Group (1A to 2C). A simple list adds SMC interns, with each one’s 12 months built from the group starting in '+fmtYm(intakeMonth())+'.</p>'+
+  '<label for="up-file">File</label><input type="file" id="up-file" accept=".csv,.tsv,.txt,.xlsx,.xls">'+
+  '<label for="up-text">Or paste rows</label><textarea id="up-text" placeholder="Name,Mobile,Email,Group">'+esc(UP.text||'')+'</textarea><div class="row" style="margin-top:6px"><button class="btn sm" data-act="up-parse">Check pasted rows</button></div>'+
+  (UP.errors.length?UP.errors.map(e=>'<div class="note bad">'+esc(e)+'</div>').join(''):'')+
+  (UP.items.length?'<div class="note '+(bad?'warn':'ok')+'"><b>'+ok+'</b> ready to import'+(bad?', <b>'+bad+'</b> with problems (these are skipped)':'')+'.</div><div class="scroll" style="max-height:30vh"><table class="tbl"><thead><tr><th>Row</th><th>Name</th><th>Mobile</th><th>Group</th><th>Check</th></tr></thead><tbody>'+UP.items.slice(0,200).map(x=>'<tr><td>'+x.line+'</td><td>'+esc(x.name)+'</td><td>'+esc(x.phone)+'</td><td>'+esc(grpLabel(x.group))+'</td><td>'+(x.errs.length?'<span class="tag bad">'+esc(x.errs.join('; '))+'</span>':'<span class="tag ok">Ready</span>')+'</td></tr>').join('')+'</tbody></table></div>':'')+
+  '<div class="foot"><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="up-go"'+(ok?'':' disabled')+'>Import '+(ok||'')+' interns</button></div>';
+}
+async function handleUploadFile(file){
+  UP.errors=[];UP.batch=null;
+  try{
+    const sheets=await readSheetFile(file);let b=null;
+    for(const sh of sheets){b=analyzeBatch(sh.rows);if(b)break;}
+    if(b){UP.batch=b;UP.items=[];}
+    else{const a=analyzeSheet((sheets[0]||{rows:[]}).rows);UP.items=a.items;UP.errors=a.errors;}
+  }catch(e){UP.items=[];UP.errors=[e&&e.message?e.message:'That file could not be read. Try saving it as a CSV file.'];}
+  paintUpload();
+}
+async function runUpload(){
+  if(UP.batch)return runBatchUpload();
+  const good=UP.items.filter(x=>!x.errs.length);closeModal();
+  const tmp={};Object.values(S.interns).forEach(i=>{tmp[i.id]=i;});const start=intakeMonth(),items=[];
+  good.forEach(x=>{const id=uid('i'),ver=balanceVer(x.group,tmp),it={id,name:x.name,phone:x.phone,email:x.email,affil:'SMC',group:x.group,ver,startYm:start,accessCode:genCode(),plan:makeGroupPlan(x.group,start,ver),createdAt:Date.now()};tmp[id]=it;items.push([id,strip(it)]);});
+  await putMany('interns',items);logEv('Imported '+plural(good.length,'intern')+' from a sheet');toast(plural(good.length,'intern')+' imported.');
+}
+async function runBatchUpload(){
+  const B=UP.batch;closeModal();
+  if(B.ym0!==CFG.intakeYm)await saveConfig(Object.assign({},S.config||{},{intakeYm:B.ym0}));
+  const items=[],surg=[];
+  B.own.forEach(x=>{const id=uid('i');items.push([id,{name:x.name,phone:x.phone,email:x.email,affil:'SMC',group:x.group,ver:x.ver,startYm:x.startYm,plan:x.plan,accessCode:genCode(),createdAt:Date.now(),_idno:x.idno||''}]);if(x.orth)surg.push([id,{spec:null,orthFirst:true}]);});
+  B.ext.forEach(x=>{const id=uid('i');items.push([id,{name:x.name,phone:x.phone,email:x.email,affil:x.affil,startYm:x.startYm,plan:x.plan,accessCode:genCode(),createdAt:Date.now(),_idno:x.idno||''}]);if(x.orth)surg.push([id,{spec:null,orthFirst:true}]);});
+  await putMany('interns',items);Object.values(S.interns).forEach(i=>{delete i._idno;});if(surg.length)await putMany('surgery',surg);
+  logEv('Imported the batch sheet: '+B.own.length+' SMC and '+B.ext.length+' part-time interns');
+  toast('Imported '+B.own.length+' SMC interns and '+B.ext.length+' part-time interns.');
 }
 /* ============ Shell, render, events ============ */
 function routeContent(){
@@ -2433,7 +2666,9 @@ async function init(){
   if(API.token){try{await loadAll();startPolling();}catch(e){if(e.code!=='unauthorized'){LOADERR=e.message;scheduleRender();}}}
 }
 /* ---------- final wiring: extra actions and handlers, then start ---------- */
+const _peSave=ACT['pe-save'];
 Object.assign(ACT,{
+  'pe-save':el=>(PE&&PE.part)?savePartPE():_peSave(el),
   'pm-toggle':()=>{UI.pmenu=!UI.pmenu;},
   'more-open':()=>{UI.more=true;},
   'more-close':(el,ev)=>{if(ev.target===el)UI.more=false;},
@@ -2461,6 +2696,7 @@ Object.assign(ACT,{
     return saveCsv('oncall-'+unit+'-'+ym+'.csv',rows);
   }
 });
+document.addEventListener('input',ev=>{const t=ev.target;if(t&&t.dataset&&t.dataset.peNote!==undefined&&PE&&PE.part)PE.plan[+t.dataset.peNote].note=t.value;});
 document.addEventListener('change',ev=>{
   const t=ev.target;if(!t||!t.dataset)return;
   if(t.dataset.emfill){const id=t.dataset.emfill,k=t.value;t.value='';if(k&&canEm())emMutate(UI.ocYm,(g,n)=>{g[id]=k.repeat(n);});return;}
