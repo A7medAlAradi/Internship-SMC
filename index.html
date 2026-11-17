@@ -278,6 +278,8 @@ function tokenShort(t){const g=COVER_GROUPS.find(x=>x.id===t);return g?(g.short|
 function coverChips(units){return contractUnits(units).map(t=>chip(t,tokenShort(t))).join(' ');}
 const ITEMS=[['period','Rotation period finished'],['oncalls','On-calls done'],['logbook','Logbook done'],['eval','Evaluation submitted'],['procbook','Procedure book done']];
 const GROUPS=['1a','1b','1c','2a','2b','2c'];
+const PGROUPS=GROUPS.concat(['inh','amh','ksa']);
+const OWNBLOCK=it=>{const a=affilOf(it);return(a==='INH'||a==='AMH'||a==='KSA')?a.toLowerCase():'';};
 const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const DEFAULT_CFG={
@@ -632,10 +634,11 @@ function cleanMobile(raw){
   return{phone:pick,flag:pick?'Not an 8-digit number, please check':'No number'};
 }
 
-const APP_VERSION='4.2';
+const APP_VERSION='4.4';
 
 /* the groups a part-time intern rotates with (one row per group in the sheet) */
 function groupsOf(it){
+  if(OWNBLOCK(it))return[OWNBLOCK(it)];
   if(patternApplies(it))return it.group?[it.group]:[];
   const s=new Set();(it.plan||[]).forEach(e=>{if(e.g)s.add(e.g);});
   if(!s.size&&it.group)s.add(it.group);
@@ -1033,7 +1036,7 @@ function viewRotations(){
     '<button class="btn" data-act="gridmove" data-n="-6">Earlier</button><button class="btn" data-act="gridmove" data-n="0">Today</button><button class="btn" data-act="gridmove" data-n="6">Later</button>'+
     (UI.tab==='grid'?'<input type="search" id="gq" data-bind="q" placeholder="Search name or number" value="'+esc(UI.q)+'" aria-label="Search interns">'+
     '<select data-bind="fBlock" aria-label="Rotation filter"><option value="">Any rotation</option>'+BLOCKS.map(b=>'<option value="'+b+'"'+(UI.fBlock===b?' selected':'')+'>'+BLOCK_NAME[b]+'</option>').join('')+'</select>'+
-    '<select data-bind="fGroup" aria-label="Group filter"><option value="">Any group</option>'+GROUPS.map(g=>'<option value="'+g+'"'+(UI.fGroup===g?' selected':'')+'>Group '+grpLabel(g)+'</option>').join('')+'</select>'+
+    '<select data-bind="fGroup" aria-label="Group filter"><option value="">Any group</option>'+PGROUPS.map(g=>'<option value="'+g+'"'+(UI.fGroup===g?' selected':'')+'>Group '+grpLabel(g)+'</option>').join('')+'</select>'+
     '<select data-bind="fCohort" aria-label="Start month filter"><option value="">Any start month</option>'+cohorts.map(c=>'<option value="'+c+'"'+(UI.fCohort===c?' selected':'')+'>Started '+fmtYm(c)+'</option>').join('')+'</select>':'')+'</div>';
   const legend='<div class="row small" style="margin:0 0 12px">'+BLOCKS.map(b=>chip(b,BLOCK_SHORT[b])+' '+esc(BLOCK_NAME[b])).join(' &nbsp; ')+'</div>';
   const actions=UI.tab==='grid'?'<button class="btn" data-act="export-rot">Download CSV</button>':'';
@@ -1079,11 +1082,11 @@ function paintPE(){
 function tplLabel(i){return (i+1)+'. '+BLOCK_NAME[BLOCKS[i]]+' first';}
 function viewInterns(){
   const q=UI.intQ.trim().toLowerCase();
-  const list=Object.values(S.interns).filter(it=>(!q||it.name.toLowerCase().includes(q)||String(it.phone||'').includes(q)||String(it.email||'').toLowerCase().includes(q))&&(!UI.fGroup||it.group===UI.fGroup)).sort((a,b)=>a.name.localeCompare(b.name));
+  const list=Object.values(S.interns).filter(it=>(!q||it.name.toLowerCase().includes(q)||String(it.phone||'').includes(q)||String(it.email||'').toLowerCase().includes(q))&&(!UI.fGroup||inGroup(it,UI.fGroup))).sort((a,b)=>a.name.localeCompare(b.name));
   const nsel=Object.keys(UI.sel).filter(k=>UI.sel[k]&&S.interns[k]).length;
   const rows=list.slice(0,300).map(it=>{const st=internStatus(it);return'<tr><td><input type="checkbox" data-act="sel" data-id="'+it.id+'"'+(UI.sel[it.id]?' checked':'')+' aria-label="Select '+esc(it.name)+'"></td><td><a href="#intern-'+it.id+'">'+esc(it.name)+'</a></td><td>'+esc(it.group||'')+'</td><td>'+fmtYm(planStart(it))+'</td><td>'+(st.block?chip(st.block,st.text):'<span class="muted">'+esc(st.text)+'</span>')+'</td><td><a href="'+telHref(it.phone)+'">'+esc(it.phone)+'</a></td><td>'+esc(it.email||'')+'</td><td>'+esc(it.accessCode||'')+'</td></tr>';}).join('');
   return head('Interns',plural(Object.keys(S.interns).length,'intern')+' in the system.','<button class="btn pri" data-act="add-intern">Add intern</button><button class="btn" data-act="upload-open">Upload a sheet</button>')+
-  '<div class="bar"><input type="search" id="iq" data-bind="intQ" placeholder="Search name, number or email" value="'+esc(UI.intQ)+'" aria-label="Search interns"><select data-bind="fGroup" aria-label="Group filter"><option value="">All groups</option>'+GROUPS.map(g=>'<option value="'+g+'"'+(UI.fGroup===g?' selected':'')+'>Group '+grpLabel(g)+'</option>').join('')+'</select><button class="btn" data-act="sel-all">Select all shown</button><button class="btn" data-act="sel-none">Clear selection</button><button class="btn" data-act="bulk-tpl"'+(nsel?'':' disabled')+'>Apply template to '+nsel+' selected</button><button class="btn" data-act="bulk-group"'+(nsel?'':' disabled')+'>Set group for '+nsel+' selected</button><span class="sp"></span><button class="btn" data-act="export-codes">Download access codes</button><button class="btn" data-act="export-int">Download CSV</button></div>'+
+  '<div class="bar"><input type="search" id="iq" data-bind="intQ" placeholder="Search name, number or email" value="'+esc(UI.intQ)+'" aria-label="Search interns"><select data-bind="fGroup" aria-label="Group filter"><option value="">All groups</option>'+PGROUPS.map(g=>'<option value="'+g+'"'+(UI.fGroup===g?' selected':'')+'>Group '+grpLabel(g)+'</option>').join('')+'</select><button class="btn" data-act="sel-all">Select all shown</button><button class="btn" data-act="sel-none">Clear selection</button><button class="btn" data-act="bulk-tpl"'+(nsel?'':' disabled')+'>Apply template to '+nsel+' selected</button><button class="btn" data-act="bulk-group"'+(nsel?'':' disabled')+'>Set group for '+nsel+' selected</button><span class="sp"></span><button class="btn" data-act="export-codes">Download access codes</button><button class="btn" data-act="export-int">Download CSV</button></div>'+
   (list.length?'<div class="scroll" style="max-height:72vh"><table class="tbl"><thead><tr><th></th><th>Name</th><th>Group</th><th>Started</th><th>This month</th><th>Contact number</th><th>Email</th><th>Access code</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+(list.length>300?'<p class="hint">Showing the first 300. Use search to narrow the list.</p>':''):emptyBox('No interns yet. Add one, or upload a sheet.'));
 }
 function internForm(it,withGroup){
@@ -2225,7 +2228,7 @@ function viewInterns(){
   const rows=list.slice(0,300).map(it=>{const st=internStatus(it);return'<tr><td><input type="checkbox" data-act="sel" data-id="'+it.id+'"'+(UI.sel[it.id]?' checked':'')+' aria-label="Select '+esc(it.name)+'"></td><td><a href="#intern-'+it.id+'">'+esc(it.name)+'</a></td><td>'+esc(groupsLabel(it))+'</td><td>'+affilTag(affilOf(it))+'</td><td>'+(st.block?chip(st.block,st.text):'<span class="muted">'+esc(st.text)+'</span>')+'</td><td><a href="'+telHref(it.phone)+'">'+esc(it.phone)+'</a></td><td>'+esc(it.email||'')+'</td><td>'+esc(it.accessCode||'')+'</td></tr>';}).join('');
   const bulk=nsel?'<div class="note info row"><b>'+nsel+' selected</b><span class="sp"></span><button class="btn sm" data-act="bulk-tpl">Apply group template</button><button class="btn sm" data-act="bulk-group">Set group</button><button class="btn sm" data-act="sel-none">Clear</button></div>':'';
   return head('Interns',plural(Object.keys(S.interns).length,'intern')+' in the system.','<button class="btn pri" data-act="add-intern">Add intern</button><button class="btn" data-act="upload-open">Upload a sheet</button>')+
-  '<div class="bar"><input type="search" id="iq" data-bind="intQ" placeholder="Search name, number or email" value="'+esc(UI.intQ)+'" aria-label="Search interns"><select data-bind="fGroup" aria-label="Group filter"><option value="">All groups</option>'+GROUPS.map(g=>'<option value="'+g+'"'+(UI.fGroup===g?' selected':'')+'>Group '+grpLabel(g)+'</option>').join('')+'</select><select data-bind="fAffil" aria-label="Tag filter"><option value="">All tags</option>'+AFFIL.map(a=>'<option value="'+a+'"'+(UI.fAffil===a?' selected':'')+'>'+a+'</option>').join('')+'</select><button class="btn" data-act="sel-all">Select all shown</button><span class="sp"></span><button class="btn" data-act="export-codes">Download access codes</button><button class="btn" data-act="export-int">Download CSV</button></div>'+bulk+
+  '<div class="bar"><input type="search" id="iq" data-bind="intQ" placeholder="Search name, number or email" value="'+esc(UI.intQ)+'" aria-label="Search interns"><select data-bind="fGroup" aria-label="Group filter"><option value="">All groups</option>'+PGROUPS.map(g=>'<option value="'+g+'"'+(UI.fGroup===g?' selected':'')+'>Group '+grpLabel(g)+'</option>').join('')+'</select><select data-bind="fAffil" aria-label="Tag filter"><option value="">All tags</option>'+AFFIL.map(a=>'<option value="'+a+'"'+(UI.fAffil===a?' selected':'')+'>'+a+'</option>').join('')+'</select><button class="btn" data-act="sel-all">Select all shown</button><span class="sp"></span><button class="btn" data-act="export-codes">Download access codes</button><button class="btn" data-act="export-int">Download CSV</button></div>'+bulk+
   (list.length?'<div class="scroll" style="max-height:72vh"><table class="tbl stk"><thead><tr><th></th><th>Name</th><th>Group</th><th>Tag</th><th>This month</th><th>Mobile</th><th>Email</th><th>Access code</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+(list.length>300?'<p class="hint">Showing the first 300. Use search to narrow the list.</p>':''):emptyBox('No interns yet. Add one, or upload a sheet.'));
 }
 function openBulkTpl(){
@@ -2545,7 +2548,7 @@ function render(){
 }
 function shownInterns(){
   const q=UI.intQ.trim().toLowerCase();
-  return Object.values(S.interns).filter(it=>(!q||it.name.toLowerCase().includes(q)||String(it.phone||'').includes(q)||String(it.email||'').toLowerCase().includes(q))&&(!UI.fGroup||it.group===UI.fGroup));
+  return Object.values(S.interns).filter(it=>(!q||it.name.toLowerCase().includes(q)||String(it.phone||'').includes(q)||String(it.email||'').toLowerCase().includes(q))&&(!UI.fGroup||inGroup(it,UI.fGroup)));
 }
 function setPreview(v){
   if(!v)PREVIEW=null;else{const id=v.slice(2);PREVIEW=v[0]==='i'?{role:'intern',internId:id}:{role:'coordinator',personId:id};}
