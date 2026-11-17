@@ -243,6 +243,40 @@ button.shift{cursor:pointer}
 .afl.a-KSA{background:hsl(125 var(--cbs) var(--cbl));color:hsl(125 var(--cfs) var(--cfl))}
 .afl.a-EXT{background:hsl(270 var(--cbs) var(--cbl));color:hsl(270 var(--cfs) var(--cfl))}
 .afl.a-OLD{background:var(--line);color:var(--ink2)}
+
+/* v4.5 overview + grid */
+.cols>*,.panel{min-width:0}
+.panel .tbl{width:100%}
+.panel .tbl td:first-child .chip{white-space:normal;text-align:left;max-width:100%}
+.panel .tbl .mcol{width:28%;min-width:50px}
+.rota td.stick{width:170px;min-width:150px;max-width:170px;overflow:hidden}
+.rota td.stick a{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rota td.stick small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rota .esub{display:block;font-size:.62rem;color:var(--ink3);max-width:58px;margin:1px auto 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rota.cap td{position:relative}
+.rota.cap td.stick,.rota.cap th.stick{width:auto;min-width:200px;max-width:280px;overflow:visible}
+.rota.cap .tot{position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);font-size:.68rem;line-height:1;color:var(--ink3);background:var(--surface);padding:1px 5px;border-radius:8px;border:1px solid var(--line2);z-index:1;pointer-events:none}
+/*V45-CSS-START*/
+
+/* v4.5 additions */
+.sw.big{font-size:1.2rem;padding:4px 10px;min-height:34px}
+.tbl.sg td.swc{text-align:center;width:60px}
+.firmbox{display:grid;gap:6px;margin-bottom:6px}
+.firmstrip{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;padding:8px 12px;background:var(--surface2);border:1px solid var(--line2);border-radius:8px;font-size:.9rem}
+.firmstrip.warn{border-color:var(--warn)}
+.fsadd{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.fsadd input{flex:1 1 120px;min-width:0}
+.fsadd select{flex:0 0 auto}
+.notices li.unseen{border-left:3px solid var(--accent);padding-left:8px}
+.notices .nk{display:inline-block;width:1.2em;color:var(--accent)}
+.pm-det{margin:10px 0;padding-top:10px;border-top:1px solid var(--line2)}
+.focus-off{opacity:.28}
+@media(max-width:700px){.focus-hide{display:none}}
+.cc{display:contents}
+.rota.foc .cc:not(.f1) .chip,.rota.foc .cc:not(.f1) .esub{opacity:.2;filter:grayscale(1)}
+@media(max-width:700px){.rota.foc .cc:not(.f1) .chip{display:none}}
+
+/*V45-CSS-END*/
 </style>
 </head>
 <body>
@@ -324,7 +358,7 @@ function chip(u,label,extra){return '<span class="chip '+(extra||'')+'" style="-
 function downloadCsv(rows){return rows.map(r=>r.map(c=>{c=String(c==null?'':c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(',')).join('\r\n');}
 
 /* ============ State (shared) ============ */
-const S={config:null,interns:{},people:{},requests:{},checklists:{},surgery:{},oncall:{},eshift:{},holidays:[],log:[]};
+const S={config:null,interns:{},people:{},requests:{},checklists:{},surgery:{},oncall:{},eshift:{},holidays:[],log:[],firmstaff:{},notices:{},absences:{},profreq:{},board:{GS:{},SSS:{}},peerLeave:[],leaveFlags:{}};
 let CFG=mergeCfg(null);
 function mergeCfg(c){
   c=c||{};const d=DEFAULT_CFG;
@@ -392,13 +426,15 @@ function coordsFor(unit){
 
 /* ============ Leave logic ============ */
 function leaveReqs(internId){return Object.values(S.requests).filter(r=>r.type==='leave'&&r.internId===internId);}
+/* days Training has confirmed an intern absent count against the leave limits (sick and emergency leave do not) */
+function absentDays(internId,span){return Object.values(S.absences||{}).filter(a=>a.internId===internId&&a.status==='absent'&&(!span||span.includes(ymOf(a.date)))).length;}
 function annualUsed(internId,exceptId){
-  return leaveReqs(internId).filter(r=>r.kind==='annual'&&r.status==='approved'&&r.id!==exceptId).reduce((s,r)=>s+dayCount(r.from,r.to),0);
+  return leaveReqs(internId).filter(r=>r.kind==='annual'&&r.status==='approved'&&r.id!==exceptId).reduce((s,r)=>s+dayCount(r.from,r.to),0)+absentDays(internId);
 }
 function kindUsed(internId,kind){return leaveReqs(internId).filter(r=>r.kind===kind&&r.status==='approved').reduce((s,r)=>s+dayCount(r.from,r.to),0);}
 function rotationUsed(it,ym,exceptId){
   const span=blockSpan(it,ym);
-  return leaveReqs(it.id).filter(r=>r.kind==='annual'&&r.status==='approved'&&r.id!==exceptId&&span.includes(ymOf(r.from))).reduce((s,r)=>s+dayCount(r.from,r.to),0);
+  return leaveReqs(it.id).filter(r=>r.kind==='annual'&&r.status==='approved'&&r.id!==exceptId&&span.includes(ymOf(r.from))).reduce((s,r)=>s+dayCount(r.from,r.to),0)+absentDays(it.id,span);
 }
 function leaveWarnings(r){
   const w=[];if(r.kind!=='annual')return w;
@@ -423,9 +459,13 @@ function dayRec(unit,date){const doc=S.oncall[ocKey(unit,ymOf(date))];const r=do
 function holidayOf(date){return S.holidays.find(h=>h.d===date)||null;}
 function isWkDay(date){return CFG.weekendDays.includes(dow(date))||!!holidayOf(date);}
 function periodKey(it,date){const e=entryAt(it,ymOf(date));if(e&&e.dept==='SSS')return ymOf(date)+(+date.slice(8,10)<=15?'a':'b');return ymOf(date);}
-function shiftsOf(internId){
+/* a day on which the intern was off sick, on emergency leave or confirmed absent doesn't count as an on-call */
+function excusedOn(internId,date){
+  return Object.values(S.requests||{}).some(r=>r.type==='leave'&&r.internId===internId&&r.status==='approved'&&(r.kind==='sick'||r.kind==='emergency')&&r.from<=date&&date<=r.to)||Object.values(S.absences||{}).some(a=>a.internId===internId&&a.date===date&&a.status==='absent');
+}
+function shiftsOf(internId,all){
   const out=[];
-  Object.values(S.oncall).forEach(doc=>{Object.keys(doc.days||{}).forEach(k=>{const v=doc.days[k];if((v.ids||[]).includes(internId))out.push({unit:doc.unit,date:doc.ym+'-'+k.slice(1)});});});
+  Object.values(S.oncall).forEach(doc=>{Object.keys(doc.days||{}).forEach(k=>{const v=doc.days[k];const date=doc.ym+'-'+k.slice(1);if((v.ids||[]).includes(internId)&&(all||!excusedOn(internId,date)))out.push({unit:doc.unit,date});});});
   return out.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
 }
 function periodCounts(internId,date,list){
@@ -442,8 +482,20 @@ function assignCheck(unit,internId,date){
   if(pc.total+1>max)res.block.push('Limit reached: '+pc.total+' of '+max+' on-calls '+(pc.split?'in this half of the month.':'this month.'));
   const wkMax=pc.split?CFG.wkHalfWarn:CFG.wkMonthWarn;
   if(isWkDay(date)&&pc.wk+1>wkMax)res.warn.push('Over the weekend and holiday limit: '+(pc.wk+1)+' of '+wkMax+'.');
-  if(onLeave(internId,date))res.warn.push('Has approved leave on this date.');
+  const lv=leaveReqs(internId).find(r=>r.status==='approved'&&r.from<=date&&date<=r.to);
+  if(lv&&lv.kind==='annual')res.block.push('Has approved annual leave on this date.'),res.annual=true;
+  else if(lv)res.warn.push('Has approved '+(KIND_NAME[lv.kind]||'leave').toLowerCase()+' on this date.');
+  const pend=leaveReqs(internId).find(r=>r.status!=='approved'&&r.status!=='declined'&&r.from<=date&&date<=r.to);
+  if(pend)res.warn.push('Has a leave request for this date that is not decided yet.');
+  const gap=gapClash(internId,date,unit);
+  if(gap)res.warn.push('Only '+(gap.diff-1)+' free day'+(gap.diff-1===1?'':'s')+' from the on-call on '+fmtDate(gap.date)+' ('+(UNIT_NAME[gap.unit]||gap.unit)+'). Two free days are needed in between.');
   return res;
+}
+const MIN_GAP=3;/* the 10th then the 13th: two free days in between */
+function gapClash(internId,date,unit){
+  let best=null;
+  shiftsOf(internId,true).forEach(s=>{if(s.date===date&&s.unit===unit)return;const diff=Math.abs(dayCount(s.date<date?s.date:date,s.date<date?date:s.date)-1);if(diff<MIN_GAP&&(!best||diff<best.diff))best={date:s.date,unit:s.unit,diff};});
+  return best;
 }
 function eligibleFor(unit,date){
   return Object.values(S.interns).filter(it=>rotaOf(placementAt(it,date,S.surgery[it.id]))===unit).sort((a,b)=>a.name.localeCompare(b.name));
@@ -591,10 +643,11 @@ function validateIntern(it){
 }
 /* how a month is written in the sheet (your own words) and read back */
 const WORD={MED:'Med',PED:'Ped',EM:'A/E',MSS:'M.S',GS:'G. Surg',OBG:'Gyne',ELE:'E',SSS:'S.S /Ortho',FROZEN:'FROZEN',OTHER:''};
-function monthCellText(e,orthFirst){
+function monthCellText(e,orthFirst,spec){
   if(!e)return'';
   let w=WORD[e.dept];if(w===undefined)w=e.dept;
-  if(e.dept==='SSS'&&orthFirst)w='Ortho /S.S';
+  if(e.dept==='SSS'){const sp=spec?String(spec).trim():'';w=orthFirst?'Ortho /'+(sp||'S.S'):(sp||'S.S')+' /Ortho';}
+  if(e.dept==='GS'&&(e.fa||e.fb))w+=' '+(e.fa||'-')+' /'+(e.fb||'-');
   if(e.repeat)w+='*';
   let t=w;if(e.sub&&(e.dept==='MSS'||e.dept==='ELE'))t+=' ('+e.sub+')';
   if(e.note)t+=(t?'\n':'')+e.note;
@@ -603,12 +656,17 @@ function monthCellText(e,orthFirst){
 function parseMonthCell(raw){
   const text=String(raw==null?'':raw).replace(/\u00a0/g,' ').trim();if(!text)return null;
   const lines=text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean),first=lines[0],low=first.toLowerCase();
-  let dept='',orthFirst=false,rest=first,repeat=false;
+  let dept='',orthFirst=false,rest=first,repeat=false,spec='',fa='',fb='';
   const m=(re,d)=>{const x=low.match(re);if(x){dept=d;rest=first.slice(x[0].length);return true;}return false;};
+  const mSp=first.match(/^(.+?)\s*\/\s*ortho(?:pedics?)?\s*(\*?)$/i),mOs=first.match(/^ortho(?:pedics?)?\s*\/\s*(.+?)\s*(\*?)$/i);
+  const notSS=x=>!/^(s\.?\s?s|surg\s*smc)$/i.test(String(x).trim());
   if(/^frozen\b/.test(low)){dept='FROZEN';rest='';}
+  else if(mSp&&notSS(mSp[1])&&!/^(med|ped|a\/e|m\.?\s?s|g\.?\s*surg|gyne|obg|e)\b/i.test(mSp[1].trim())){dept='SSS';spec=mSp[1].trim();rest=mSp[2]||'';}
+  else if(mOs&&notSS(mOs[1])){dept='SSS';orthFirst=true;spec=mOs[1].trim();rest=mOs[2]||'';}
   else if(!(m(/^a\/e\b/,'EM')||m(/^m\.?\s?s\b/,'MSS')||m(/^g\.?\s*surg\b/,'GS')||m(/^(gyne|obg)\b/,'OBG')||m(/^ped\b/,'PED')||m(/^med\b/,'MED')||m(/^ortho\s*\/\s*s\.?s\b/,'SSS')||m(/^s\.?s\s*\/\s*ortho\b/,'SSS')||m(/^surg\s*smc\b/,'SSS')||m(/^s\.?s\b/,'SSS')||m(/^elective\b/,'ELE')||m(/^e(?=[\s(]|$)/,'ELE')))dept='OTHER';
   if(dept==='SSS'&&/^ortho/.test(low))orthFirst=true;
-  if(/^\S+\*/.test(first)&&dept&&dept!=='OTHER'){repeat=true;rest=rest.replace(/^\*/,'');}
+  if(dept==='GS'){const mf=rest.match(/^\s*(IV|I{1,3}|-)\s*\/\s*(IV|I{1,3}|-)?\s*$/i)||rest.match(/^\s*(IV|I{1,3})\s*()$/i);if(mf){fa=(mf[1]||'').toUpperCase().replace('-','');fb=(mf[2]||'').toUpperCase().replace('-','');rest='';}}
+  if((/^\S+\*/.test(first)||/\*\s*$/.test(first))&&dept&&dept!=='OTHER'){repeat=true;rest=rest.replace(/^\s*\*/,'');}
   if(dept==='OTHER'){return{dept,note:lines.join(' / ')};}
   let sub='',note='';
   const b=rest.match(/\(([^)]*)\)/);
@@ -620,7 +678,7 @@ function parseMonthCell(raw){
   if(dept==='SSS'&&sub)extra.unshift(sub),sub='';
   note=extra.join(' / ');
   const out={dept};if(sub&&(dept==='MSS'||dept==='ELE'))out.sub=sub;else if(sub)note=(note?sub+' / '+note:sub);
-  if(note)out.note=note;if(orthFirst)out.orthFirst=true;if(repeat)out.repeat=true;
+  if(note)out.note=note;if(orthFirst)out.orthFirst=true;if(repeat)out.repeat=true;if(spec)out.spec=spec;if(fa)out.fa=fa;if(fb)out.fb=fb;
   return out;
 }
 function cleanName(s){return String(s==null?'':s).replace(/\(([^)]*)\)/g,' ').replace(/\s+/g,' ').trim();}
@@ -634,7 +692,7 @@ function cleanMobile(raw){
   return{phone:pick,flag:pick?'Not an 8-digit number, please check':'No number'};
 }
 
-const APP_VERSION='4.4';
+const APP_VERSION='4.5';
 
 /* the groups a part-time intern rotates with (one row per group in the sheet) */
 function groupsOf(it){
@@ -666,7 +724,7 @@ async function loadAll(){
   const j=await call('load');
   const d=j.data;
   S.interns=d.interns||{};S.people=d.people||{};S.requests=d.requests||{};S.checklists=d.checklists||{};S.surgery=d.surgery||{};S.oncall=d.oncall||{};
-  S.eshift=d.eshift||{};S.sheetIssues=d.sheetIssues||[];S.config=d.config||null;CFG=mergeCfg(S.config);S.holidays=d.holidays||[];S.log=d.log||[];
+  S.eshift=d.eshift||{};S.firmstaff=d.firmstaff||{};S.notices=d.notices||{};S.absences=d.absences||{};S.profreq=d.profreq||{};S.board=d.board||{GS:{},SSS:{}};S.peerLeave=d.peerLeave||[];S.leaveFlags=d.leaveFlags||{};S.sheetIssues=d.sheetIssues||[];S.config=d.config||null;CFG=mergeCfg(S.config);S.holidays=d.holidays||[];S.log=d.log||[];
   ME=Object.assign({},j.me);VER=j.v;SERVER_VER=j.ver||'';LOADED=true;LOADERR='';
   if(PREVIEW){const ok=PREVIEW.role==='intern'?S.interns[PREVIEW.internId]:S.people[PREVIEW.personId];if(!ok)PREVIEW=null;}
   scheduleRender();
@@ -792,7 +850,7 @@ function E(){return (PREVIEW&&ME.role==='training')?PREVIEW:ME;}
 const isTr=()=>E().role==='training';
 function myUnits(){const e=E();return e.role==='coordinator'?((S.people[e.personId]||{}).units||[]):[];}
 const canRota=u=>isTr()||(ROTA_MEMBERS[u]||[u]).some(x=>myUnits().includes(x));
-const canSurg=()=>isTr()||myUnits().some(u=>['GS','SSS','NEURO','ORT'].includes(u));
+const canSurg=()=>isTr()||myUnits().some(u=>['GS','SSS'].includes(u));
 const canTick=b=>isTr()||(BLOCK_UNITS[b]||[]).some(u=>myUnits().includes(u));
 function actor(){const e=E();return{p:e.internId||e.personId||ME.staffId||null,u:null};}
 function stepRole(){const e=E();if(e.role==='coordinator'){const p=S.people[e.personId];return p&&p.role==='deputy'?'deputy':'coordinator';}return e.role==='intern'?'intern':'training';}
@@ -933,10 +991,42 @@ function head(title,sub,actions){return'<header class="phead"><div><h1>'+esc(tit
 function emptyBox(t){return'<div class="empty">'+t+'</div>';}
 function internLink(id){const it=S.interns[id];if(!it)return 'Unknown intern';return E().role==='intern'?esc(it.name):'<a href="#intern-'+id+'">'+esc(it.name)+'</a>';}
 function personLink(id){const p=S.people[id];if(!p)return '';return E().role==='intern'?esc(p.name):'<a href="#person-'+id+'">'+esc(p.name)+'</a>';}
+const NAME_PARTICLES=['al','el','bin','bint','ibn','abu','abd','abdul','abdel'];
+function nameParts(n){return String(n||'').trim().split(/\s+/).filter(Boolean);}
+function shortGridName(n,withMiddle){
+  const p=nameParts(n);if(p.length<=2)return p.join(' ');
+  let li=p.length-1;while(li>1&&NAME_PARTICLES.includes(p[li-1].toLowerCase()))li--;
+  const first=p[0],last=p.slice(li).join(' ');
+  if(!withMiddle)return first+' '+last;
+  const mid=p.slice(1,li).map(x=>x[0].toUpperCase()+'.').join(' ');
+  return mid?first+' '+mid+' '+last:first+' '+last;
+}
+function shortNameMap(list){
+  const m={},by={};
+  list.forEach(it=>{const s=shortGridName(it.name,false);(by[s.toLowerCase()]=by[s.toLowerCase()]||[]).push(it);});
+  list.forEach(it=>{const s=shortGridName(it.name,false);m[it.id]=by[s.toLowerCase()].length>1?shortGridName(it.name,true):s;});
+  return m;
+}
+function groupLine(it){
+  const g=groupsOf(it),a=affilOf(it);
+  const gl=g.length>3?g.slice(0,3).map(grpLabel).join(', ')+' +'+(g.length-3):g.map(grpLabel).join(', ');
+  return (a!=='SMC'?affilTag(a)+' ':'')+(gl?(a==='SMC'?'Group ':'')+gl:(it.plan.length?'':'no months yet'));
+}
+function electiveUnit(sub){
+  const s=String(sub||'').toLowerCase();if(!s)return'';
+  if(/pediatr|paed/.test(s))return'PED';
+  if(/obst|gyn|obg/.test(s))return'OBG';
+  if(/emerg|a&e|a\/e/.test(s))return'EM';
+  if(/surg|ortho|urolog|vascular/.test(s))return/general/.test(s)||!/ortho|neuro|urolog|vascular|plastic|pediatric/.test(s)?'GS':'SSS';
+  if(/medic|cardio|gastro|nephro|neurolog|pulmo|endocrin|haemat|hemat|oncol|rheum|infect/.test(s))return'MED';
+  return'';
+}
+function electivesIn(unit,ym){return Object.values(S.interns).filter(it=>{const e=entryAt(it,ym);return e&&e.dept==='ELE'&&electiveUnit(e.sub)===unit;});}
 function cellChip(e,it){
   if(!e)return'';
   if(e.dept==='FROZEN')return chip('FROZEN','Frozen','frozen');
   let label=BLOCK_SHORT[e.dept];
+  if(e.dept==='ELE'&&e.sub)return chip(e.dept,label,e.repeat?'rep':'')+'<small class="esub">'+esc(e.sub)+'</small>';
   return chip(e.dept,label,e.repeat?'rep':'');
 }
 function entryTitle(e,ym,it){
@@ -985,7 +1075,7 @@ function issuesPanel(list,limit,title){
   if(!list.length)return'<section class="panel"><h2>'+(title||'Issues to look at')+'</h2><p class="muted" style="margin:0">Nothing to fix right now.</p></section>';
   return'<section class="panel"><h2>'+(title||'Issues to look at')+' <span class="tag warn">'+list.length+'</span></h2><ul class="list">'+list.slice(0,limit).map(i=>'<li><span>'+(i.lvl==='bad'?'<span class="tag bad">Error</span> ':'')+esc(i.text)+'</span><a class="small" href="#'+i.to+'" data-act="goissue" data-tab="'+(i.tab||'')+'" data-unit="'+(i.unit||'')+'" data-ym="'+(i.ym||'')+'">Open</a></li>').join('')+'</ul>'+(list.length>limit?'<p class="hint">And '+(list.length-limit)+' more.</p>':'')+'</section>';
 }
-function ovTraining(){
+function ovTraining0(){
   const list=Object.values(S.interns),ym=ymOf(todayStr());
   const active=list.filter(it=>internStatus(it).k==='active').length,frozen=list.filter(it=>internStatus(it).k==='frozen').length;
   const fin=list.filter(it=>{const d=ymIdx(planEnd(it))-ymIdx(ym);return d>=0&&d<3;}).length;
@@ -993,7 +1083,7 @@ function ovTraining(){
   const counts={};list.forEach(it=>{const e=entryAt(it,ym);if(e&&e.dept!=='FROZEN')counts[e.dept]=(counts[e.dept]||0)+1;});
   const top=Math.max(1,...BLOCKS.map(b=>counts[b]||0));
   const rows=BLOCKS.map(b=>{const n=counts[b]||0,mn=CFG.min[b]||0,low=mn>0&&n<mn;
-    return'<tr><td>'+chip(b,BLOCK_NAME[b])+'</td><td class="mcol"><div class="meter"><i style="width:'+Math.round(n/top*100)+'%"></i></div></td><td>'+n+(low?' <span class="tag info">below minimum</span>':'')+'</td></tr>';}).join('');
+    return'<tr><td>'+chip(b,BLOCK_NAME[b])+'</td><td class="mcol"><div class="meter"><i style="width:'+Math.round(n/top*100)+'%"></i></div></td><td>'+n+(low?' <span class="tag info">below minimum</span>':'')+(electivesIn(b,ym).length?' <span class="muted small" title="Interns on an elective in this department, counted under Elective">+'+electivesIn(b,ym).length+' elective</span>':'')+'</td></tr>';}).join('');
   return head('Overview',fmtYm(ym)+' at a glance')+
   '<div class="kpis"><div class="kpi"><b>'+list.length+'</b><span>interns in the system</span></div><div class="kpi"><b>'+active+'</b><span>on a rotation now</span></div><div class="kpi"><b>'+frozen+'</b><span>frozen now</span></div><div class="kpi"><b>'+fin+'</b><span>finishing within 3 months</span></div></div>'+
   '<div class="cols"><section class="panel"><h2>This month by rotation</h2><table class="tbl"><thead><tr><th>Rotation</th><th></th><th>Interns</th></tr></thead><tbody>'+rows+'</tbody></table><p class="hint">The split surgical month is counted once under its own rotation.</p></section>'+
@@ -1032,25 +1122,29 @@ function codeBox(col,d){return'<div class="note info small row"><span>Access cod
 function viewRotations(){
   const months=gridMonths(),cur=ymOf(todayStr()),tr=isTr();
   const cohorts=[...new Set(Object.values(S.interns).map(planStart))].sort();
+  const nf=[UI.fBlock,UI.fGroup,UI.fCohort,UI.q].filter(Boolean).length,coordOn=!tr&&myUnits().length>0;
   const bar='<div class="bar"><div class="seg"><button class="'+(UI.tab==='grid'?'on':'')+'" data-act="tab" data-v="grid">Intern grid</button><button class="'+(UI.tab==='capacity'?'on':'')+'" data-act="tab" data-v="capacity">Capacity by month</button></div>'+
     '<button class="btn" data-act="gridmove" data-n="-6">Earlier</button><button class="btn" data-act="gridmove" data-n="0">Today</button><button class="btn" data-act="gridmove" data-n="6">Later</button>'+
-    (UI.tab==='grid'?'<input type="search" id="gq" data-bind="q" placeholder="Search name or number" value="'+esc(UI.q)+'" aria-label="Search interns">'+
+    (UI.tab==='grid'?'<button class="btn'+(UI.showF||nf?' pri':'')+'" data-act="tog" data-k="showF">Filters'+(nf?' ('+nf+')':'')+'</button><button class="btn'+(UI.showKey?' pri':'')+'" data-act="tog" data-k="showKey">Key</button>'+((coordOn||isDualMe())?'<button class="btn'+(UI.focus?' pri':'')+'" data-act="tog" data-k="focus" title="Grey out the rotations that are not yours">'+(UI.focus?'Showing my rotations':'Focus on my rotations')+'</button>':''):'')+'</div>'+
+    (UI.tab==='grid'&&(UI.showF||nf)?'<div class="bar"><input type="search" id="gq" data-bind="q" placeholder="Search name or number" value="'+esc(UI.q)+'" aria-label="Search interns">'+
     '<select data-bind="fBlock" aria-label="Rotation filter"><option value="">Any rotation</option>'+BLOCKS.map(b=>'<option value="'+b+'"'+(UI.fBlock===b?' selected':'')+'>'+BLOCK_NAME[b]+'</option>').join('')+'</select>'+
     '<select data-bind="fGroup" aria-label="Group filter"><option value="">Any group</option>'+PGROUPS.map(g=>'<option value="'+g+'"'+(UI.fGroup===g?' selected':'')+'>Group '+grpLabel(g)+'</option>').join('')+'</select>'+
-    '<select data-bind="fCohort" aria-label="Start month filter"><option value="">Any start month</option>'+cohorts.map(c=>'<option value="'+c+'"'+(UI.fCohort===c?' selected':'')+'>Started '+fmtYm(c)+'</option>').join('')+'</select>':'')+'</div>';
-  const legend='<div class="row small" style="margin:0 0 12px">'+BLOCKS.map(b=>chip(b,BLOCK_SHORT[b])+' '+esc(BLOCK_NAME[b])).join(' &nbsp; ')+'</div>';
+    '<select data-bind="fCohort" aria-label="Start month filter"><option value="">Any start month</option>'+cohorts.map(c=>'<option value="'+c+'"'+(UI.fCohort===c?' selected':'')+'>Started '+fmtYm(c)+'</option>').join('')+'</select></div>':'');
+  const legend=UI.showKey?'<div class="row small" style="margin:0 0 12px">'+BLOCKS.map(b=>chip(b,BLOCK_SHORT[b])+' '+esc(BLOCK_NAME[b])).join(' &nbsp; ')+'</div>':'';
   const actions=UI.tab==='grid'?'<button class="btn" data-act="export-rot">Download CSV</button>':'';
   if(UI.tab==='capacity'){
     const counts={};months.forEach(m=>counts[m]={});
     Object.values(S.interns).forEach(it=>months.forEach(m=>{const e=entryAt(it,m);if(e&&e.dept!=='FROZEN')counts[m][e.dept]=(counts[m][e.dept]||0)+1;}));
-    const rows=BLOCKS.map(b=>{const mn=CFG.min[b]||0;return'<tr><td class="stick">'+chip(b,BLOCK_NAME[b])+(mn>0?'<small>minimum '+mn+'</small>':'')+'</td>'+months.map(m=>{const n=counts[m][b]||0,cls=mn>0&&n<mn?'low':'';return'<td class="'+cls+'" title="'+esc(BLOCK_NAME[b]+', '+fmtYm(m)+': '+n)+'">'+n+'</td>';}).join('')+'</tr>';}).join('');
+    const PAIR={MED:'MSS',GS:'SSS'};
+    const rows=BLOCKS.map(b=>{const mn=CFG.min[b]||0;return'<tr><td class="stick">'+chip(b,BLOCK_NAME[b])+(mn>0?'<small>minimum '+mn+'</small>':'')+'</td>'+months.map(m=>{const n=counts[m][b]||0,cls=mn>0&&n<mn?'low':'',el=electivesIn(b,m).length;const tot=PAIR[b]?'<span class="tot" title="'+esc(BLOCK_NAME[b]+' + '+BLOCK_NAME[PAIR[b]]+', '+fmtYm(m))+'">'+(n+(counts[m][PAIR[b]]||0))+'</span>':'';return'<td class="'+cls+'" title="'+esc(BLOCK_NAME[b]+', '+fmtYm(m)+': '+n+(el?' (plus '+el+' on elective here)':''))+'">'+n+tot+'</td>';}).join('')+'</tr>';}).join('');
     const tot='<tr><td class="stick"><b>Interns on a rotation</b></td>'+months.map(m=>'<td><b>'+Object.values(counts[m]).reduce((a,b)=>a+b,0)+'</b></td>').join('')+'</tr>';
     return head('Rotations','How many interns are on each rotation in each calendar month.',actions)+bar+'<div class="note info small">There is no upper limit on interns per rotation. A cell turns blue only if you set a minimum for that rotation in Setup.</div><div class="scroll gw"><table class="rota cap"><thead><tr><th class="stick">Rotation</th>'+months.map(m=>'<th class="'+(m===cur?'cur':'')+'">'+fmtYmShort(m)+'</th>').join('')+'</tr></thead><tbody>'+rows+tot+'</tbody></table></div>';
   }
   const list=filteredInterns(months);
-  const rows=list.map(it=>'<tr><td class="stick"><a href="#intern-'+it.id+'">'+esc(it.name)+'</a><small>'+(affilOf(it)!=='SMC'?affilTag(affilOf(it))+' ':'')+(groupsOf(it).length?'Group'+(groupsOf(it).length>1?'s ':' ')+esc(groupsLabel(it))+', ':'')+(it.plan.length?'from '+fmtYm(planStart(it)):'no months yet')+'</small></td>'+months.map(m=>{const e=entryAt(it,m),ix=it.plan.findIndex(x=>x.ym===m);return'<td title="'+esc(entryTitle(e,m,it))+'">'+cellChip(e,it)+(tr&&ix>=0&&canSwapAt(it.plan,ix)?'<button class="sw" data-act="swap-pair" data-id="'+it.id+'" data-i="'+ix+'" title="Swap with the next month" aria-label="Swap with the next month">⇄</button>':'')+'</td>';}).join('')+(tr?'<td><button class="btn sm" data-act="edit-plan" data-id="'+it.id+'">Edit</button></td>':'')+'</tr>').join('');
+  const snm=shortNameMap(list);
+  const rows=list.map(it=>'<tr><td class="stick"><a href="#intern-'+it.id+'" title="'+esc(it.name)+'">'+esc(snm[it.id])+'</a><small title="'+esc(it.name)+'">'+groupLine(it)+'</small></td>'+months.map(m=>{const e=entryAt(it,m),ix=it.plan.findIndex(x=>x.ym===m);return'<td title="'+esc(entryTitle(e,m,it))+'">'+cellChip(e,it)+(tr&&ix>=0&&canSwapAt(it.plan,ix)?'<button class="sw" data-act="swap-pair" data-id="'+it.id+'" data-i="'+ix+'" title="Swap with the next month" aria-label="Swap with the next month">⇄</button>':'')+'</td>';}).join('')+(tr?'<td><button class="btn sm" data-act="edit-plan" data-id="'+it.id+'">Edit</button></td>':'')+'</tr>').join('');
   return head('Rotations',tr?'Plan each intern’s twelve months. Plans must follow the pattern before they can be saved.':'Read-only view of every intern’s plan.',actions)+bar+legend+
-    (list.length?'<div class="scroll gw" style="max-height:72vh"><table class="rota"><thead><tr><th class="stick">Intern ('+list.length+')</th>'+months.map(m=>'<th class="'+(m===cur?'cur':'')+'">'+fmtYmShort(m)+'</th>').join('')+(tr?'<th></th>':'')+'</tr></thead><tbody>'+rows+'</tbody></table></div>':emptyBox('No interns match these filters.'));
+    (list.length?'<div class="scroll gw" style="max-height:72vh"><table class="rota'+(UI.focus?' foc':'')+'"><thead><tr><th class="stick">Intern ('+list.length+')</th>'+months.map(m=>'<th class="'+(m===cur?'cur':'')+'">'+fmtYmShort(m)+'</th>').join('')+(tr?'<th></th>':'')+'</tr></thead><tbody>'+rows+'</tbody></table></div>':emptyBox('No interns match these filters.'));
 }
 
 /* ----- Plan editor (Training) ----- */
@@ -1086,7 +1180,7 @@ function viewInterns(){
   const nsel=Object.keys(UI.sel).filter(k=>UI.sel[k]&&S.interns[k]).length;
   const rows=list.slice(0,300).map(it=>{const st=internStatus(it);return'<tr><td><input type="checkbox" data-act="sel" data-id="'+it.id+'"'+(UI.sel[it.id]?' checked':'')+' aria-label="Select '+esc(it.name)+'"></td><td><a href="#intern-'+it.id+'">'+esc(it.name)+'</a></td><td>'+esc(it.group||'')+'</td><td>'+fmtYm(planStart(it))+'</td><td>'+(st.block?chip(st.block,st.text):'<span class="muted">'+esc(st.text)+'</span>')+'</td><td><a href="'+telHref(it.phone)+'">'+esc(it.phone)+'</a></td><td>'+esc(it.email||'')+'</td><td>'+esc(it.accessCode||'')+'</td></tr>';}).join('');
   return head('Interns',plural(Object.keys(S.interns).length,'intern')+' in the system.','<button class="btn pri" data-act="add-intern">Add intern</button><button class="btn" data-act="upload-open">Upload a sheet</button>')+
-  '<div class="bar"><input type="search" id="iq" data-bind="intQ" placeholder="Search name, number or email" value="'+esc(UI.intQ)+'" aria-label="Search interns"><select data-bind="fGroup" aria-label="Group filter"><option value="">All groups</option>'+PGROUPS.map(g=>'<option value="'+g+'"'+(UI.fGroup===g?' selected':'')+'>Group '+grpLabel(g)+'</option>').join('')+'</select><button class="btn" data-act="sel-all">Select all shown</button><button class="btn" data-act="sel-none">Clear selection</button><button class="btn" data-act="bulk-tpl"'+(nsel?'':' disabled')+'>Apply template to '+nsel+' selected</button><button class="btn" data-act="bulk-group"'+(nsel?'':' disabled')+'>Set group for '+nsel+' selected</button><span class="sp"></span><button class="btn" data-act="export-codes">Download access codes</button><button class="btn" data-act="export-int">Download CSV</button></div>'+
+  '<div class="bar"><input type="search" id="iq" data-bind="intQ" placeholder="Search name, number or email" value="'+esc(UI.intQ)+'" aria-label="Search interns"><select data-bind="fGroup" aria-label="Group filter"><option value="">All groups</option>'+PGROUPS.map(g=>'<option value="'+g+'"'+(UI.fGroup===g?' selected':'')+'>Group '+grpLabel(g)+'</option>').join('')+'</select><button class="btn" data-act="sel-all">Select all shown</button><button class="btn" data-act="sel-none">Clear selection</button><button class="btn" data-act="bulk-tpl"'+(nsel?'':' disabled')+'>Apply template to '+nsel+' selected</button><button class="btn" data-act="bulk-group"'+(nsel?'':' disabled')+'>Set group for '+nsel+' selected</button><span class="sp"></span><button class="btn" data-act="send-codes">Send access codes</button><button class="btn" data-act="export-int">Download CSV</button></div>'+
   (list.length?'<div class="scroll" style="max-height:72vh"><table class="tbl"><thead><tr><th></th><th>Name</th><th>Group</th><th>Started</th><th>This month</th><th>Contact number</th><th>Email</th><th>Access code</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+(list.length>300?'<p class="hint">Showing the first 300. Use search to narrow the list.</p>':''):emptyBox('No interns yet. Add one, or upload a sheet.'));
 }
 function internForm(it,withGroup){
@@ -1223,7 +1317,7 @@ async function runUpload(){
 function viewCoordinators(){
   const people=Object.values(S.people).sort((a,b)=>a.name.localeCompare(b.name));
   const cover=COVER_GROUPS.map(g=>{const cs=[];g.members.forEach(m=>coordsFor(m).forEach(c=>{if(!cs.find(x=>x.id===c.id))cs.push(c);}));const c=cs.find(x=>x.role==='coordinator'),d=cs.find(x=>x.role==='deputy');return'<tr><td>'+chip(g.id,g.short||g.name)+(g.members.length>1?'<div class="small muted">'+g.members.map(m=>esc(UNIT_NAME[m])).join(' and ')+'</div>':'')+'</td><td>'+(c?personLink(c.id):'<span class="tag warn">Not set</span>')+'</td><td>'+(d?personLink(d.id):'<span class="tag warn">Not set</span>')+'</td></tr>';}).join('');
-  return head('Coordinators','Each rotation has a coordinator and a deputy. Either one can give the first leave approval.','<button class="btn" data-act="export-codes">Download access codes</button><button class="btn pri" data-act="add-person">Add coordinator</button>')+
+  return head('Coordinators','Each rotation has a coordinator and a deputy. Either one can give the first leave approval.','<button class="btn" data-act="send-codes">Send access codes</button><button class="btn pri" data-act="add-person">Add coordinator</button>')+
   '<div class="cols"><section class="panel"><h2>Cover by rotation</h2><table class="tbl"><thead><tr><th>Rotation</th><th>Coordinator</th><th>Deputy</th></tr></thead><tbody>'+cover+'</tbody></table></section>'+
   '<section class="panel"><h2>Everyone</h2>'+(people.length?'<div class="scroll" style="max-height:60vh"><table class="tbl"><thead><tr><th>Name</th><th>Role</th><th>Contact</th><th>Access code</th><th></th></tr></thead><tbody>'+people.map(p=>'<tr><td>'+personLink(p.id)+'<div class="small muted">'+esc(unitsLabel(p.units))+'</div></td><td>'+esc(ROLE_LABEL[p.role])+'</td><td><a href="'+telHref(p.phone)+'">'+esc(p.phone)+'</a></td><td>'+esc(p.accessCode||'')+'</td><td><button class="btn sm" data-act="edit-person" data-id="'+p.id+'">Edit</button></td></tr>').join('')+'</tbody></table></div>':emptyBox('No coordinators yet.'))+'</section></div>';
 }
@@ -1231,7 +1325,7 @@ function openPersonForm(id){
   const p=id?S.people[id]:{role:'coordinator',units:[]};
   openModal('<h2>'+(id?'Edit coordinator':'Add a coordinator')+'</h2>'+internForm(p)+
   '<label for="f-role">Role</label><select id="f-role"><option value="coordinator"'+(p.role==='coordinator'?' selected':'')+'>Coordinator</option><option value="deputy"'+(p.role==='deputy'?' selected':'')+'>Deputy coordinator</option></select>'+
-  '<label>Rotations covered</label><p class="hint" style="margin:0 0 4px">Medicine and Medical subspecialty share one coordinator team, and so do General surgery and Surgical subspecialty.</p><div>'+COVER_GROUPS.map(g=>'<label class="inline"><input type="checkbox" name="f-unit" value="'+g.id+'"'+(g.members.every(m=>(p.units||[]).includes(m))?' checked':'')+'>'+esc(g.name)+'</label>').join('')+'</div><div id="f-err"></div>'+
+  '<label class="inline" style="margin-top:10px"><input type="checkbox" id="f-dual"'+(p.alsoTraining?' checked':'')+'>Also works in the Training department</label><p class="hint" style="margin:0 0 6px">This person gets full Training access as well as the coordinator view. Training approvals stay separate from coordinator approvals.</p>'+'<label>Rotations covered</label><p class="hint" style="margin:0 0 4px">Medicine and Medical subspecialty share one coordinator team, and so do General surgery and Surgical subspecialty.</p><div>'+COVER_GROUPS.map(g=>'<label class="inline"><input type="checkbox" name="f-unit" value="'+g.id+'"'+(g.members.every(m=>(p.units||[]).includes(m))?' checked':'')+'>'+esc(g.name)+'</label>').join('')+'</div><div id="f-err"></div>'+
   '<div class="foot">'+(id?'<button class="btn bad" data-act="person-del" data-id="'+id+'" style="margin-right:auto">Delete</button>':'')+'<button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="person-save" data-id="'+(id||'')+'">Save</button></div>');
 }
 async function savePerson(id){
@@ -1242,12 +1336,12 @@ async function savePerson(id){
   if(phoneTaken(phone,id))return showErr('That contact number already belongs to someone else.');
   if(!units.length)return showErr('Choose at least one rotation.');
   const nid=id||uid('p');
-  await mut('people',nid,b=>{b=b||{createdAt:Date.now(),accessCode:genCode()};Object.assign(b,{name,phone,email,role,units});return b;});
+  await mut('people',nid,b=>{b=b||{createdAt:Date.now(),accessCode:genCode()};Object.assign(b,{name,phone,email,role,units});if($('f-dual')&&$('f-dual').checked)b.alsoTraining=true;else delete b.alsoTraining;return b;});
   logEv((id?'Edited ':'Added ')+ROLE_LABEL[role].toLowerCase()+' '+name);closeModal();toast('Saved.');
 }
 
 /* ============ Profiles ============ */
-function viewProfile(id){
+function viewProfile0(id){
   const it=S.interns[id];
   if(!it)return head('Intern not found')+emptyBox('This intern is not in the system any more.');
   const e=E(),self=e.role==='intern'&&e.internId===id,tr=e.role==='training';
@@ -1465,9 +1559,9 @@ function viewOncall(){
     const all=shiftsOf(it.id).filter(s=>ymOf(s.date)===ym),here=all.filter(s=>s.unit===unit);
     return{it,total:all.length,here:here.length,wk:all.filter(s=>isWkDay(s.date)).length};
   }).sort((a,b)=>a.total-b.total||a.it.name.localeCompare(b.it.name));
-  const fair='<section class="panel"><h2>Who has done what in '+fmtYm(ym)+'</h2><p class="hint" style="margin:0 0 8px">Sorted with the lightest load first, to keep the rota fair. Totals count every rota the intern is on this month.</p>'+(sh.length?'<div class="scroll" style="max-height:340px"><table class="tbl"><thead><tr><th>Intern</th><th>Here</th><th>All rotas</th><th>Weekend and holiday</th></tr></thead><tbody>'+sh.map(x=>{
+  const fair='<section class="panel"><h2>Who has done what in '+fmtYm(ym)+'</h2><p class="hint" style="margin:0 0 8px">Sorted with the lightest load first, to keep the rota fair. Totals count every rota the intern is on this month.</p>'+(sh.length?'<div class="scroll" style="max-height:340px"><table class="tbl"><thead><tr><th>Intern</th><th>Here</th><th>All rotas</th><th>Weekend and holiday</th><th>Last call before this month</th></tr></thead><tbody>'+sh.map(x=>{
     const split=entryAt(x.it,ym)&&entryAt(x.it,ym).dept==='SSS',wkLim=split?CFG.wkHalfWarn*2:CFG.wkMonthWarn,max=split?CFG.shiftHalfMax*2:CFG.shiftMonthMax;
-    return'<tr><td>'+internLink(x.it.id)+'</td><td>'+x.here+'</td><td>'+x.total+' <span class="muted small">of '+max+'</span>'+(x.total>=max?' <span class="tag mute">full</span>':'')+'</td><td>'+x.wk+(x.wk>wkLim?' <span class="tag warn">over</span>':'')+'</td></tr>';}).join('')+'</tbody></table></div>':'<p class="muted" style="margin:0">No interns are placed here this month.</p>')+'</section>';
+    return'<tr><td>'+internLink(x.it.id)+'</td><td>'+x.here+'</td><td>'+x.total+' <span class="muted small">of '+max+'</span>'+(x.total>=max?' <span class="tag mute">full</span>':'')+'</td><td>'+x.wk+(x.wk>wkLim?' <span class="tag warn">over</span>':'')+'</td><td class="small">'+lastCallText(x.it.id,ym)+'</td></tr>';}).join('')+'</tbody></table></div>':'<p class="muted" style="margin:0">No interns are placed here this month.</p>')+'</section>';
   return head(e.role==='intern'?'On-call':'On-call rota',esc(UNIT_NAME[unit])+' rota. '+esc(ROTA_HELP[unit]||'')+'.'+(edit?'':' You can view this rota but not change it.')+(e.role!=='intern'?' You can also fill it in on the “'+esc(ROTA_TAB[unit]||'')+'” tab of the Google Sheet.':''),(e.role!=='intern'&&editableRotas().length)?'<button class="btn" data-act="rota-import">Import from Excel</button>':'')+tabs+nav+
   '<div class="cols" style="grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr)"><div><div class="cal">'+cells+'</div><p class="hint">Friday, Saturday and flagged holidays are shaded. A split surgical month changes placement on the 16th.</p></div><div>'+panel+'</div></div>'+(e.role==='intern'?'':'<div style="margin-top:16px">'+fair+'</div>');
 }
@@ -1478,12 +1572,12 @@ function dayPanel(unit,date,edit){
     h+=hol?'<div class="row" style="margin-bottom:8px"><button class="btn sm" data-act="hol-del" data-d="'+date+'">Remove holiday flag</button></div>':'<div class="row" style="margin-bottom:8px"><input type="text" id="oc-hol" placeholder="Holiday name (optional)" style="width:190px"><button class="btn sm" data-act="hol-add" data-d="'+date+'">Flag as national holiday</button></div>';
   }
   h+='<div class="row" style="margin:6px 0 10px"><b>Interns needed:</b> '+(rec.need==null?'<span class="muted">not set</span>':'<b>'+rec.need+'</b>')+(edit?'<button class="btn sm" data-act="oc-need" data-d="'+date+'" data-n="-1" aria-label="One fewer needed"'+(rec.need==null||rec.need<=0?' disabled':'')+'>−</button><button class="btn sm" data-act="oc-need" data-d="'+date+'" data-n="1" aria-label="One more needed">+</button>':'')+'</div>';
-  h+='<h3>On call ('+rec.ids.length+')</h3>'+(rec.ids.length?'<ul class="list">'+rec.ids.map(id=>{const it=S.interns[id];return'<li><span>'+(it?internLink(id):'Removed intern')+(onLeave(id,date)?' <span class="tag warn">on leave</span>':'')+'</span>'+(edit?'<button class="btn sm bad" data-act="unassign" data-d="'+date+'" data-i="'+id+'">Remove</button>':'')+'</li>';}).join('')+'</ul>':'<p class="muted small" style="margin:0 0 6px">No one yet.</p>');
+  h+='<h3>On call ('+rec.ids.length+')</h3>'+(rec.ids.length?'<ul class="list">'+rec.ids.map(id=>{const it=S.interns[id];return'<li><span>'+(it?internLink(id):'Removed intern')+(onLeave(id,date)?' <span class="tag warn">on leave</span>':'')+flagTag(unit,date,id)+'</span>'+(edit?'<button class="btn sm bad" data-act="unassign" data-d="'+date+'" data-i="'+id+'">Remove</button>':'')+'</li>';}).join('')+'</ul>':'<p class="muted small" style="margin:0 0 6px">No one yet.</p>');
   if(edit){
     const el=eligibleFor(unit,date).filter(it=>!rec.ids.includes(it.id));
     h+='<h3 style="margin-top:14px">Add someone ('+el.length+' placed here)</h3>'+(el.length?'<div class="scroll" style="max-height:340px"><table class="tbl"><tbody>'+el.map(it=>{
       const pc=periodCounts(it.id,date),ck=assignCheck(unit,it.id,date),max=pc.split?CFG.shiftHalfMax:CFG.shiftMonthMax;
-      return'<tr><td>'+esc(it.name)+'<div class="small muted">'+pc.total+' of '+max+(pc.split?' this half':' this month')+', '+pc.wk+' weekend/holiday</div>'+ck.warn.map(w=>'<div class="small"><span class="tag warn">Warning</span> '+esc(w)+'</div>').join('')+'</td><td style="text-align:right">'+(ck.block.length?'<span class="small muted">'+esc(ck.block[0])+'</span>':'<button class="btn sm pri" data-act="assign" data-d="'+date+'" data-i="'+it.id+'">Assign</button>')+'</td></tr>';}).join('')+'</tbody></table></div>':'<p class="muted small" style="margin:0">No other interns are placed here on this date.</p>');
+      return'<tr><td>'+esc(it.name)+'<div class="small muted">'+pc.total+' of '+max+(pc.split?' this half':' this month')+', '+pc.wk+' weekend/holiday</div>'+ck.warn.map(w=>'<div class="small"><span class="tag warn">Warning</span> '+esc(w)+'</div>').join('')+'</td><td style="text-align:right">'+(ck.block.length?'<span class="small muted">'+esc(ck.block[0])+'</span>'+(ck.annual&&ck.block.length===1&&isTr()?' <button class="btn sm" data-act="assign-ovr" data-d="'+date+'" data-i="'+it.id+'">Add anyway</button>':''):'<button class="btn sm pri" data-act="assign" data-d="'+date+'" data-i="'+it.id+'">Assign</button>')+'</td></tr>';}).join('')+'</tbody></table></div>':'<p class="muted small" style="margin:0">No other interns are placed here on this date.</p>');
   }
   return h+'</section>';
 }
@@ -1985,7 +2079,7 @@ async function decide(id,action,extra){
   if(status==='approved'&&r.type==='swap')await refresh();
   toast(action==='approved'?(status==='pending_training'||status==='pending_coord'?'Done. It now goes to '+(status==='pending_coord'?'the coordinator.':'the Training department.'):'Approved.'):'Declined.');
 }
-function viewRequests(){
+function viewRequests0(){
   const e=E();let list=Object.values(S.requests);
   if(e.role==='intern')list=list.filter(r=>r.internId===e.internId||r.peerId===e.internId);
   if(e.role==='coordinator')list=list.filter(r=>r.type==='swap'?rotaMembersOf(r.rota).some(u=>myUnits().includes(u)):(r.type==='leave'&&myUnits().includes(r.unit)));
@@ -2039,7 +2133,7 @@ function myOnCallPanel(){
     const rec=s.rota!=='EMERGENCY'?dayRec(s.rota,s.date):null,pos=rec?rec.ids.indexOf(e.internId):-1,w=rec&&pos>=0?wardsFor(s.rota,rec.ids.length,pos):'';
     return'<li><span>'+fmtDate(s.date)+' <span class="muted small">'+esc(s.label)+'</span>'+(w?'<span class="ward">Wards '+esc(w)+'</span>':'')+'</span><button class="btn sm" data-act="sw-open" data-r="'+s.rota+'" data-d="'+s.date+'">Ask to swap</button></li>';}).join('')+'</ul>':'<p class="muted" style="margin:0">No upcoming on-calls.</p>')+'</section>';
 }
-function viewOncall(){
+function viewOncall0(){
   const e=E();
   if(!UI.ocUnit||!ocUnits().includes(UI.ocUnit))UI.ocUnit=defaultOcUnit();
   if(UI._lastOc!==UI.ocUnit){UI._lastOc=UI.ocUnit;UI.ocDay=null;}
@@ -2063,9 +2157,9 @@ function viewOncall(){
   const panel=UI.ocDay&&ymOf(UI.ocDay)===ym?dayPanel(unit,UI.ocDay,edit):'<section class="panel"><h2>Pick a day</h2><p class="muted" style="margin:0">'+(edit?'Select a day to '+(sur?'see and arrange who is on call.':'set how many interns you need and assign them.'):'Select a day to see who is on call.')+'</p></section>';
   const pool=new Map();eligibleFor(unit,ym+'-01').concat(eligibleFor(unit,ym+'-16')).forEach(it=>pool.set(it.id,it));
   const sh=[...pool.values()].map(it=>{const all=shiftsOf(it.id).filter(s=>ymOf(s.date)===ym),here=all.filter(s=>s.unit===unit);return{it,total:all.length,here:here.length,wk:all.filter(s=>isWkDay(s.date)).length};}).sort((a,b)=>a.total-b.total||a.it.name.localeCompare(b.it.name));
-  const fair='<section class="panel"><h2>Who has done what in '+fmtYm(ym)+'</h2><p class="hint" style="margin:0 0 8px">Lightest load first. Totals count every rota the intern is on this month.</p>'+(sh.length?'<div class="scroll" style="max-height:340px"><table class="tbl stk"><thead><tr><th>Intern</th><th>Here</th><th>All rotas</th><th>Weekend and holiday</th></tr></thead><tbody>'+sh.map(x=>{
+  const fair='<section class="panel"><h2>Who has done what in '+fmtYm(ym)+'</h2><p class="hint" style="margin:0 0 8px">Lightest load first. Totals count every rota the intern is on this month.</p>'+(sh.length?'<div class="scroll" style="max-height:340px"><table class="tbl stk"><thead><tr><th>Intern</th><th>Here</th><th>All rotas</th><th>Weekend and holiday</th><th>Last call before this month</th></tr></thead><tbody>'+sh.map(x=>{
     const split=entryAt(x.it,ym)&&entryAt(x.it,ym).dept==='SSS',wkLim=split?CFG.wkHalfWarn*2:CFG.wkMonthWarn,max=split?CFG.shiftHalfMax*2:CFG.shiftMonthMax;
-    return'<tr><td>'+internLink(x.it.id)+'</td><td>'+x.here+'</td><td>'+x.total+' <span class="muted small">of '+max+'</span>'+(x.total>=max?' <span class="tag mute">full</span>':'')+'</td><td>'+x.wk+(x.wk>wkLim?' <span class="tag warn">over</span>':'')+'</td></tr>';}).join('')+'</tbody></table></div>':'<p class="muted" style="margin:0">No interns are placed here this month.</p>')+'</section>';
+    return'<tr><td>'+internLink(x.it.id)+'</td><td>'+x.here+'</td><td>'+x.total+' <span class="muted small">of '+max+'</span>'+(x.total>=max?' <span class="tag mute">full</span>':'')+'</td><td>'+x.wk+(x.wk>wkLim?' <span class="tag warn">over</span>':'')+'</td><td class="small">'+lastCallText(x.it.id,ym)+'</td></tr>';}).join('')+'</tbody></table></div>':'<p class="muted" style="margin:0">No interns are placed here this month.</p>')+'</section>';
   return head('On-call',sub,imp)+myOnCallPanel()+ocNav(unit,ym)+
     '<div class="cols oc-cols"><div>'+main+'</div><div>'+panel+'</div></div>'+(e.role==='intern'?'':'<div style="margin-top:16px">'+fair+'</div>');
 }
@@ -2082,7 +2176,7 @@ function ocTable(unit,ym,mine){
   for(let d=1;d<=n;d++){
     const date=ym+'-'+pad(d),rec=dayRec(unit,date),wk=isWkDay(date),hol=holidayOf(date);
     h+='<tr class="'+(wk?'wk ':'')+(UI.ocDay===date?'sel ':'')+'" data-act="ocday" data-d="'+date+'"><th>'+d+' '+DAYS[dow(date)]+(hol?'<span class="ward">'+esc(hol.label||'Holiday')+'</span>':'')+'</th>';
-    for(let p=0;p<K;p++){const id=rec.ids[p];h+='<td>'+(id?'<span class="'+(id===mine?'mine':'')+'">'+esc((S.interns[id]||{}).name||'?')+'</span>'+(sur?wardLine(unit,rec,p):''):'<span class="muted">'+(sur?'—':'')+'</span>')+'</td>';}
+    for(let p=0;p<K;p++){const id=rec.ids[p];h+='<td>'+(id?'<span class="'+(id===mine?'mine':'')+'">'+esc((S.interns[id]||{}).name||'?')+'</span>'+flagTag(unit,date,id)+(sur?wardLine(unit,rec,p):''):'<span class="muted">'+(sur?'—':'')+'</span>')+'</td>';}
     h+='</tr>';
   }
   return h+'</tbody></table></div><p class="hint">Friday, Saturday and flagged holidays are shaded. Select a day to change it.'+(sur?' The wards follow each intern’s place in the day.':'')+'</p>';
@@ -2093,12 +2187,12 @@ function dayPanel(unit,date,edit){
   if(edit)h+=hol?'<div class="row" style="margin-bottom:8px"><button class="btn sm" data-act="hol-del" data-d="'+date+'">Remove holiday flag</button></div>':'<div class="row" style="margin-bottom:8px"><input type="text" id="oc-hol" placeholder="Holiday name (optional)" style="width:190px"><button class="btn sm" data-act="hol-add" data-d="'+date+'">Flag as national holiday</button></div>';
   if(!sur)h+='<div class="row" style="margin:6px 0 10px"><b>Interns needed:</b> '+(rec.need==null?'<span class="muted">not set</span>':'<b>'+rec.need+'</b>')+(edit?'<button class="btn sm" data-act="oc-need" data-d="'+date+'" data-n="-1" aria-label="One fewer needed"'+(rec.need==null||rec.need<=0?' disabled':'')+'>−</button><button class="btn sm" data-act="oc-need" data-d="'+date+'" data-n="1" aria-label="One more needed">+</button>':'')+'</div>';
   h+='<h3>On call ('+rec.ids.length+')</h3>'+(rec.ids.length?'<ul class="list">'+rec.ids.map((id,p)=>{const it=S.interns[id];
-    return'<li><span>'+(sur?'<span class="muted small">'+(p+1)+'.</span> ':'')+(it?internLink(id):'Removed intern')+(onLeave(id,date)?' <span class="tag warn">on leave</span>':'')+(sur?wardLine(unit,rec,p):'')+'</span><span class="row">'+(edit&&sur?'<button class="btn sm" data-act="oc-move" data-d="'+date+'" data-i="'+id+'" data-n="-1" aria-label="Move up"'+(p===0?' disabled':'')+'>↑</button><button class="btn sm" data-act="oc-move" data-d="'+date+'" data-i="'+id+'" data-n="1" aria-label="Move down"'+(p===rec.ids.length-1?' disabled':'')+'>↓</button>':'')+(edit?'<button class="btn sm bad" data-act="unassign" data-d="'+date+'" data-i="'+id+'">Remove</button>':'')+'</span></li>';}).join('')+'</ul>':'<p class="muted small" style="margin:0 0 6px">No one yet.</p>');
+    return'<li><span>'+(sur?'<span class="muted small">'+(p+1)+'.</span> ':'')+(it?internLink(id):'Removed intern')+(onLeave(id,date)?' <span class="tag warn">on leave</span>':'')+flagTag(unit,date,id)+(sur?wardLine(unit,rec,p):'')+'</span><span class="row">'+(edit&&sur?'<button class="btn sm" data-act="oc-move" data-d="'+date+'" data-i="'+id+'" data-n="-1" aria-label="Move up"'+(p===0?' disabled':'')+'>↑</button><button class="btn sm" data-act="oc-move" data-d="'+date+'" data-i="'+id+'" data-n="1" aria-label="Move down"'+(p===rec.ids.length-1?' disabled':'')+'>↓</button>':'')+(edit?'<button class="btn sm bad" data-act="unassign" data-d="'+date+'" data-i="'+id+'">Remove</button>':'')+'</span></li>';}).join('')+'</ul>':'<p class="muted small" style="margin:0 0 6px">No one yet.</p>');
   if(edit){
     const el=eligibleFor(unit,date).filter(it=>!rec.ids.includes(it.id));
     h+='<h3 style="margin-top:14px">Add someone ('+el.length+' placed here)</h3>'+(el.length?'<div class="scroll" style="max-height:340px"><table class="tbl"><tbody>'+el.map(it=>{
       const pc=periodCounts(it.id,date),ck=assignCheck(unit,it.id,date),max=pc.split?CFG.shiftHalfMax:CFG.shiftMonthMax;
-      return'<tr><td>'+esc(it.name)+'<div class="small muted">'+pc.total+' of '+max+(pc.split?' this half':' this month')+', '+pc.wk+' weekend/holiday</div>'+ck.warn.map(w=>'<div class="small"><span class="tag warn">Warning</span> '+esc(w)+'</div>').join('')+'</td><td style="text-align:right">'+(ck.block.length?'<span class="small muted">'+esc(ck.block[0])+'</span>':'<button class="btn sm pri" data-act="assign" data-d="'+date+'" data-i="'+it.id+'">Add</button>')+'</td></tr>';}).join('')+'</tbody></table></div>':'<p class="muted small" style="margin:0">No other interns are placed here on this date.</p>');
+      return'<tr><td>'+esc(it.name)+'<div class="small muted">'+pc.total+' of '+max+(pc.split?' this half':' this month')+', '+pc.wk+' weekend/holiday</div>'+ck.warn.map(w=>'<div class="small"><span class="tag warn">Warning</span> '+esc(w)+'</div>').join('')+'</td><td style="text-align:right">'+(ck.block.length?'<span class="small muted">'+esc(ck.block[0])+'</span>'+(ck.annual&&ck.block.length===1&&isTr()?' <button class="btn sm" data-act="assign-ovr" data-d="'+date+'" data-i="'+it.id+'">Add anyway</button>':''):'<button class="btn sm pri" data-act="assign" data-d="'+date+'" data-i="'+it.id+'">Add</button>')+'</td></tr>';}).join('')+'</tbody></table></div>':'<p class="muted small" style="margin:0">No other interns are placed here on this date.</p>');
   }
   return h+'</section>';
 }
@@ -2228,7 +2322,7 @@ function viewInterns(){
   const rows=list.slice(0,300).map(it=>{const st=internStatus(it);return'<tr><td><input type="checkbox" data-act="sel" data-id="'+it.id+'"'+(UI.sel[it.id]?' checked':'')+' aria-label="Select '+esc(it.name)+'"></td><td><a href="#intern-'+it.id+'">'+esc(it.name)+'</a></td><td>'+esc(groupsLabel(it))+'</td><td>'+affilTag(affilOf(it))+'</td><td>'+(st.block?chip(st.block,st.text):'<span class="muted">'+esc(st.text)+'</span>')+'</td><td><a href="'+telHref(it.phone)+'">'+esc(it.phone)+'</a></td><td>'+esc(it.email||'')+'</td><td>'+esc(it.accessCode||'')+'</td></tr>';}).join('');
   const bulk=nsel?'<div class="note info row"><b>'+nsel+' selected</b><span class="sp"></span><button class="btn sm" data-act="bulk-tpl">Apply group template</button><button class="btn sm" data-act="bulk-group">Set group</button><button class="btn sm" data-act="sel-none">Clear</button></div>':'';
   return head('Interns',plural(Object.keys(S.interns).length,'intern')+' in the system.','<button class="btn pri" data-act="add-intern">Add intern</button><button class="btn" data-act="upload-open">Upload a sheet</button>')+
-  '<div class="bar"><input type="search" id="iq" data-bind="intQ" placeholder="Search name, number or email" value="'+esc(UI.intQ)+'" aria-label="Search interns"><select data-bind="fGroup" aria-label="Group filter"><option value="">All groups</option>'+PGROUPS.map(g=>'<option value="'+g+'"'+(UI.fGroup===g?' selected':'')+'>Group '+grpLabel(g)+'</option>').join('')+'</select><select data-bind="fAffil" aria-label="Tag filter"><option value="">All tags</option>'+AFFIL.map(a=>'<option value="'+a+'"'+(UI.fAffil===a?' selected':'')+'>'+a+'</option>').join('')+'</select><button class="btn" data-act="sel-all">Select all shown</button><span class="sp"></span><button class="btn" data-act="export-codes">Download access codes</button><button class="btn" data-act="export-int">Download CSV</button></div>'+bulk+
+  '<div class="bar"><input type="search" id="iq" data-bind="intQ" placeholder="Search name, number or email" value="'+esc(UI.intQ)+'" aria-label="Search interns"><select data-bind="fGroup" aria-label="Group filter"><option value="">All groups</option>'+PGROUPS.map(g=>'<option value="'+g+'"'+(UI.fGroup===g?' selected':'')+'>Group '+grpLabel(g)+'</option>').join('')+'</select><select data-bind="fAffil" aria-label="Tag filter"><option value="">All tags</option>'+AFFIL.map(a=>'<option value="'+a+'"'+(UI.fAffil===a?' selected':'')+'>'+a+'</option>').join('')+'</select><button class="btn" data-act="sel-all">Select all shown</button><span class="sp"></span><button class="btn" data-act="send-codes">Send access codes</button><button class="btn" data-act="export-int">Download CSV</button></div>'+bulk+
   (list.length?'<div class="scroll" style="max-height:72vh"><table class="tbl stk"><thead><tr><th></th><th>Name</th><th>Group</th><th>Tag</th><th>This month</th><th>Mobile</th><th>Email</th><th>Access code</th></tr></thead><tbody>'+rows+'</tbody></table></div>'+(list.length>300?'<p class="hint">Showing the first 300. Use search to narrow the list.</p>':''):emptyBox('No interns yet. Add one, or upload a sheet.'));
 }
 function openBulkTpl(){
@@ -2504,7 +2598,7 @@ function verBanner(){
   return'<div class="note warn"><b>The page and the Google script are different versions.</b> This page is version '+esc(APP_VERSION)+' and the Google script is '+(SERVER_VER?'version '+esc(SERVER_VER):'older than 4.1')+'. Paste the newest <b>Code.gs</b> into Apps Script, deploy a new version, and refresh this page with Ctrl+Shift+R.</div>';
 }
 /* ============ Shell, render, events ============ */
-function routeContent(){
+function routeContent0(){
   const r=UI.route,base=r.split('-')[0],arg=r.slice(base.length+1);
   switch(base){
     case'overview':return isTr()?ovTraining():ovCoord();
@@ -2744,6 +2838,543 @@ document.addEventListener('click',ev=>{
   if(UI.pmenu&&!ev.target.closest('.pmenu')&&!ev.target.closest('.pbtn')){UI.pmenu=false;scheduleRender();}
 });
 window.addEventListener('hashchange',()=>{UI.more=false;UI.pmenu=false;});
+/*V45-JS-START*/
+/* ===================== version 4.5 additions (part A) ===================== */
+const FIRMS=['I','II','III','IV'];
+const TITLES=['Consultant','Chief','Senior','Junior'];
+const isDualMe=()=>ME.role==='training'&&!!ME.dual;
+const trainingIdsC=()=>Object.values(S.people).filter(p=>p.role==='training'||p.alsoTraining).map(p=>p.id);
+const coordIdsC=units=>Object.values(S.people).filter(p=>p.role!=='training'&&(p.units||[]).some(u=>units.includes(u))).map(p=>p.id);
+function notifyStaff(ids,kind,text){
+  ids=[...new Set(ids)].filter(Boolean);if(!ids.length)return Promise.resolve();
+  const id=uid('n');return put('notices',id,{to:ids,kind,text:String(text).slice(0,300),at:Date.now(),seen:{}});
+}
+function actorName(){return ME.name||'Training';}
+
+/* ---------- titles: "Surgical coordinator", "Training and Surgical coordinator" ---------- */
+function roleTitle(p){
+  if(!p)return'';
+  if(p.role==='training')return'Training department';
+  const toks=contractUnits(p.units||[]).map(tokenShort),r=p.role==='deputy'?'deputy':'coordinator';
+  const base=toks.length?toks.join(' and ')+' '+r:(p.role==='deputy'?'Deputy coordinator':'Coordinator');
+  return p.alsoTraining?'Training and '+base:base;
+}
+function whoInfo(){
+  if(ME.role==='training'||ME.role==='coordinator'){const p=S.people[ME.staffId]||S.people[ME.personId]||{role:ME.role};return{name:p.name||ME.name||'Training',sub:ME.role==='training'&&!p.alsoTraining?'Training department':roleTitle(p)};}
+  const it=S.interns[ME.internId]||{};return{name:it.name||ME.name,sub:'Intern'+(groupsOf(it).length?', Group '+groupsLabel(it):'')};
+}
+function meBox(){
+  const e=E(),out=b=>'<div class="me">'+b+'<button class="btn ghost sm" data-act="logout" style="padding:0;min-height:0;margin-top:6px;display:block">Sign out</button></div>';
+  if(e.role==='training'){const w=whoInfo();return out('<b>'+esc(w.sub)+'</b><span>'+esc(ME.name||'Full access')+'</span>');}
+  if(e.role==='coordinator'){const p=S.people[e.personId]||{};return out('<b>'+esc(p.name)+'</b><span>'+esc(roleTitle(p))+'</span>');}
+  const it=S.interns[e.internId]||{};return out('<b>'+esc(it.name)+'</b><span>Intern</span>');
+}
+
+/* ---------- navigation ---------- */
+function navItems(){
+  const e=E(),dec=myDecisions().length;
+  const myRot=(isDualMe()&&(ME.units||[]).length&&!PREVIEW)?[{r:'myrot',t:'My rotation',g:'Home'}]:[];
+  if(e.role==='training')return[
+    {r:'overview',t:'Overview',g:'Home'}].concat(myRot,[{r:'rotations',t:'Rotations',g:'Plan'},{r:'oncall',t:'On-call',g:'Plan'},{r:'surgery',t:'Surgical allocation',g:'Plan'},
+    {r:'interns',t:'Interns',g:'People',alt:x=>x.startsWith('intern-')},{r:'coordinators',t:'Coordinators',g:'People',alt:x=>x.startsWith('person-')},
+    {r:'requests',t:'Requests',g:'Requests',badge:dec||''},{r:'checklists',t:'Checklists',g:'Tracking'},{r:'activity',t:'Activity',g:'Admin'},{r:'setup',t:'Setup',g:'Admin'}]);
+  if(e.role==='coordinator'){
+    const a=[{r:'overview',t:'My rotation',g:'Home'},{r:'rotations',t:'Rotations',g:'Plan'},{r:'oncall',t:'On-call rota',g:'Plan'}];
+    if(canSurg())a.push({r:'surgery',t:'Surgical allocation',g:'Plan'});
+    a.push({r:'requests',t:'Approvals',g:'Requests',badge:dec||''},{r:'checklists',t:'Checklists',g:'Tracking'});return a;
+  }
+  return[{r:'myyear',t:'My year',g:'Home'},{r:'oncall',t:'On-call',g:'Plan'},{r:'requests',t:'My requests',g:'Requests',badge:dec||''}];
+}
+function parseRoute(){
+  let r=(location.hash||'').replace(/^#/,'');const e=E();
+  const dflt=e.role==='intern'?'myyear':'overview';
+  if(!r)return dflt;
+  const base=r.split('-')[0];
+  const ok={
+    training:['overview','myrot','rotations','oncall','requests','surgery','checklists','interns','coordinators','activity','setup','intern','person'],
+    coordinator:['overview','rotations','oncall','requests','surgery','checklists','intern'],
+    intern:['myyear','oncall','requests']
+  }[e.role]||[];
+  if(!ok.includes(base))return dflt;
+  if(base==='surgery'&&!canSurg())return dflt;
+  if(base==='myrot'&&!(isDualMe()&&(ME.units||[]).length))return dflt;
+  return r;
+}
+function bottomItems(){
+  const e=E(),dec=myDecisions().length;
+  if(e.role==='training')return[['overview','Home','home'],['rotations','Rotations','grid'],['oncall','On-call','cal'],['requests','Requests','inbox',dec],['more','More','more']];
+  if(e.role==='coordinator')return[['overview','Home','home'],['oncall','On-call','cal'],['requests','Approvals','inbox',dec],['checklists','Checklists','check'],['more','More','more']];
+  return[['myyear','Home','home'],['oncall','On-call','cal'],['requests','Requests','inbox',dec]];
+}
+
+/* ---------- the panel that opens when you tap your name ---------- */
+function myPerson(){return S.people[ME.staffId]||S.people[ME.personId]||null;}
+function topbarHtml(){
+  const w=whoInfo(),p=ME.role!=='intern'?myPerson():null;
+  let panel='';
+  if(UI.pmenu){
+    const pend=p&&Object.values(S.profreq).find(x=>x.personId===p.id&&x.status==='pending');
+    panel='<div class="pmenu"><div class="pm-who"><b>'+esc(w.name)+'</b><small>'+esc(w.sub)+'</small></div>'+
+      (p?'<div class="pm-det"><div class="small"><span class="muted">Contact number</span><br><b>'+esc(p.phone||'none')+'</b></div><div class="small" style="margin-top:6px"><span class="muted">Email</span><br><b>'+esc(p.email||'none')+'</b></div>'+
+        (pend?'<div class="note info small" style="margin-top:8px">Change requested: '+esc([pend.phone,pend.email].filter(Boolean).join(', '))+'. Waiting for Training.</div>':'<button class="btn sm" data-act="prof-req" style="margin-top:8px;width:100%">Change my number or email</button>')+'</div>':'')+
+      previewBox().replace('id="pv"','id="pv2"').replace('for="pv"','for="pv2"')+
+      '<button class="btn" data-act="logout" style="width:100%;margin-top:10px">Sign out</button><button class="btn ghost sm" data-act="logout-all" style="width:100%;margin-top:4px">Sign out on all devices</button></div>';
+  }
+  return'<div class="topbar"><span class="tb-title">Internship board</span><button class="pbtn" data-act="pm-toggle" aria-label="Profile menu" aria-expanded="'+(UI.pmenu?'true':'false')+'"><span><b>'+esc(w.name)+'</b><small>'+esc(w.sub)+'</small></span><span class="av">'+esc(initials(w.name))+'</span></button>'+panel+'</div>';
+}
+Object.assign(ACT,{
+  'logout-all':async()=>{try{await call('signoutall');}catch(e){}signedOut();},
+  'prof-req':()=>{
+    const p=myPerson();if(!p)return;
+    UI.pmenu=false;
+    openModal('<h2>Change my number or email</h2><p class="hint" style="margin-top:0">Training has to approve this. Until then your old details stay in use.</p><label for="pr-phone">New contact number</label><input type="tel" id="pr-phone" value="'+esc(p.phone||'')+'"><label for="pr-email">New email</label><input type="email" id="pr-email" value="'+esc(p.email||'')+'"><div id="pr-msg"></div><div class="foot"><button class="btn" data-act="close-modal">Cancel</button><button class="btn pri" data-act="prof-send">Send for approval</button></div>');
+  },
+  'prof-send':async()=>{
+    const p=myPerson();if(!p)return;
+    const ph=$('pr-phone').value.trim(),em=$('pr-email').value.trim().toLowerCase(),d={personId:p.id,status:'pending'};
+    if(ph&&ph!==p.phone)d.phone=ph;if(em&&em!==(p.email||''))d.email=em;
+    if(!d.phone&&!d.email){$('pr-msg').innerHTML='<div class="note bad">Change at least one of them.</div>';return;}
+    if(d.phone&&!phoneKey(d.phone)){$('pr-msg').innerHTML='<div class="note bad">That contact number does not look right.</div>';return;}
+    closeModal();await put('profreq',uid('pr'),d);toast('Sent to Training for approval.');
+  },
+  'close-modal':()=>closeModal()
+});
+
+/* ---------- notices (with history) and approvals of detail changes ---------- */
+const NOTICE_ICON={surgery:'⚠',absence:'●',profile:'✎',leave:'●',info:'●'};
+function myNoticeList(){const id=ME.staffId;return id?Object.values(S.notices).filter(n=>(n.to||[]).includes(id)).sort((a,b)=>b.at-a.at):[];}
+function profreqPanel(){
+  if(!isTr())return'';
+  const list=Object.values(S.profreq).filter(x=>x.status==='pending'&&x.personId!==ME.staffId);if(!list.length)return'';
+  return'<section class="panel"><h2>Detail changes to approve <span class="tag info">'+list.length+'</span></h2><ul class="list">'+list.map(x=>{const p=S.people[x.personId]||{};return'<li><span><b>'+esc(p.name||'Someone')+'</b>: '+(x.phone?'number '+esc(p.phone||'')+' to '+esc(x.phone):'')+(x.phone&&x.email?'; ':'')+(x.email?'email '+esc(p.email||'none')+' to '+esc(x.email):'')+'</span><span class="row"><button class="btn sm pri" data-act="pr-decide" data-id="'+x.id+'" data-v="approved">Approve</button><button class="btn sm" data-act="pr-decide" data-id="'+x.id+'" data-v="declined">Decline</button></span></li>';}).join('')+'</ul></section>';
+}
+function noticesPanel(){
+  if(!ME.staffId)return'';
+  const all=myNoticeList(),me=ME.staffId,un=all.filter(n=>!(n.seen||{})[me]),hist=all.filter(n=>(n.seen||{})[me]);
+  const shown=UI.nhist?hist:un;
+  const li=n=>'<li class="'+(UI.nhist?'':'unseen')+'"><span><span class="nk">'+(NOTICE_ICON[n.kind]||'●')+'</span> '+esc(n.text)+' <span class="muted small">'+fmtTs(n.at)+'</span></span>'+(UI.nhist?'':'<button class="btn sm" data-act="notice-seen" data-id="'+n.id+'">Seen</button>')+'</li>';
+  return'<section class="panel notices"><h2>Notices and warnings'+(un.length?' <span class="tag info">'+un.length+'</span>':'')+'</h2>'+
+    '<div class="row" style="margin-bottom:8px"><button class="btn sm '+(UI.nhist?'':'pri')+'" data-act="nhist" data-v="0">New</button><button class="btn sm '+(UI.nhist?'pri':'')+'" data-act="nhist" data-v="1">History ('+hist.length+')</button>'+(!UI.nhist&&un.length>1?'<span class="sp"></span><button class="btn sm" data-act="notice-all">Mark all as seen</button>':'')+'</div>'+
+    (shown.length?'<ul class="list">'+shown.slice(0,UI.nhist?40:15).map(li).join('')+'</ul>':'<p class="muted" style="margin:0">'+(UI.nhist?'Nothing in the history yet.':'No new notices.')+'</p>')+'</section>';
+}
+Object.assign(ACT,{
+  nhist:el=>{UI.nhist=el.dataset.v==='1';},
+  'notice-seen':el=>mut('notices',el.dataset.id,b=>b&&Object.assign({},b,{seen:Object.assign({},b.seen||{},{[ME.staffId]:Date.now()})})),
+  'notice-all':()=>mutMany('notices',myNoticeList().filter(n=>!(n.seen||{})[ME.staffId]).map(n=>n.id),b=>Object.assign({},b,{seen:Object.assign({},b.seen||{},{[ME.staffId]:Date.now()})})),
+  'pr-decide':el=>mut('profreq',el.dataset.id,b=>Object.assign({},b,{status:el.dataset.v}))
+});
+
+/* ---------- absences ---------- */
+const ABS_TEXT={reported:'Reported',pending:'Marked absent, waiting for Training',absent:'Absent (confirmed)',fine:'Contacted, intern is fine'};
+function absId(internId,date){return'a'+internId+'_'+date.replace(/-/g,'');}
+function openAbsences(){
+  const e=E();return Object.values(S.absences).filter(a=>a.status==='reported'||a.status==='pending').filter(a=>e.role==='training'||unitsOfDay(a).some(u=>myUnits().includes(u))).sort((a,b)=>a.date<b.date?1:-1);
+}
+function unitsOfDay(a){const it=S.interns[a.internId];if(!it)return a.unit?[a.unit]:[];const u=placementAt(it,a.date,S.surgery[it.id]);return u?[u]:(a.unit?[a.unit]:[]);}
+function absActions(a){
+  if(a.status==='absent'||a.status==='fine')return'';
+  const tr=isTr();
+  return'<span class="row">'+(tr?'<button class="btn sm pri" data-act="abs-set" data-id="'+a.id+'" data-v="absent">Confirm absent</button>':'<button class="btn sm pri" data-act="abs-set" data-id="'+a.id+'" data-v="pending">Mark absent</button>')+
+    (tr&&a.status==='pending'?'':'')+'<button class="btn sm" data-act="abs-set" data-id="'+a.id+'" data-v="fine">Contacted, intern is fine</button></span>';
+}
+function absencePanel(){
+  const list=openAbsences();if(!list.length)return'';
+  return'<section class="panel"><h2>Intern not reached <span class="tag warn">'+list.length+'</span></h2><ul class="list">'+list.map(a=>'<li><span>'+internLink(a.internId)+' on '+fmtDate(a.date)+' <span class="muted small">'+esc(ABS_TEXT[a.status]||a.status)+(a.status==='reported'&&(a.reports||[]).length>1?' ('+(a.reports||[]).length+' reports)':'')+'</span></span>'+absActions(a)+'</li>').join('')+'</ul></section>';
+}
+Object.assign(ACT,{
+  'abs-set':async el=>{
+    const id=el.dataset.id,v=el.dataset.v,a=S.absences[id];if(!a)return;
+    if(v==='absent'&&!(await askConfirm('Confirm absence','Confirm that '+esc((S.interns[a.internId]||{}).name||'this intern')+' was absent on '+esc(fmtDate(a.date))+'? It counts against the leave limit and does not count as an on-call.','Confirm')))return;
+    await mut('absences',id,b=>Object.assign({},b,{status:v}));logEv('Absence on '+a.date+' for '+((S.interns[a.internId]||{}).name||'an intern')+': '+v);
+  },
+  'abs-mark':async el=>{
+    const id=el.dataset.id,date=($('abs-date')||{}).value||todayStr(),tr=isTr(),it=S.interns[id];if(!it)return;
+    const aid=absId(id,date),old=S.absences[aid];
+    if(old&&(old.status==='absent'||old.status==='pending')){toast('This day is already marked.');return;}
+    await mut('absences',aid,b=>Object.assign({},b||{},{internId:id,date,status:tr?'absent':'pending'}));
+    logEv('Marked '+it.name+' absent on '+date);
+  },
+  'abs-report':async el=>{
+    const id=el.dataset.id,it=S.interns[id];if(!it)return;
+    const date=todayStr();
+    if(!(await askConfirm('Can’t reach or find this intern','Tell the coordinator that you can’t reach or find '+esc(it.name)+' today ('+esc(fmtDate(date))+')? Only the coordinators and Training will see this.','Send')))return;
+    try{await put('absences',absId(id,date),{internId:id,date,status:'reported'});toast('Sent to the coordinators.');}catch(e){}
+  }
+});
+
+/* ---------- Surgical allocation ---------- */
+const isNeuroSpec=s=>!!s&&!!CFG.neuroSpec&&String(s).trim().toLowerCase()===String(CFG.neuroSpec).trim().toLowerCase();
+const gsInterns=ym=>Object.values(S.interns).filter(it=>{const e=entryAt(it,ym);return e&&e.dept==='GS';}).sort((a,b)=>a.name.localeCompare(b.name));
+const sssInterns=ym=>Object.values(S.interns).filter(it=>{const e=entryAt(it,ym);return e&&e.dept==='SSS';}).sort((a,b)=>a.name.localeCompare(b.name));
+function firmsDone(it,exceptYm){const s=new Set();it.plan.forEach(e=>{if(e.dept==='GS'&&e.ym!==exceptYm){if(e.fa)s.add(e.fa);if(e.fb)s.add(e.fb);}});return s;}
+function firmCounts(ym,override){
+  const c={a:{},b:{}};FIRMS.forEach(f=>{c.a[f]=0;c.b[f]=0;});
+  gsInterns(ym).forEach(it=>{const e=entryAt(it,ym),o=override&&override[it.id]||{};const fa=o.fa!==undefined?o.fa:e.fa,fb=o.fb!==undefined?o.fb:e.fb;if(fa)c.a[fa]++;if(fb)c.b[fb]++;});
+  return c;
+}
+function firmWarnings(it,ym,fa,fb){
+  const out=[],done=firmsDone(it,ym);
+  if(fa&&fa===fb)out.push('Firm '+fa+' is set for both halves.');
+  [fa,fb].filter(Boolean).forEach(f=>{if(done.has(f)){const m=it.plan.find(e=>e.dept==='GS'&&e.ym!==ym&&(e.fa===f||e.fb===f));out.push('Already did Firm '+f+(m?' in '+fmtYm(m.ym):'')+'.');}});
+  const gs=it.plan.filter(e=>e.dept==='GS'),all=new Set();let filled=0;
+  gs.forEach(e=>{const a=e.ym===ym?fa:e.fa,b=e.ym===ym?fb:e.fb;if(a){all.add(a);filled++;}if(b){all.add(b);filled++;}});
+  if(gs.length&&filled===gs.length*2&&all.size<Math.min(4,filled))out.push('Will not rotate through all four firms ('+all.size+' of '+Math.min(4,filled)+').');
+  const c=firmCounts(ym,{[it.id]:{fa:fa||'',fb:fb||''}});
+  [['a','first'],['b','second']].forEach(([k,lab])=>{const v=FIRMS.map(f=>c[k][f]),mx=Math.max(...v),mn=Math.min(...v);if(mx-mn>1)out.push('Firms are uneven in the '+lab+' half ('+FIRMS.map((f,i)=>f+' '+v[i]).join(', ')+').');});
+  return out;
+}
+function surgClashes(it,ym,oldS,nextS){
+  const out=[],n=dim(ym);
+  shiftsOf(it.id,true).filter(s=>ymOf(s.date)===ym).forEach(s=>{
+    const now=rotaOf(placementAt(it,s.date,nextS));
+    if(now!==s.unit)out.push('On call on '+fmtDate(s.date)+' in the '+(UNIT_NAME[s.unit]||s.unit)+' rota, but after this change they will be in the '+(UNIT_NAME[now]||'another')+' rota that day.');
+  });
+  leaveReqs(it.id).filter(r=>r.status!=='declined'&&(ymOf(r.from)===ym||ymOf(r.to)===ym)).forEach(r=>out.push((KIND_NAME[r.kind]||'Leave')+' '+fmtDateY(r.from)+(r.to!==r.from?' to '+fmtDateY(r.to):'')+(r.status==='approved'?' (approved).':' (requested).')));
+  Object.values(S.requests).filter(r=>r.type==='swap'&&(r.internId===it.id||r.peerId===it.id)&&r.status!=='approved'&&r.status!=='declined').forEach(()=>out.push('An on-call swap request is still open.'));
+  [[1,15],[16,n]].forEach(([a,b])=>{const c=shiftsOf(it.id).filter(s=>{const d=+s.date.slice(8);return ymOf(s.date)===ym&&d>=a&&d<=b;}).length;if(c>CFG.shiftHalfMax)out.push('Already has '+c+' on-calls in the '+(a===1?'first':'second')+' half (limit '+CFG.shiftHalfMax+').');});
+  return out;
+}
+async function sgApply(id,next){
+  const it=S.interns[id],ym=UI.sgYm,old=S.surgery[id]||{spec:null,orthFirst:false};
+  next={spec:next.spec||null,orthFirst:!!next.orthFirst};
+  if((old.spec||null)===next.spec&&!!old.orthFirst===next.orthFirst)return;
+  const warns=surgClashes(it,ym,old,next);
+  if(warns.length&&!(await askConfirm('Check before saving','<ul style="margin:0 0 8px 18px;padding:0">'+warns.map(w=>'<li>'+esc(w)+'</li>').join('')+'</ul>You can still save. The coordinators involved will be told.','Save anyway')))return;
+  await mut('surgery',id,()=>next);
+  logEv('Set the surgical split for '+it.name);
+  const who=actorName(),mon=fmtYm(ym);
+  const jobs=[];
+  if(!!old.orthFirst!==next.orthFirst)jobs.push(notifyStaff(coordIdsC(['ORT']),'surgery',it.name+': Orthopedics moved to the '+(next.orthFirst?'first':'second')+' half of '+mon+' (by '+who+').'));
+  const wasN=isNeuroSpec(old.spec),isN=isNeuroSpec(next.spec);
+  if(wasN!==isN)jobs.push(notifyStaff(coordIdsC(['NEURO']),'surgery',it.name+' was '+(isN?'added to':'removed from')+' Neurosurgery in '+mon+' (by '+who+').'));
+  if(warns.length){const rotas=['GS','SSS','ORT'].concat(wasN||isN?['NEURO']:[]);jobs.push(notifyStaff(coordIdsC(rotas).concat(trainingIdsC()),'surgery','Clash for '+it.name+' in '+mon+' after a change to the surgical split: '+warns.slice(0,3).join(' ')+(warns.length>3?' (and more)':'')));}
+  await Promise.all(jobs);
+}
+function specOptions(cur){
+  const list=(CFG.surgSpecs||[]).slice();if(cur&&!list.some(x=>String(x).toLowerCase()===String(cur).toLowerCase()))list.push(cur);
+  return'<option value="">Not chosen yet</option>'+list.map(x=>'<option'+(String(cur||'').toLowerCase()===String(x).toLowerCase()?' selected':'')+'>'+esc(x)+'</option>').join('');
+}
+function sgSss(ym,edit){
+  const list=sssInterns(ym);
+  if(!list.length)return emptyBox('No one has the split surgical month in '+fmtYm(ym)+'.');
+  const rows=list.map(it=>{
+    const s=S.surgery[it.id]||{},sel='<select data-sg2="'+it.id+'" aria-label="Subspecialty for '+esc(it.name)+'"'+(edit?'':' disabled')+'>'+specOptions(s.spec)+'</select>',ort='<span class="chip" style="--uh:'+(HUE.ORT!=null?HUE.ORT:30)+'">Orthopedics</span>';
+    return'<tr><td>'+internLink(it.id)+'</td><td>'+(s.orthFirst?ort:sel)+'</td><td class="swc">'+(edit?'<button class="sw big" data-act="sg-swap" data-id="'+it.id+'" title="Switch the halves" aria-label="Switch the halves for '+esc(it.name)+'">⇄</button>':'')+'</td><td>'+(s.orthFirst?sel:ort)+'</td></tr>';}).join('');
+  return'<div class="scroll"><table class="tbl sg"><thead><tr><th>Intern</th><th>First half <span class="muted small">(1st to 15th)</span></th><th></th><th>Second half <span class="muted small">(16th to end)</span></th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="hint">The on-call lists follow these choices. An intern doing Neurosurgery is placed on the Neurosurgery rota; any other subspecialty is on the Surgical rota; the Orthopedics half is on the Orthopedics rota. In the Google Sheet this is the month cell, for example “Urology /Ortho”.</p>';
+}
+function sgGs(ym,edit){
+  const list=gsInterns(ym);
+  if(!list.length)return emptyBox('No one is on General surgery in '+fmtYm(ym)+'.');
+  const c=firmCounts(ym);
+  const strip=[['a','First half'],['b','Second half']].map(([k,l])=>{const v=FIRMS.map(f=>c[k][f]),uneven=Math.max(...v)-Math.min(...v)>1;return'<div class="firmstrip'+(uneven?' warn':'')+'"><b>'+l+'</b> '+FIRMS.map(f=>'<span>Firm '+f+': <b>'+c[k][f]+'</b></span>').join(' ')+(uneven?' <span class="tag warn">uneven</span>':'')+'</div>';}).join('');
+  const sel=(id,k,v)=>'<select data-gs="'+id+'" data-half="'+k+'" aria-label="Firm"'+(edit?'':' disabled')+'><option value="">Not set</option>'+FIRMS.map(f=>'<option value="'+f+'"'+(v===f?' selected':'')+'>Firm '+f+'</option>').join('')+'</select>';
+  const rows=list.map(it=>{
+    const e=entryAt(it,ym),w=firmWarnings(it,ym,e.fa||'',e.fb||''),done=[...firmsDone(it,ym)];
+    return'<tr><td>'+internLink(it.id)+(w.length?'<div class="small" style="color:var(--warn)" title="'+esc(w.join(' '))+'">⚠ '+esc(w[0])+'</div>':'')+'</td><td>'+sel(it.id,'a',e.fa||'')+'</td><td>'+sel(it.id,'b',e.fb||'')+'</td><td class="small muted">'+(done.length?'Done: '+esc(done.sort().join(', ')):'')+'</td></tr>';}).join('');
+  return'<div class="firmbox">'+strip+'</div>'+(edit?'<div class="row" style="margin:8px 0"><button class="btn" data-act="gs-suggest">Suggest allocation</button><span class="small muted">Fills every intern’s two halves so they cover all four firms, using the firms already done in earlier months. You can change it afterwards.</span></div>':'')+
+    '<div class="scroll"><table class="tbl"><thead><tr><th>Intern</th><th>First half</th><th>Second half</th><th>Earlier months</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="hint">In the Google Sheet the firms are in the month cell, for example “G. Surg I /II”. Interns see their own firms and the people in them.</p>';
+}
+function staffGroups(){return FIRMS.map(f=>({key:f,label:'Firm '+f})).concat((CFG.surgSpecs||[]).filter(x=>!isNeuroSpec(x)&&!/ortho/i.test(x)).map(x=>({key:x,label:x})));}
+function sgStaff(edit){
+  const cards=staffGroups().map(g=>{
+    const list=Object.values(S.firmstaff).filter(x=>x.firm===g.key).sort((a,b)=>TITLES.indexOf(a.title)-TITLES.indexOf(b.title)||a.name.localeCompare(b.name));
+    return'<section class="panel"><h2>'+esc(g.label)+'</h2>'+(list.length?'<ul class="list">'+list.map(x=>'<li><span><b>'+esc(x.name)+'</b> <span class="tag mute">'+esc(x.title)+'</span>'+(x.phone?' <a href="'+telHref(x.phone)+'">'+esc(x.phone)+'</a>':'')+'</span>'+(edit?'<button class="btn sm" data-act="fs-del" data-id="'+x.id+'" aria-label="Remove '+esc(x.name)+'">Remove</button>':'')+'</li>').join('')+'</ul>':'<p class="muted small" style="margin:0 0 8px">No one added yet.</p>')+
+      (edit?'<div class="fsadd"><input type="text" placeholder="Name" data-fs="name" data-key="'+esc(g.key)+'"><select data-fs="title" data-key="'+esc(g.key)+'">'+TITLES.map(t=>'<option>'+t+'</option>').join('')+'</select><input type="tel" placeholder="Contact number (optional)" data-fs="phone" data-key="'+esc(g.key)+'"><button class="btn sm pri" data-act="fs-add" data-key="'+esc(g.key)+'">Add</button></div>':'')+'</section>';
+  }).join('');
+  return'<p class="hint" style="margin-top:0">Consultants, chiefs, seniors and juniors for each General surgery firm and each surgical subspecialty. Interns on that rotation this month and next month see them, and the contact numbers.</p><div class="cols">'+cards+'</div>';
+}
+function viewSurgery(){
+  const ym=UI.sgYm||(UI.sgYm=ymOf(todayStr())),edit=canSurg(),tab=UI.sgTab||'sss';
+  const seg='<div class="seg"><button class="'+(tab==='sss'?'on':'')+'" data-act="sgtab" data-v="sss">SSS and Orthopedics</button><button class="'+(tab==='gs'?'on':'')+'" data-act="sgtab" data-v="gs">General surgery firms</button><button class="'+(tab==='staff'?'on':'')+'" data-act="sgtab" data-v="staff">Firm and subspecialty staff</button></div>';
+  const nav=tab==='staff'?'':'<button class="btn" data-act="sgmonth" data-n="-1">Previous month</button><b style="min-width:110px;text-align:center">'+fmtYm(ym)+'</b><button class="btn" data-act="sgmonth" data-n="1">Next month</button><button class="btn" data-act="sgmonth" data-n="0">This month</button>';
+  return head('Surgical allocation',tab==='sss'?'Subspecialty and orthopedics, half by half.':tab==='gs'?'Which firm each General surgery intern is in, half by half.':'Who the interns work with.','')+
+    '<div class="bar">'+seg+nav+'</div>'+(tab==='sss'?sgSss(ym,edit):tab==='gs'?sgGs(ym,edit):sgStaff(edit));
+}
+async function setFirm(id,k,val){
+  const ym=UI.sgYm,it=S.interns[id],e=entryAt(it,ym);if(!e)return;
+  const fa=k==='a'?val:(e.fa||''),fb=k==='b'?val:(e.fb||'');
+  const w=firmWarnings(it,ym,fa,fb);
+  if(val&&w.length&&!(await askConfirm('Check before saving','<ul style="margin:0 0 8px 18px;padding:0">'+w.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>You can still save it.','Save anyway')))return;
+  await mut('interns',id,b=>{const pl=b.plan.map(x=>{if(x.ym!==ym)return x;const y=Object.assign({},x);if(fa)y.fa=fa;else delete y.fa;if(fb)y.fb=fb;else delete y.fb;return y;});return Object.assign({},b,{plan:pl});});
+  logEv('Set the General surgery firm for '+it.name+' in '+fmtYm(ym));
+}
+async function suggestFirms(){
+  const ym=UI.sgYm,list=gsInterns(ym);if(!list.length)return;
+  if(!(await askConfirm('Suggest allocation','This sets both halves for '+plural(list.length,'intern')+' in '+esc(fmtYm(ym))+', replacing what is there now.','Suggest')))return;
+  const cnt={a:{},b:{}};FIRMS.forEach(f=>{cnt.a[f]=0;cnt.b[f]=0;});
+  const order=list.slice().sort((x,y)=>firmsDone(y,ym).size-firmsDone(x,ym).size||x.name.localeCompare(y.name)),res={};
+  order.forEach((it,ix)=>{
+    const done=firmsDone(it,ym),pick=(k,not)=>{
+      let cand=FIRMS.filter(f=>!done.has(f)&&!not.includes(f));if(!cand.length)cand=FIRMS.filter(f=>!not.includes(f));
+      cand.sort((p,q)=>cnt[k][p]-cnt[k][q]||((FIRMS.indexOf(p)-ix%4+4)%4)-((FIRMS.indexOf(q)-ix%4+4)%4));return cand[0];};
+    const fa=pick('a',[]);cnt.a[fa]++;const fb=pick('b',[fa]);cnt.b[fb]++;res[it.id]={fa,fb};
+  });
+  await mutMany('interns',list.map(i=>i.id),b=>{const r=res[b.id]||res[Object.keys(res).find(k=>S.interns[k]&&S.interns[k].name===b.name)];const pl=b.plan.map(x=>x.ym===ym?Object.assign({},x,r):x);return Object.assign({},b,{plan:pl});});
+  logEv('Suggested the General surgery firms for '+fmtYm(ym));toast('Firms filled in. Check any warnings that remain.');
+}
+Object.assign(ACT,{
+  sgtab:el=>{UI.sgTab=el.dataset.v;},
+  'sg-swap':el=>{const id=el.dataset.id,s=S.surgery[id]||{spec:null,orthFirst:false};return sgApply(id,{spec:s.spec,orthFirst:!s.orthFirst});},
+  'gs-suggest':()=>suggestFirms(),
+  'fs-add':async el=>{
+    const key=el.dataset.key,get=f=>document.querySelector('[data-fs="'+f+'"][data-key="'+key+'"]'),name=get('name').value.trim(),title=get('title').value,phone=get('phone').value.trim();
+    if(!name){toast('Enter a name.');return;}
+    if(phone&&!phoneKey(phone)){toast('That contact number does not look right.');return;}
+    await put('firmstaff',uid('f'),{firm:key,name,title,phone});logEv('Added '+name+' to '+key);
+  },
+  'fs-del':async el=>{const x=S.firmstaff[el.dataset.id];if(!x)return;if(!(await askConfirm('Remove '+x.name,'Remove '+esc(x.name)+' from '+esc(x.firm)+'?','Remove',true)))return;await del('firmstaff',el.dataset.id);logEv('Removed '+x.name+' from '+x.firm);}
+});
+document.addEventListener('change',ev=>{
+  const t=ev.target;if(!t||!t.dataset)return;
+  if(t.dataset.sg2){const id=t.dataset.sg2,s=S.surgery[id]||{spec:null,orthFirst:false};if(!canSurg())return;sgApply(id,{spec:t.value||null,orthFirst:!!s.orthFirst}).then(()=>scheduleRender());return;}
+  if(t.dataset.gs){if(!canSurg())return;setFirm(t.dataset.gs,t.dataset.half,t.value).then(()=>scheduleRender());return;}
+});
+
+/* ===================== version 4.5 additions (part B) ===================== */
+Object.assign(ACT,{tog:el=>{UI[el.dataset.k]=!UI[el.dataset.k];}});
+
+/* rotation cells carry a marker so a coordinator can grey out other rotations */
+function cellChip(e,it){
+  if(!e)return'';
+  let inner;
+  if(e.dept==='FROZEN')return chip('FROZEN','Frozen','frozen');
+  const label=BLOCK_SHORT[e.dept];
+  if(e.dept==='ELE'&&e.sub)inner=chip(e.dept,label,e.repeat?'rep':'')+'<small class="esub">'+esc(e.sub)+'</small>';
+  else inner=chip(e.dept,label,e.repeat?'rep':'');
+  const mine=(BLOCK_UNITS[e.dept]||[]).some(u=>myUnits().includes(u))||(isDualMe()&&(ME.units||[]).some(u=>(BLOCK_UNITS[e.dept]||[]).includes(u)));
+  return'<span class="cc'+(mine?' f1':'')+'">'+inner+'</span>';
+}
+
+/* ---------- where each intern is, with the subspecialty or firm ---------- */
+function placeDetail(it,date){
+  const ym=ymOf(date),e=entryAt(it,ym),u=placementAt(it,date,S.surgery[it.id]);
+  if(!e||!u)return'';
+  const sg=S.surgery[it.id]||{};
+  if(e.dept==='MSS'&&e.sub)return e.sub;
+  if(e.dept==='SSS'&&u==='NEURO')return CFG.neuroSpec||'Neurosurgery';
+  if(e.dept==='SSS'&&u==='ORT')return'Orthopedics';
+  if(e.dept==='SSS'&&sg.spec)return sg.spec;
+  if(e.dept==='GS'){const half=+date.slice(8,10)<=15?e.fa:e.fb;return half?'Firm '+half:'';}
+  if(e.dept==='ELE'&&e.sub)return e.sub;
+  return'';
+}
+function myTeamLine(p){
+  const out=[];(p.units||[]).forEach(u=>coordsFor(u).forEach(c=>{if(c.id!==p.id&&!out.find(t=>t.id===c.id))out.push(c);}));
+  if(!out.length)return'';
+  return out.map(c=>esc(c.name)).join(', ');
+}
+function ovCoord(){
+  const e=E(),p=S.people[e.personId||ME.staffId]||S.people[ME.staffId];if(!p)return emptyBox('Your profile could not be found.');
+  const units=(isDualMe()&&!e.personId?ME.units:p.units)||[],today=todayStr(),ym=ymOf(today);
+  const now=internsInUnits(units,today),dec=myDecisions(),iss=computeIssues(units);
+  const eles=[];units.forEach(u=>electivesIn(u,ym).forEach(it=>{if(!eles.find(x=>x.id===it.id))eles.push(it);}));
+  const team=myTeamLine(p);
+  const sub='You are '+esc(roleTitle(p).replace(/^Training and /,'').toLowerCase().replace(/^./,c=>c.toUpperCase()))+(team?'. '+(p.role==='deputy'?'Your coordinator is ':'Your deputy is ')+team:'');
+  const rowOf=(it,tag)=>'<tr><td>'+internLink(it.id)+'</td><td>'+chip(placementAt(it,today,S.surgery[it.id])||'ELE',UNIT_NAME[placementAt(it,today,S.surgery[it.id])]||'Elective')+(placeDetail(it,today)?' <span class="small">'+esc(placeDetail(it,today))+'</span>':'')+(tag||'')+'</td><td><a href="'+telHref(it.phone)+'">'+esc(it.phone)+'</a></td></tr>';
+  const rows=now.map(it=>rowOf(it)).join('')+eles.filter(it=>!now.find(x=>x.id===it.id)).map(it=>rowOf(it,' <span class="tag mute">elective</span>')).join('');
+  const nn=now.length+eles.filter(it=>!now.find(x=>x.id===it.id)).length;
+  return head(isDualMe()?'My rotation':'My rotation',sub)+
+  '<div class="kpis"><div class="kpi"><b>'+nn+'</b><span>interns with you now</span></div><div class="kpi"><b>'+dec.length+'</b><span>approvals waiting for you</span></div><div class="kpi"><b>'+iss.length+'</b><span>things to look at</span></div></div>'+
+  '<div class="cols">'+noticesPanel()+absencePanel()+
+  '<section class="panel"><h2>Interns with you today</h2>'+(nn?'<div class="scroll" style="max-height:420px"><table class="tbl"><thead><tr><th>Intern</th><th>Placement</th><th>Contact</th></tr></thead><tbody>'+rows+'</tbody></table></div>':emptyBox('No interns are placed with you today.'))+'</section>'+
+  '<section class="panel"><h2>Approvals waiting</h2>'+(dec.length?'<ul class="list">'+dec.slice(0,6).map(r=>'<li><span>'+internLink(r.internId)+', '+esc(KIND_NAME[r.kind]||r.type).toLowerCase()+' '+(r.from?fmtDate(r.from):'')+'</span><a class="small" href="#requests">Review</a></li>').join('')+'</ul>':'<p class="muted" style="margin:0">Nothing waiting.</p>')+'</section>'+
+  issuesPanel(iss,8)+'</div>';
+}
+function ovTraining(){
+  let h=ovTraining0();
+  const extra=noticesPanel()+absencePanel()+profreqPanel();
+  if(!extra)return h;
+  const i=h.lastIndexOf('</div>');return h.slice(0,i)+extra+h.slice(i);
+}
+function routeContent(){
+  if(UI.route==="myrot")return ovCoord();
+  return routeContent0();
+}
+
+/* ---------- requests: with coordinators for more than a week ---------- */
+const WAIT_DAYS=7;
+function viewRequests(){
+  let h=viewRequests0();
+  if(!isTr()||UI.reqF!=='open')return h;
+  const old=waitingOnCoord().filter(r=>Date.now()-(r.createdAt||0)>WAIT_DAYS*864e5);
+  if(!old.length)return h;
+  const box='<div class="note warn"><b>'+old.length+(old.length===1?' request has':' requests have')+' been with a coordinator for more than a week.</b><ul class="list" style="margin-top:6px">'+old.slice(0,8).map(r=>'<li><span>'+internLink(r.internId)+', '+esc((KIND_NAME[r.kind]||r.type)).toLowerCase()+(r.from?' from '+fmtDate(r.from):'')+' <span class="muted small">asked '+Math.floor((Date.now()-r.createdAt)/864e5)+' days ago</span></span></li>').join('')+'</ul><p class="small" style="margin:6px 0 0">You can decide these yourself in the list below, under “With coordinators”.</p></div>';
+  const i=h.indexOf('</header>');return i<0?h:h.slice(0,i+9)+box+h.slice(i+9);
+}
+
+/* ---------- downloads: confirm and log ---------- */
+async function guardedCsv(what,name,rows){
+  if(!(await askConfirm('Download '+what,'This saves a file with '+(rows.length-1)+' rows of personal details to this device. Keep it private and delete it when you are done.','Download')))return;
+  logEv('Downloaded '+what+' ('+(rows.length-1)+' rows)');
+  return saveCsv(name,rows);
+}
+Object.assign(ACT,{
+  'export-rot':()=>{
+    const months=gridMonths();let list=filteredInterns(months);
+    if(!isTr()){const us=myUnits();list=list.filter(it=>months.some(m=>{const e=entryAt(it,m);return e&&(BLOCK_UNITS[e.dept]||[]).some(u=>us.includes(u));}));}
+    const rows=[['Name','Group','Contact number','Started'].concat(months.map(fmtYm))];
+    list.forEach(it=>rows.push([it.name,groupsLabel?groupsLabel(it):(it.group||''),it.phone,fmtYm(planStart(it))].concat(months.map(m=>{const e=entryAt(it,m);return e?BLOCK_NAME[e.dept]+(e.sub?' ('+e.sub+')':''):'';}))));
+    return guardedCsv('the rotation list','rotations.csv',rows);
+  },
+  'export-int':()=>{const rows=[['Name','Group','Contact number','Email','Start month']];shownInterns().forEach(it=>rows.push([it.name,it.group||'',it.phone,it.email||'',planStart(it)]));return guardedCsv('the intern list','interns.csv',rows);}
+});
+
+/* ---------- sign-in: send me my code ---------- */
+function clientId(){try{let c=localStorage.getItem('ib_cid');if(!c){c=Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem('ib_cid',c);}return c;}catch(e){return'';}}
+function pageLink(){return location.origin+location.pathname;}
+function loginView(){
+  return'<div class="claim"><h1>Internship board</h1><p>Sign in with the contact number you gave the Training department and your personal access code.</p>'+
+  '<label for="lg-phone">Contact number</label><input type="tel" id="lg-phone" value="'+esc(UI.lPhone||'')+'" autocomplete="tel">'+
+  '<label for="lg-code">Access code</label><input type="text" id="lg-code" value="'+esc(UI.lCode||'')+'" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" style="text-transform:uppercase">'+
+  '<div id="lg-msg">'+(UI.lMsg?'<div class="note '+(UI.lOk?'ok':'bad')+'">'+esc(UI.lMsg)+'</div>':'')+'</div>'+
+  '<div class="row" style="margin-top:12px"><button class="btn pri" data-act="login">Sign in</button><button class="btn" data-act="req-code">Send me my code</button></div>'+
+  (API.clientId?'<p class="hint" style="margin-top:22px">Staff can also use their Google account.</p><div id="g-btn"></div>':'')+
+  '<p class="hint">“Send me my code” emails the code to the address the Training department has on file for your number. It only works if an email address was given.</p></div>';
+}
+Object.assign(ACT,{
+  'req-code':async()=>{
+    const ph=($('lg-phone')||{}).value||'';UI.lPhone=ph;
+    if(!phoneKey(ph)){UI.lMsg='Enter your contact number first.';UI.lOk=false;return;}
+    try{const j=await call('requestcode',{phone:ph,cid:clientId(),link:pageLink()});UI.lMsg=j.message||'Done.';UI.lOk=true;}
+    catch(e){UI.lMsg=e.message;UI.lOk=false;}
+  },
+  'send-codes':()=>{
+    const ni=Object.values(S.interns).length,np=Object.values(S.people).length;
+    openModal('<h2>Send access codes by email</h2><p class="hint" style="margin-top:0">Each person gets only their own code, at the email address on file. People without an email are listed afterwards.</p>'+
+      '<label class="inline"><input type="radio" name="sc-mode" value="unsent" checked>Only people who have not been sent one yet</label><label class="inline"><input type="radio" name="sc-mode" value="all">Everyone again</label>'+
+      '<div style="margin-top:8px"><label class="inline"><input type="checkbox" id="sc-int" checked>Interns ('+ni+')</label><label class="inline"><input type="checkbox" id="sc-staff" checked>Coordinators and Training ('+np+')</label></div>'+
+      '<div id="sc-msg"></div><div class="foot"><button class="btn" data-act="close">Close</button><button class="btn pri" data-act="sc-go">Send</button></div>');
+  },
+  'sc-go':async()=>{
+    const mode=(document.querySelector('input[name=sc-mode]:checked')||{}).value||'unsent',kinds=[];
+    if($('sc-int').checked)kinds.push('intern');if($('sc-staff').checked)kinds.push('staff');
+    if(!kinds.length){$('sc-msg').innerHTML='<div class="note bad">Choose who to send to.</div>';return;}
+    $('sc-msg').innerHTML='<div class="note info">Sending…</div>';
+    try{
+      const j=await call('sendcodes',{mode,kinds,link:pageLink()});
+      $('sc-msg').innerHTML='<div class="note ok"><b>'+j.sent+' of '+j.total+' sent.</b>'+(j.left?'<br>'+j.left+' are left because of the daily email limit. Send again tomorrow and choose “not sent yet”.':'')+(j.noEmail.length?'<br>No email on file: '+esc(j.noEmail.slice(0,20).join(', '))+(j.noEmail.length>20?' and '+(j.noEmail.length-20)+' more':''):'')+(j.failed.length?'<br>Failed: '+esc(j.failed.join(', ')):'')+'</div>';
+    }catch(e){$('sc-msg').innerHTML='<div class="note bad">'+esc(e.message)+'</div>';}
+  }
+});
+
+/* ---------- profile: surgical panel for interns, absence for staff ---------- */
+const KIND_LEAVE={annual:'Annual leave',sick:'Sick leave',emergency:'Emergency leave'};
+function firmStaffFor(key){return Object.values(S.firmstaff).filter(x=>x.firm===key).sort((a,b)=>TITLES.indexOf(a.title)-TITLES.indexOf(b.title)||a.name.localeCompare(b.name));}
+function staffList(key){
+  const l=firmStaffFor(key);if(!l.length)return'<p class="muted small" style="margin:0">No names added yet.</p>';
+  return'<ul class="list">'+l.map(x=>'<li><span>'+esc(x.name)+' <span class="tag mute">'+esc(x.title||'')+'</span></span>'+(x.phone?'<a href="'+telHref(x.phone)+'">'+esc(x.phone)+'</a>':'')+'</li>').join('')+'</ul>';
+}
+function internSurgPanel(it){
+  const ym0=ymOf(todayStr()),yms=[ym0,ymAdd(ym0,1)],mine=ME.internId;
+  let out='';
+  yms.forEach(m=>{
+    const e=entryAt(it,m);if(!e||(e.dept!=='GS'&&e.dept!=='SSS'))return;
+    const sg=S.surgery[it.id]||{};
+    if(e.dept==='GS'){
+      const mates=(S.board.GS[m]||[]).filter(x=>x.id!==it.id);
+      const firmsMine=[e.fa,e.fb].filter(Boolean);
+      out+='<section class="panel"><h2>General surgery, '+fmtYm(m)+'</h2><p style="margin:0 0 8px">'+(e.fa||e.fb?'First half: <b>'+(e.fa?'Firm '+esc(e.fa):'not set')+'</b>. Second half: <b>'+(e.fb?'Firm '+esc(e.fb):'not set')+'</b>.':'<span class="muted">Your firm has not been set yet.</span>')+'</p>';
+      [...new Set(firmsMine)].forEach(f=>{out+='<h3>Firm '+esc(f)+' team</h3>'+staffList(f);});
+      const sameF=mates.filter(x=>firmsMine.some(f=>f===x.fa||f===x.fb)),others=mates.filter(x=>!sameF.includes(x));
+      const lv=n=>{const l=S.peerLeave.filter(p=>p.internId===n.id&&ymOf(p.from)===m||p.internId===n.id&&ymOf(p.to)===m);return l.map(p=>'<div class="small"><span class="tag warn">'+esc(KIND_LEAVE[p.kind]||'Leave')+'</span> '+fmtDate(p.from)+(p.to!==p.from?' to '+fmtDate(p.to):'')+'</div>').join('');};
+      out+='<h3 style="margin-top:12px">Interns in your firm</h3>'+(sameF.length?'<ul class="list">'+sameF.map(x=>'<li><span>'+esc(x.name)+' <span class="muted small">Firm '+esc(x.fa||'?')+' / '+esc(x.fb||'?')+'</span>'+lv(x)+'</span><button class="btn sm" data-act="abs-report" data-id="'+x.id+'">Can’t reach them today</button></li>').join('')+'</ul>':'<p class="muted small" style="margin:0">No one else yet.</p>');
+      if(others.length)out+='<h3 style="margin-top:12px">Interns in other firms</h3><p class="small" style="margin:0">'+others.map(x=>esc(x.name)+' <span class="muted">('+esc(x.fa||'?')+'/'+esc(x.fb||'?')+')</span>').join(', ')+'</p>';
+      out+='</section>';
+    }else{
+      const spec=sg.spec,mates=(S.board.SSS[m]||[]).filter(x=>x.id!==it.id&&spec&&x.spec===spec);
+      const lv=n=>S.peerLeave.filter(p=>p.internId===n.id&&(ymOf(p.from)===m||ymOf(p.to)===m)).map(p=>'<div class="small"><span class="tag warn">'+esc(KIND_LEAVE[p.kind]||'Leave')+'</span> '+fmtDate(p.from)+(p.to!==p.from?' to '+fmtDate(p.to):'')+'</div>').join('');
+      out+='<section class="panel"><h2>Surgical subspecialty, '+fmtYm(m)+'</h2><p style="margin:0 0 8px">'+(spec?'<b>'+esc(spec)+'</b>'+(sg.orthFirst?' second half, orthopedics first':' first half, orthopedics second'):'<span class="muted">Your subspecialty has not been assigned yet.</span>')+'</p>'+
+        (spec&&!isNeuroSpec(spec)?'<h3>'+esc(spec)+' team</h3>'+staffList(spec):'')+
+        (spec?'<h3 style="margin-top:12px">Interns with you</h3>'+(mates.length?'<ul class="list">'+mates.map(x=>'<li><span>'+esc(x.name)+lv(x)+'</span><button class="btn sm" data-act="abs-report" data-id="'+x.id+'">Can’t reach them today</button></li>').join('')+'</ul>':'<p class="muted small" style="margin:0">No one else yet.</p>'):'')+'</section>';
+    }
+  });
+  return out?'<div class="cols" style="margin-top:16px">'+out+'</div>':'';
+}
+function staffAbsPanel(it){
+  const rows=Object.values(S.absences).filter(a=>a.internId===it.id).sort((a,b)=>a.date<b.date?1:-1).slice(0,8);
+  return'<div class="cols" style="margin-top:16px"><section class="panel"><h2>Attendance</h2><div class="row" style="margin-bottom:8px"><input type="date" id="abs-date" value="'+todayStr()+'" style="width:auto"><button class="btn sm pri" data-act="abs-mark" data-id="'+it.id+'">Mark absent</button></div><p class="hint" style="margin:0 0 6px">'+(isTr()?'Training’s mark counts straight away.':'Training has to confirm it before it counts against the leave limit.')+'</p>'+
+    (rows.length?'<ul class="list">'+rows.map(a=>'<li><span>'+fmtDate(a.date)+' <span class="muted small">'+esc(ABS_TEXT[a.status]||a.status)+'</span></span>'+absActions(a)+'</li>').join('')+'</ul>':'<p class="muted small" style="margin:0">No absences recorded.</p>')+'</section></div>';
+}
+function viewProfile(id){
+  let h=viewProfile0(id);const it=S.interns[id];if(!it)return h;
+  const e=E();
+  if(e.role==='intern'&&e.internId===id)return h+internSurgPanel(it);
+  if(e.role!=='intern')return h+staffAbsPanel(it);
+  return h;
+}
+
+/* ===================== version 4.5 additions (part C: on-call) ===================== */
+const FLAG_TEXT={sick:'Sick leave',emergency:'Emergency leave',absent:'Absent'};
+function flagOf(unit,date,id){const f=S.leaveFlags&&S.leaveFlags[ocKey(unit,ymOf(date))];return f&&f[dayKey(date)]&&f[dayKey(date)][id]||'';}
+function flagTag(unit,date,id){const f=flagOf(unit,date,id);return f?' <span class="tag warn">'+esc(FLAG_TEXT[f]||f)+'</span>':'';}
+function lastCallText(id,ym){
+  const it=S.interns[id];if(!it)return'';
+  const first=ym+'-01',all=shiftsOf(id,true),before=all.filter(s=>s.date<first),thisM=all.filter(s=>ymOf(s.date)===ym);
+  const prev=entryAt(it,ymAdd(ym,-1)),ele=prev&&prev.dept==='ELE'?' Last month was an elective'+(prev.sub?' ('+esc(prev.sub)+')':'')+'.':'';
+  if(!before.length)return'<span class="muted">None recorded.</span>'+ele;
+  const last=before[before.length-1];let w='';
+  if(thisM.length){const nx=thisM[0],diff=Math.abs(dayCount(last.date,nx.date)-1);if(diff<MIN_GAP)w=' <span class="tag warn">Next call '+fmtDate(nx.date)+', only '+(diff-1<0?0:diff-1)+' free day'+(diff-1===1?'':'s')+'</span>';}
+  return fmtDate(last.date)+' <span class="muted">'+esc(UNIT_NAME[last.unit]||last.unit)+'</span>'+w+ele;
+}
+function ocWarnings(unit,ym){
+  const out=[],n=dim(ym);
+  const add=(sev,date,id,text)=>out.push({sev,date,id,text});
+  for(let d=1;d<=n;d++){
+    const date=ym+'-'+pad(d),rec=dayRec(unit,date);
+    if(rec.need!=null&&rec.ids.length<rec.need)add(1,date,null,'Short of cover: '+rec.ids.length+' of '+rec.need+' interns.');
+    rec.ids.forEach(id=>{
+      const it=S.interns[id];if(!it)return;
+      const f=flagOf(unit,date,id);
+      if(f)add(1,date,id,(FLAG_TEXT[f]||f)+' on a call day. Cover may be needed, and this call does not count.');
+      const lv=leaveReqs(id).find(r=>r.status==='approved'&&r.from<=date&&date<=r.to);
+      if(lv&&lv.kind==='annual')add(1,date,id,'Has approved annual leave on a call day.');
+      else if(lv&&!f)add(2,date,id,'Has approved '+(KIND_NAME[lv.kind]||'leave').toLowerCase()+' on a call day.');
+      const pend=leaveReqs(id).find(r=>r.status!=='approved'&&r.status!=='declined'&&r.from<=date&&date<=r.to);
+      if(pend)add(2,date,id,'Has a leave request on this day that is not decided yet.');
+      const gap=gapClash(id,date,unit);
+      if(gap&&gap.date<date)add(2,date,id,'Only '+Math.max(gap.diff-1,0)+' free day'+(gap.diff-1===1?'':'s')+' after the call on '+fmtDate(gap.date)+' ('+(UNIT_NAME[gap.unit]||gap.unit)+'). Two are needed.');
+      if(rotaOf(placementAt(it,date,S.surgery[id]))!==unit)add(2,date,id,'Not placed in this rota on this date.');
+    });
+  }
+  const seen={};
+  Object.values(S.interns).forEach(it=>{
+    const sh=shiftsOf(it.id).filter(s=>s.unit===unit&&ymOf(s.date)===ym);
+    sh.forEach(s=>{
+      const pc=periodCounts(it.id,s.date),max=pc.split?CFG.shiftHalfMax:CFG.shiftMonthMax,wkMax=pc.split?CFG.wkHalfWarn:CFG.wkMonthWarn,k=it.id+pc.pk;
+      if(pc.total>max&&!seen['m'+k]){seen['m'+k]=1;add(2,s.date,it.id,'Over the on-call limit: '+pc.total+' of '+max+(pc.split?' in this half.':' this month.'));}
+      if(pc.wk>wkMax&&!seen['w'+k]){seen['w'+k]=1;add(2,s.date,it.id,'Over the weekend and holiday limit: '+pc.wk+' of '+wkMax+'.');}
+    });
+  });
+  return out.sort((a,b)=>a.sev-b.sev||(a.date<b.date?-1:1));
+}
+function warnPanel(unit,ym){
+  const list=ocWarnings(unit,ym);
+  return'<section class="panel"><h2>Warnings for '+fmtYm(ym)+' <span class="tag '+(list.length?'warn':'ok')+'">'+list.length+'</span></h2>'+
+    (list.length?'<ul class="list">'+list.map(w=>'<li><span><b>'+fmtDate(w.date)+'</b> '+(w.id?internLink(w.id)+': ':'')+esc(w.text)+'</span><button class="btn sm" data-act="ocgo" data-d="'+w.date+'">Open day</button></li>').join('')+'</ul>':'<p class="muted" style="margin:0">Nothing to look at in this rota this month.</p>')+
+    '<p class="hint">Checked live: cover shortfalls, sick or emergency leave and absences, leave clashes, calls too close together (also across rotas and months), limits, and interns not placed in this rota.</p></section>';
+}
+function viewOncall(){
+  const h=viewOncall0(),e=E();
+  const unit=UI.ocUnit,ym=UI.ocYm||ymOf(todayStr());
+  if(e.role==='intern'||!unit||unit==='EMERGENCY')return h;
+  const cnt=ocWarnings(unit,ym).length,tab=UI.ocTab||'rota';
+  const seg='<div class="bar"><div class="seg"><button class="'+(tab==='rota'?'on':'')+'" data-act="octab" data-v="rota">Rota</button><button class="'+(tab==='warn'?'on':'')+'" data-act="octab" data-v="warn">Warnings'+(cnt?' ('+cnt+')':'')+'</button></div></div>';
+  const i=h.indexOf('<div class="cols oc-cols">');if(i<0)return h;
+  if(tab==='warn')return h.slice(0,i)+seg+warnPanel(unit,ym);
+  return h.slice(0,i)+seg+h.slice(i);
+}
+Object.assign(ACT,{
+  octab:el=>{UI.ocTab=el.dataset.v;},
+  ocgo:el=>{UI.ocTab='rota';UI.ocDay=el.dataset.d;},
+  'assign-ovr':async el=>{
+    const date=el.dataset.d,id=el.dataset.i,unit=UI.ocUnit,it=S.interns[id];if(!isTr()||!it)return;
+    if(!(await askConfirm('Add during annual leave','Add '+esc(it.name)+' on '+esc(fmtDate(date))+' although they have approved annual leave that day?','Add anyway')))return;
+    logEv('Put '+it.name+' on the '+UNIT_NAME[unit]+' rota for '+fmtDate(date)+' over approved annual leave');
+    return mut('oncall',ocKey(unit,ymOf(date)),b=>{b=b||{unit,ym:ymOf(date),days:{}};b.unit=unit;b.ym=ymOf(date);b.days=b.days||{};const r=ensureDay(b.days,date);if(!r.ids.includes(id))r.ids.push(id);b.ovr=[dayKey(date)+':'+id];return b;});
+  }
+});
+
+/*V45-JS-END*/
 init();
 </script>
 </body>
