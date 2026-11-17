@@ -632,7 +632,17 @@ function cleanMobile(raw){
   return{phone:pick,flag:pick?'Not an 8-digit number, please check':'No number'};
 }
 
-const APP_VERSION='4.1';
+const APP_VERSION='4.2';
+
+/* the groups a part-time intern rotates with (one row per group in the sheet) */
+function groupsOf(it){
+  if(patternApplies(it))return it.group?[it.group]:[];
+  const s=new Set();(it.plan||[]).forEach(e=>{if(e.g)s.add(e.g);});
+  if(!s.size&&it.group)s.add(it.group);
+  return GROUPS.filter(g=>s.has(g));
+}
+const inGroup=(it,g)=>groupsOf(it).includes(g);
+const groupsLabel=it=>groupsOf(it).map(grpLabel).join(', ');
 /* ============ Client state ============ */
 const API={url:'',token:null,clientId:''};
 let ME={role:'loading'},PREVIEW=null,SERVER_VER='',VER='0',LOADED=false,LOADERR='',SAVING=0;
@@ -1005,7 +1015,7 @@ function filteredInterns(months){
   return Object.values(S.interns).filter(it=>{
     if(q&&!(it.name.toLowerCase().includes(q)||String(it.phone||'').includes(q)))return false;
     if(UI.fCohort&&planStart(it)!==UI.fCohort)return false;
-    if(UI.fGroup&&it.group!==UI.fGroup)return false;
+    if(UI.fGroup&&!inGroup(it,UI.fGroup))return false;
     if(UI.fAffil&&affilOf(it)!==UI.fAffil)return false;
     if(UI.fBlock&&!months.some(m=>{const e=entryAt(it,m);return e&&e.dept===UI.fBlock;}))return false;
     return true;
@@ -1035,7 +1045,7 @@ function viewRotations(){
     return head('Rotations','How many interns are on each rotation in each calendar month.',actions)+bar+'<div class="note info small">There is no upper limit on interns per rotation. A cell turns blue only if you set a minimum for that rotation in Setup.</div><div class="scroll gw"><table class="rota cap"><thead><tr><th class="stick">Rotation</th>'+months.map(m=>'<th class="'+(m===cur?'cur':'')+'">'+fmtYmShort(m)+'</th>').join('')+'</tr></thead><tbody>'+rows+tot+'</tbody></table></div>';
   }
   const list=filteredInterns(months);
-  const rows=list.map(it=>'<tr><td class="stick"><a href="#intern-'+it.id+'">'+esc(it.name)+'</a><small>'+(affilOf(it)!=='SMC'?affilTag(affilOf(it))+' ':'')+(it.group?'Group '+esc(grpLabel(it.group))+', ':'')+(it.plan.length?'from '+fmtYm(planStart(it)):'no months yet')+'</small></td>'+months.map(m=>{const e=entryAt(it,m),ix=it.plan.findIndex(x=>x.ym===m);return'<td title="'+esc(entryTitle(e,m,it))+'">'+cellChip(e,it)+(tr&&ix>=0&&canSwapAt(it.plan,ix)?'<button class="sw" data-act="swap-pair" data-id="'+it.id+'" data-i="'+ix+'" title="Swap with the next month" aria-label="Swap with the next month">⇄</button>':'')+'</td>';}).join('')+(tr?'<td><button class="btn sm" data-act="edit-plan" data-id="'+it.id+'">Edit</button></td>':'')+'</tr>').join('');
+  const rows=list.map(it=>'<tr><td class="stick"><a href="#intern-'+it.id+'">'+esc(it.name)+'</a><small>'+(affilOf(it)!=='SMC'?affilTag(affilOf(it))+' ':'')+(groupsOf(it).length?'Group'+(groupsOf(it).length>1?'s ':' ')+esc(groupsLabel(it))+', ':'')+(it.plan.length?'from '+fmtYm(planStart(it)):'no months yet')+'</small></td>'+months.map(m=>{const e=entryAt(it,m),ix=it.plan.findIndex(x=>x.ym===m);return'<td title="'+esc(entryTitle(e,m,it))+'">'+cellChip(e,it)+(tr&&ix>=0&&canSwapAt(it.plan,ix)?'<button class="sw" data-act="swap-pair" data-id="'+it.id+'" data-i="'+ix+'" title="Swap with the next month" aria-label="Swap with the next month">⇄</button>':'')+'</td>';}).join('')+(tr?'<td><button class="btn sm" data-act="edit-plan" data-id="'+it.id+'">Edit</button></td>':'')+'</tr>').join('');
   return head('Rotations',tr?'Plan each intern’s twelve months. Plans must follow the pattern before they can be saved.':'Read-only view of every intern’s plan.',actions)+bar+legend+
     (list.length?'<div class="scroll gw" style="max-height:72vh"><table class="rota"><thead><tr><th class="stick">Intern ('+list.length+')</th>'+months.map(m=>'<th class="'+(m===cur?'cur':'')+'">'+fmtYmShort(m)+'</th>').join('')+(tr?'<th></th>':'')+'</tr></thead><tbody>'+rows+'</tbody></table></div>':emptyBox('No interns match these filters.'));
 }
@@ -1261,7 +1271,7 @@ function viewProfile(id){
     return'<tr><td>'+chip(b,BLOCK_NAME[b])+'<div class="small muted">'+fmtYmShort(first)+(first!==last?' to '+fmtYmShort(last):'')+'</div></td>'+cells+'</tr>';
   }).join('');
   const reqBtns=(self||(PREVIEW&&PREVIEW.role==='intern'&&PREVIEW.internId===id))?'<div class="row" style="margin-bottom:12px"><button class="btn pri sm" data-act="new-leave">Request leave</button><button class="btn sm" data-act="new-elective">Request elective</button><button class="btn sm" data-act="new-freeze">Request a freeze</button></div>':'';
-  return head(it.name,'<a href="'+telHref(it.phone)+'">'+esc(it.phone)+'</a>'+(it.email?' &nbsp; <a href="mailto:'+esc(it.email)+'">'+esc(it.email)+'</a>':'')+' &nbsp; '+affilTag(affilOf(it))+' &nbsp; '+(it.group?'Group '+esc(grpLabel(it.group))+' &nbsp; ':''),actions)+
+  return head(it.name,'<a href="'+telHref(it.phone)+'">'+esc(it.phone)+'</a>'+(it.email?' &nbsp; <a href="mailto:'+esc(it.email)+'">'+esc(it.email)+'</a>':'')+' &nbsp; '+affilTag(affilOf(it))+' &nbsp; '+(groupsOf(it).length?'Group'+(groupsOf(it).length>1?'s ':' ')+esc(groupsLabel(it))+' &nbsp; ':''),actions)+
   (tr?codeBox('interns',it):'')+
   '<div class="cols"><section class="panel"><h2>Now</h2><p style="margin:0 0 8px">'+(st.block?chip(st.block,st.text):'<span class="tag mute">'+esc(st.text)+'</span>')+(place&&st.block==='SSS'?' in '+esc(UNIT_NAME[place])+' this half of the month':'')+'</p>'+
     (st.k==='active'&&st.block==='SSS'&&!(sg&&sg.spec)?'<div class="note warn small">The surgical subspecialty has not been assigned yet.</div>':'')+
@@ -2210,9 +2220,9 @@ async function applyGroupChange(rebuild){
 }
 function viewInterns(){
   const q=UI.intQ.trim().toLowerCase();
-  const list=Object.values(S.interns).filter(it=>(!q||it.name.toLowerCase().includes(q)||String(it.phone||'').includes(q)||String(it.email||'').toLowerCase().includes(q))&&(!UI.fGroup||it.group===UI.fGroup)&&(!UI.fAffil||affilOf(it)===UI.fAffil)).sort((a,b)=>a.name.localeCompare(b.name));
+  const list=Object.values(S.interns).filter(it=>(!q||it.name.toLowerCase().includes(q)||String(it.phone||'').includes(q)||String(it.email||'').toLowerCase().includes(q))&&(!UI.fGroup||inGroup(it,UI.fGroup))&&(!UI.fAffil||affilOf(it)===UI.fAffil)).sort((a,b)=>a.name.localeCompare(b.name));
   const nsel=Object.keys(UI.sel).filter(k=>UI.sel[k]&&S.interns[k]).length;
-  const rows=list.slice(0,300).map(it=>{const st=internStatus(it);return'<tr><td><input type="checkbox" data-act="sel" data-id="'+it.id+'"'+(UI.sel[it.id]?' checked':'')+' aria-label="Select '+esc(it.name)+'"></td><td><a href="#intern-'+it.id+'">'+esc(it.name)+'</a></td><td>'+esc(grpLabel(it.group))+'</td><td>'+affilTag(affilOf(it))+'</td><td>'+(st.block?chip(st.block,st.text):'<span class="muted">'+esc(st.text)+'</span>')+'</td><td><a href="'+telHref(it.phone)+'">'+esc(it.phone)+'</a></td><td>'+esc(it.email||'')+'</td><td>'+esc(it.accessCode||'')+'</td></tr>';}).join('');
+  const rows=list.slice(0,300).map(it=>{const st=internStatus(it);return'<tr><td><input type="checkbox" data-act="sel" data-id="'+it.id+'"'+(UI.sel[it.id]?' checked':'')+' aria-label="Select '+esc(it.name)+'"></td><td><a href="#intern-'+it.id+'">'+esc(it.name)+'</a></td><td>'+esc(groupsLabel(it))+'</td><td>'+affilTag(affilOf(it))+'</td><td>'+(st.block?chip(st.block,st.text):'<span class="muted">'+esc(st.text)+'</span>')+'</td><td><a href="'+telHref(it.phone)+'">'+esc(it.phone)+'</a></td><td>'+esc(it.email||'')+'</td><td>'+esc(it.accessCode||'')+'</td></tr>';}).join('');
   const bulk=nsel?'<div class="note info row"><b>'+nsel+' selected</b><span class="sp"></span><button class="btn sm" data-act="bulk-tpl">Apply group template</button><button class="btn sm" data-act="bulk-group">Set group</button><button class="btn sm" data-act="sel-none">Clear</button></div>':'';
   return head('Interns',plural(Object.keys(S.interns).length,'intern')+' in the system.','<button class="btn pri" data-act="add-intern">Add intern</button><button class="btn" data-act="upload-open">Upload a sheet</button>')+
   '<div class="bar"><input type="search" id="iq" data-bind="intQ" placeholder="Search name, number or email" value="'+esc(UI.intQ)+'" aria-label="Search interns"><select data-bind="fGroup" aria-label="Group filter"><option value="">All groups</option>'+GROUPS.map(g=>'<option value="'+g+'"'+(UI.fGroup===g?' selected':'')+'>Group '+grpLabel(g)+'</option>').join('')+'</select><select data-bind="fAffil" aria-label="Tag filter"><option value="">All tags</option>'+AFFIL.map(a=>'<option value="'+a+'"'+(UI.fAffil===a?' selected':'')+'>'+a+'</option>').join('')+'</select><button class="btn" data-act="sel-all">Select all shown</button><span class="sp"></span><button class="btn" data-act="export-codes">Download access codes</button><button class="btn" data-act="export-int">Download CSV</button></div>'+bulk+
@@ -2356,11 +2366,11 @@ function openPlanEditor(id){
 }
 function paintPartPE(){
   const it=S.interns[PE.id];
-  const rows=PE.plan.map((e,i)=>'<tr><td>'+fmtYm(e.ym)+'</td><td><select data-pe-dept="'+i+'" aria-label="Rotation for '+fmtYm(e.ym)+'"><option value="">Not with us</option>'+BLOCKS.concat(['OTHER']).map(b=>'<option value="'+b+'"'+(e.dept===b?' selected':'')+'>'+BLOCK_NAME[b]+'</option>').join('')+'</select></td><td>'+(e.dept?'<input type="text" data-pe-note="'+i+'" value="'+esc(e.note||'')+'" placeholder="Note, for example “2 weeks”" aria-label="Note for '+fmtYm(e.ym)+'">':'')+'</td></tr>').join('');
-  $('modal').querySelector('.modal').innerHTML='<h2>Months with us: '+esc(it.name)+' '+affilTag(affilOf(it))+'</h2><p class="hint" style="margin-top:0">A part-time schedule has only the months this intern spends with us, so the 12-month pattern does not apply. Anything in the note appears under the rotation in the sheet.</p><div class="scroll" style="max-height:52vh"><table class="tbl"><tbody>'+rows+'</tbody></table></div><div class="foot"><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="pe-save">Save months</button></div>';
+  const rows=PE.plan.map((e,i)=>'<tr><td>'+fmtYm(e.ym)+'</td><td><select data-pe-dept="'+i+'" aria-label="Rotation for '+fmtYm(e.ym)+'"><option value="">Not with us</option>'+BLOCKS.concat(['OTHER']).map(b=>'<option value="'+b+'"'+(e.dept===b?' selected':'')+'>'+BLOCK_NAME[b]+'</option>').join('')+'</select></td><td>'+(e.dept?'<select data-pe-g="'+i+'" aria-label="Group for '+fmtYm(e.ym)+'"><option value="">No group</option>'+GROUPS.map(g=>'<option value="'+g+'"'+(e.g===g?' selected':'')+'>'+grpLabel(g)+'</option>').join('')+'</select>':'')+'</td><td>'+(e.dept?'<input type="text" data-pe-note="'+i+'" value="'+esc(e.note||'')+'" placeholder="Note, for example “2 weeks”" aria-label="Note for '+fmtYm(e.ym)+'">':'')+'</td></tr>').join('');
+  $('modal').querySelector('.modal').innerHTML='<h2>Months with us: '+esc(it.name)+' '+affilTag(affilOf(it))+'</h2><p class="hint" style="margin-top:0">A part-time schedule has only the months this intern spends with us, so the 12-month pattern does not apply. The group is the block of the Interns tab the month is listed under. Anything in the note appears under the rotation in the sheet.</p><div class="scroll" style="max-height:52vh"><table class="tbl"><tbody>'+rows+'</tbody></table></div><div class="foot"><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="pe-save">Save months</button></div>';
 }
 async function savePartPE(){
-  const id=PE.id,plan=PE.plan.filter(e=>e.dept).map(e=>{const x={ym:e.ym,dept:e.dept};if(e.note&&e.note.trim())x.note=e.note.trim();if(e.sub)x.sub=e.sub;if(e.repeat)x.repeat=true;return x;});
+  const id=PE.id,plan=PE.plan.filter(e=>e.dept).map(e=>{const x={ym:e.ym,dept:e.dept};if(e.g)x.g=e.g;if(e.note&&e.note.trim())x.note=e.note.trim();if(e.sub)x.sub=e.sub;if(e.repeat)x.repeat=true;return x;});
   await mut('interns',id,b=>{b.plan=plan;b.startYm=plan.length?plan[0].ym:'';return b;});
   logEv('Updated the months for '+S.interns[id].name);closeModal();toast('Saved.');
 }
@@ -2395,18 +2405,20 @@ function analyzeBatch(rows){
     (first12>=12?own:part).push({line:r+1,idno:col.idno>=0?String(row[col.idno]==null?'':row[col.idno]).trim():'',name:cleanName(rawName),tag:(col.tag>=0&&AFFIL.includes(String(row[col.tag]||'').trim().toUpperCase()))?String(row[col.tag]).trim().toUpperCase():affilFromName(rawName),mob:cleanMobile(row[col.mob]),email:col.email>=0?String(row[col.email]||'').trim().toLowerCase():'',group,entries});
   }
   const res={kind:'batch',ym0,own:[],ext:[],issues,rowsRead:own.length+part.length,partRows:part.length};
-  const seen=new Set(Object.values(S.interns).map(i=>phoneKey(i.phone)).filter(Boolean));
+  const existing={};Object.values(S.interns).forEach(i=>{const k=phoneKey(i.phone);if(k)existing[k]=i.id;});
+  const seen=new Set();res.updates=0;
   own.forEach(x=>{
     if(!GROUPS.includes(x.group)){issues.push({lvl:'skip',where:'Row '+x.line,name:x.name,msg:'The group “'+x.group+'” is not 1A, 1B, 1C, 2A, 2B or 2C.'});return;}
     const k=phoneKey(x.mob.phone);
     if(!x.name||!k){issues.push({lvl:'skip',where:'Row '+x.line,name:x.name,msg:'Name or mobile number is missing.'});return;}
-    if(seen.has(k)){issues.push({lvl:'skip',where:'Row '+x.line,name:x.name,msg:'This mobile number is already in the system or used earlier in the sheet.'});return;}
+    if(seen.has(k)){issues.push({lvl:'skip',where:'Row '+x.line,name:x.name,msg:'This mobile number is used twice in the sheet.'});return;}
     const plan=x.entries.map(y=>y.e),v=validatePlan(plan);
     if(!v.ok){issues.push({lvl:'skip',where:'Row '+x.line,name:x.name,msg:'The 12 months break the pattern: '+v.errors[0]});return;}
     seen.add(k);
     if(x.mob.flag)issues.push({lvl:'warn',where:'Row '+x.line,name:x.name,msg:x.mob.flag+' ('+x.mob.phone+')'});
     const sss=x.entries.find(y=>y.e.dept==='SSS');
-    res.own.push({name:x.name,phone:x.mob.phone,email:x.email,affil:(x.tag==='OLD'?'OLD':'SMC'),group:x.group,ver:planVersion({group:x.group,plan}),startYm:plan[0].ym,plan,orth:!!(sss&&sss.orth),idno:x.idno,line:x.line});
+    if(existing[k])res.updates++;
+    res.own.push({updateId:existing[k]||'',name:x.name,phone:x.mob.phone,email:x.email,affil:(x.tag==='OLD'?'OLD':'SMC'),group:x.group,ver:planVersion({group:x.group,plan}),startYm:plan[0].ym,plan,orth:!!(sss&&sss.orth),idno:x.idno,line:x.line});
   });
   const people=[];
   part.forEach(x=>{
@@ -2415,15 +2427,15 @@ function analyzeBatch(rows){
     if(!p){p={name:x.name,email:x.email,key:k,phone:x.mob.phone,flag:x.mob.flag,tag:x.tag,idno:'',lines:[],map:{}};people.push(p);}
     if(!p.idno&&x.idno)p.idno=x.idno;
     if(!p.tag&&x.tag)p.tag=x.tag;p.lines.push(x.line);
-    x.entries.forEach(y=>{if(y.e.dept==='SSS'&&y.orth)p.orth=true;const ex=p.map[y.e.ym];if(ex&&ex.dept!==y.e.dept)issues.push({lvl:'warn',where:'Row '+x.line,name:x.name,msg:'Two different rotations in '+fmtYm(y.e.ym)+'; the first was kept.'});else if(!ex)p.map[y.e.ym]=y.e;});
+    x.entries.forEach(y=>{if(y.e.dept==='SSS'&&y.orth)p.orth=true;if(GROUPS.includes(x.group))y.e.g=x.group;const ex=p.map[y.e.ym];if(ex&&ex.dept!==y.e.dept)issues.push({lvl:'warn',where:'Row '+x.line,name:x.name,msg:'Two different rotations in '+fmtYm(y.e.ym)+'; the first was kept.'});else if(!ex)p.map[y.e.ym]=y.e;});
   });
   people.forEach(p=>{
     if(!p.name||!p.key){issues.push({lvl:'skip',where:'Row '+p.lines[0],name:p.name,msg:'Name or mobile number is missing.'});return;}
-    if(seen.has(p.key)){issues.push({lvl:'skip',where:'Row '+p.lines[0],name:p.name,msg:'This mobile number is already in the system or used earlier in the sheet.'});return;}
-    seen.add(p.key);
+    if(seen.has(p.key)){issues.push({lvl:'skip',where:'Row '+p.lines[0],name:p.name,msg:'This mobile number is used by someone else in the sheet.'});return;}
+    seen.add(p.key);if(existing[p.key])res.updates++;
     const plan=Object.values(p.map).sort((a,b)=>ymIdx(a.ym)-ymIdx(b.ym)),tag=p.tag||(/^\+966/.test(p.phone)?'KSA':'EXT');
     if(p.flag)issues.push({lvl:'warn',where:'Row '+p.lines[0],name:p.name,msg:p.flag+' ('+p.phone+')'});
-    res.ext.push({name:p.name,phone:p.phone,email:p.email,affil:tag,startYm:plan.length?plan[0].ym:'',plan,rows:p.lines.length,orth:!!p.orth,idno:p.idno});
+    res.ext.push({updateId:existing[p.key]||'',name:p.name,phone:p.phone,email:p.email,affil:tag,startYm:plan.length?plan[0].ym:'',plan,rows:p.lines.length,orth:!!p.orth,idno:p.idno});
   });
   res.notes=[...res.own.concat(res.ext)].reduce((n,x)=>n+x.plan.filter(e=>e.note).length,0);
   return res;
@@ -2435,7 +2447,7 @@ function paintUpload(){
     const sample=Object.values(S.interns).some(i=>i.sample);
     $('modal').querySelector('.modal').innerHTML='<h2>Import the batch sheet</h2><p class="hint" style="margin-top:0">Your sheet’s layout was recognised: group blocks, repeated headings and month columns from <b>'+fmtYm(B.ym0)+'</b>. Nothing is saved until you press Import. The ID No. column goes into the Google Sheet only: the app never reads, shows or keeps it.</p>'+
       (sample?'<div class="note warn">Sample data is still loaded. Clear it first in Setup, or the sample interns will sit beside the real ones.</div>':'')+
-      '<div class="note ok"><b>'+B.own.length+'</b> SMC interns with their 12 months, and <b>'+B.ext.length+'</b> part-time interns ('+Object.keys(byTag).map(t=>byTag[t]+' '+t).join(', ')+') made from <b>'+B.partRows+'</b> rows. <b>'+B.notes+'</b> month notes are kept.</div>'+
+      '<div class="note ok"><b>'+B.own.length+'</b> SMC interns with their 12 months, and <b>'+B.ext.length+'</b> part-time interns ('+Object.keys(byTag).map(t=>byTag[t]+' '+t).join(', ')+') made from <b>'+B.partRows+'</b> rows. They stay under each group they rotate with, as in your sheet, but are one person in the app. <b>'+B.notes+'</b> month notes are kept.</div>'+(B.updates?'<div class="note info"><label class="inline" style="margin:0"><input type="checkbox" id="up-update" checked> Update the <b>'+B.updates+'</b> interns already in the system that have the same mobile number (their name, tag and months are replaced; their access code is kept).</label></div>':'')+
       (B.issues.length?'<div class="scroll" style="max-height:30vh"><table class="tbl"><thead><tr><th></th><th>Where</th><th>Name</th><th>What</th></tr></thead><tbody>'+B.issues.slice(0,200).map(i=>'<tr><td><span class="tag '+(i.lvl==='skip'?'bad':'warn')+'">'+(i.lvl==='skip'?'Skipped':'Check')+'</span></td><td>'+esc(i.where)+'</td><td>'+esc(i.name)+'</td><td>'+esc(i.msg)+'</td></tr>').join('')+'</tbody></table></div>':'<p class="muted small">No problems found.</p>')+
       '<label for="up-file">Choose another file</label><input type="file" id="up-file" accept=".csv,.tsv,.txt,.xlsx,.xls">'+
       '<div class="foot"><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="up-go"'+(ok?'':' disabled')+'>Import '+ok+' interns</button></div>';
@@ -2467,14 +2479,21 @@ async function runUpload(){
   await putMany('interns',items);logEv('Imported '+plural(good.length,'intern')+' from a sheet');toast(plural(good.length,'intern')+' imported.');
 }
 async function runBatchUpload(){
-  const B=UP.batch;closeModal();
+  const B=UP.batch,upd=!$('up-update')||$('up-update').checked;closeModal();
   if(B.ym0!==CFG.intakeYm)await saveConfig(Object.assign({},S.config||{},{intakeYm:B.ym0}));
-  const items=[],surg=[];
-  B.own.forEach(x=>{const id=uid('i');items.push([id,{name:x.name,phone:x.phone,email:x.email,affil:'SMC',group:x.group,ver:x.ver,startYm:x.startYm,plan:x.plan,accessCode:genCode(),createdAt:Date.now(),_idno:x.idno||''}]);if(x.orth)surg.push([id,{spec:null,orthFirst:true}]);});
-  B.ext.forEach(x=>{const id=uid('i');items.push([id,{name:x.name,phone:x.phone,email:x.email,affil:x.affil,startYm:x.startYm,plan:x.plan,accessCode:genCode(),createdAt:Date.now(),_idno:x.idno||''}]);if(x.orth)surg.push([id,{spec:null,orthFirst:true}]);});
+  const items=[],surg=[];let added=0,updated=0,t=Date.now();
+  const add=(x,base)=>{
+    const old=x.updateId&&upd?S.interns[x.updateId]:null;
+    if(x.updateId&&!upd)return;
+    const id=old?old.id:uid('i'),doc=Object.assign({name:x.name,phone:x.phone,email:x.email,affil:x.affil,startYm:x.startYm,plan:x.plan,accessCode:old?old.accessCode:genCode(),createdAt:old?old.createdAt:t++,_idno:x.idno||''},base);
+    if(old)updated++;else added++;
+    items.push([id,doc]);if(x.orth)surg.push([id,{spec:old&&S.surgery[id]?S.surgery[id].spec||null:null,orthFirst:true}]);
+  };
+  B.own.forEach(x=>add(x,{group:x.group,ver:x.ver}));
+  B.ext.forEach(x=>add(x,{}));
   await putMany('interns',items);Object.values(S.interns).forEach(i=>{delete i._idno;});if(surg.length)await putMany('surgery',surg);
-  logEv('Imported the batch sheet: '+B.own.length+' SMC and '+B.ext.length+' part-time interns');
-  toast('Imported '+B.own.length+' SMC interns and '+B.ext.length+' part-time interns.');
+  logEv('Imported the batch sheet: '+added+' new, '+updated+' updated');
+  toast('Imported: '+added+' new and '+updated+' updated.');
 }
 
 function verBanner(){
@@ -2714,6 +2733,7 @@ Object.assign(ACT,{
 document.addEventListener('input',ev=>{const t=ev.target;if(t&&t.dataset&&t.dataset.peNote!==undefined&&PE&&PE.part)PE.plan[+t.dataset.peNote].note=t.value;});
 document.addEventListener('change',ev=>{
   const t=ev.target;if(!t||!t.dataset)return;
+  if(t.dataset.peG!==undefined&&PE&&PE.part){PE.plan[+t.dataset.peG].g=t.value;return;}
   if(t.dataset.emfill){const id=t.dataset.emfill,k=t.value;t.value='';if(k&&canEm())emMutate(UI.ocYm,(g,n)=>{g[id]=k.repeat(n);});return;}
   if(t.id==='sw-peer')fillSwapDates();
 });
