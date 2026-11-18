@@ -275,6 +275,15 @@ button.shift{cursor:pointer}
 .cc{display:contents}
 .rota.foc .cc:not(.f1) .chip,.rota.foc .cc:not(.f1) .esub{opacity:.2;filter:grayscale(1)}
 @media(max-width:700px){.rota.foc .cc:not(.f1) .chip{display:none}}
+.mlabel{min-width:104px;font-weight:600}
+.cc.multi{display:inline-flex;flex-direction:column;gap:3px;align-items:center}
+.esub.dts{display:block;color:var(--ink3);font-size:.68rem;line-height:1.1}
+.dnum{width:62px!important;padding:5px 6px!important}
+.dr{display:flex;align-items:center;gap:4px;margin-top:5px}
+.tbl td.ovc{position:relative}
+.tbl td.ovc .tot{position:absolute;left:34px;bottom:-9px;font-size:.68rem;line-height:1;color:var(--ink3);background:var(--surface);padding:1px 6px;border-radius:8px;border:1px solid var(--line2);z-index:1}
+.tbl td.ovc{white-space:nowrap}
+.tbl td.ovc .tot{left:12px}
 
 /*V45-CSS-END*/
 </style>
@@ -383,12 +392,16 @@ function validatePlan(plan,cfg){
   return{ok:errs.length===0,errors:errs};
 }
 function entryAt(it,ym){return ((it&&it.plan)||[]).find(e=>e.ym===ym)||null;}
+function entryParts(e){return[e].concat((e&&e.more)||[]);}
+function partAt(e,day){return entryParts(e).find(p=>day>=(p.from||1)&&day<=(p.to||31))||null;}
 function placementAt(it,date,surg){
   const e=entryAt(it,ymOf(date));if(!e||e.dept==='FROZEN')return null;
-  if(e.dept!=='SSS')return e.dept;
+  const day=+date.slice(8,10),p=partAt(e,day);if(!p)return null;
+  if(p.dept!=='SSS')return p.dept;
+  if(p!==e||e.vsub)return'SSS';
   const sub=surg&&surg.spec&&CFG.neuroSpec&&String(surg.spec).trim().toLowerCase()===String(CFG.neuroSpec).trim().toLowerCase()?'NEURO':'SSS';
   const first=surg&&surg.orthFirst?'ORT':sub,second=surg&&surg.orthFirst?sub:'ORT';
-  return +date.slice(8,10)<=15?first:second;
+  return day<=(e.split||15)?first:second;
 }
 function planStart(it){return it.plan&&it.plan.length?it.plan[0].ym:it.startYm;}
 function planEnd(it){return it.plan&&it.plan.length?it.plan[it.plan.length-1].ym:it.startYm;}
@@ -438,7 +451,15 @@ function rotationUsed(it,ym,exceptId){
 }
 function leaveWarnings(r){
   const w=[];if(r.kind!=='annual')return w;
-  const it=S.interns[r.internId];if(!it||!patternApplies(it))return w;
+  const it=S.interns[r.internId];if(!it)return w;
+  if(!patternApplies(it)){
+    const ym=ymOf(r.from),e=entryAt(it,ym);if(!e)return w;
+    let dw=0;for(let d=1;d<=dim(ym);d++)if(partAt(e,d))dw++;
+    const cap=Math.ceil(CFG.capPerMonthDays*dw/dim(ym)),days=dayCount(r.from,r.to);
+    const ru=leaveReqs(it.id).filter(x=>x.kind==='annual'&&x.status==='approved'&&x.id!==r.id&&ymOf(x.from)===ym).reduce((s,x)=>s+dayCount(x.from,x.to),0)+absentDays(it.id,[ym]);
+    if(ru+days>cap)w.push('Over the limit for the days with us this month: '+(ru+days)+' of '+cap+' days ('+dw+' days with us).');
+    return w;
+  }
   const days=dayCount(r.from,r.to),used=annualUsed(r.internId,r.id);
   if(used+days>CFG.annualDays)w.push('Over the yearly balance: '+(used+days)+' of '+CFG.annualDays+' days (this request adds '+days+').');
   const span=blockSpan(it,ymOf(r.from));
@@ -458,7 +479,7 @@ const dayKey=d=>'d'+d.slice(8,10);
 function dayRec(unit,date){const doc=S.oncall[ocKey(unit,ymOf(date))];const r=doc&&doc.days&&doc.days[dayKey(date)];return r?{need:r.need==null?null:r.need,ids:r.ids||[]}:{need:null,ids:[]};}
 function holidayOf(date){return S.holidays.find(h=>h.d===date)||null;}
 function isWkDay(date){return CFG.weekendDays.includes(dow(date))||!!holidayOf(date);}
-function periodKey(it,date){const e=entryAt(it,ymOf(date));if(e&&e.dept==='SSS')return ymOf(date)+(+date.slice(8,10)<=15?'a':'b');return ymOf(date);}
+function periodKey(it,date){const e=entryAt(it,ymOf(date));if(e&&e.dept==='SSS'&&!e.vsub)return ymOf(date)+(+date.slice(8,10)<=(e.split||15)?'a':'b');return ymOf(date);}
 /* a day on which the intern was off sick, on emergency leave or confirmed absent doesn't count as an on-call */
 function excusedOn(internId,date){
   return Object.values(S.requests||{}).some(r=>r.type==='leave'&&r.internId===internId&&r.status==='approved'&&(r.kind==='sick'||r.kind==='emergency')&&r.from<=date&&date<=r.to)||Object.values(S.absences||{}).some(a=>a.internId===internId&&a.date===date&&a.status==='absent');
@@ -645,16 +666,29 @@ function validateIntern(it){
 const WORD={MED:'Med',PED:'Ped',EM:'A/E',MSS:'M.S',GS:'G. Surg',OBG:'Gyne',ELE:'E',SSS:'S.S /Ortho',FROZEN:'FROZEN',OTHER:''};
 function monthCellText(e,orthFirst,spec){
   if(!e)return'';
-  let w=WORD[e.dept];if(w===undefined)w=e.dept;
-  if(e.dept==='SSS'){const sp=spec?String(spec).trim():'';w=orthFirst?'Ortho /'+(sp||'S.S'):(sp||'S.S')+' /Ortho';}
-  if(e.dept==='GS'&&(e.fa||e.fb))w+=' '+(e.fa||'-')+' /'+(e.fb||'-');
-  if(e.repeat)w+='*';
-  let t=w;if(e.sub&&(e.dept==='MSS'||e.dept==='ELE'))t+=' ('+e.sub+')';
+  const one=(p,main)=>{
+    let w=WORD[p.dept];if(w===undefined)w=p.dept;
+    if(p.dept==='SSS'){
+      if(p.vsub)w='Surg SMC ('+String(p.vsub).trim()+')';
+      else if(main){const sp=spec?String(spec).trim():'';w=orthFirst?'Ortho /'+(sp||'S.S'):(sp||'S.S')+' /Ortho';}
+    }
+    if(p.dept==='GS'&&(p.fa||p.fb))w+=' '+(p.fa||'-')+' /'+(p.fb||'-');
+    if(p.repeat)w+='*';
+    let t=w;if(p.sub&&(p.dept==='MSS'||p.dept==='ELE'))t+=' ('+p.sub+')';
+    if(p.split&&p.dept==='SSS'&&!p.vsub)t+=' until '+p.split;
+    if(p.from||p.to)t+=' from '+(p.from||1)+' - '+(p.to||'end');
+    return t;
+  };
+  let t=[e].concat(e.more||[]).map((p,i)=>one(p,i===0)).join(' + ');
   if(e.note)t+=(t?'\n':'')+e.note;
   return t;
 }
-function parseMonthCell(raw){
-  const text=String(raw==null?'':raw).replace(/\u00a0/g,' ').trim();if(!text)return null;
+function parsePart(raw){
+  let text=String(raw==null?'':raw).replace(/ /g,' ').trim();if(!text)return null;
+  let from=0,to=0,split=0;
+  text=text.replace(/\s*\bfrom\s*(\d{1,2})\s*-\s*(\d{1,2}|end)\s*(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)?[a-z]*\b/i,(x,a,b)=>{from=+a;to=/end/i.test(b)?0:+b;return'';});
+  text=text.replace(/\s*\buntil\s*(\d{1,2})\b/i,(x,a)=>{split=+a;return'';}).trim();
+  if(!text)return null;
   const lines=text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean),first=lines[0],low=first.toLowerCase();
   let dept='',orthFirst=false,rest=first,repeat=false,spec='',fa='',fb='';
   const m=(re,d)=>{const x=low.match(re);if(x){dept=d;rest=first.slice(x[0].length);return true;}return false;};
@@ -668,18 +702,30 @@ function parseMonthCell(raw){
   if(dept==='GS'){const mf=rest.match(/^\s*(IV|I{1,3}|-)\s*\/\s*(IV|I{1,3}|-)?\s*$/i)||rest.match(/^\s*(IV|I{1,3})\s*()$/i);if(mf){fa=(mf[1]||'').toUpperCase().replace('-','');fb=(mf[2]||'').toUpperCase().replace('-','');rest='';}}
   if((/^\S+\*/.test(first)||/\*\s*$/.test(first))&&dept&&dept!=='OTHER'){repeat=true;rest=rest.replace(/^\s*\*/,'');}
   if(dept==='OTHER'){return{dept,note:lines.join(' / ')};}
-  let sub='',note='';
+  let sub='',note='',vsub='';
   const b=rest.match(/\(([^)]*)\)/);
   if(b){sub=b[1].trim();rest=rest.replace(b[0],'');}
   rest=rest.replace(/^\*/,'').trim();
   let tail=lines.slice(1);
   if(!sub&&tail.length){const b2=tail[0].match(/^\(([^)]*)\)\s*(.*)$/);if(b2){sub=b2[1].trim();tail=[b2[2]].concat(tail.slice(1));}}
   const extra=[rest].concat(tail).map(s=>s.trim()).filter(Boolean);
-  if(dept==='SSS'&&sub)extra.unshift(sub),sub='';
+  if(dept==='SSS'&&sub&&!spec){vsub=sub;sub='';}
   note=extra.join(' / ');
   const out={dept};if(sub&&(dept==='MSS'||dept==='ELE'))out.sub=sub;else if(sub)note=(note?sub+' / '+note:sub);
   if(note)out.note=note;if(orthFirst)out.orthFirst=true;if(repeat)out.repeat=true;if(spec)out.spec=spec;if(fa)out.fa=fa;if(fb)out.fb=fb;
+  if(vsub)out.vsub=vsub;if(from>1)out.from=from;if(to&&to<28)out.to=to;if(split&&dept==='SSS'&&!vsub)out.split=split;
   return out;
+}
+function parseMonthCell(raw){
+  const text=String(raw==null?'':raw).replace(/ /g,' ').trim();if(!text)return null;
+  const bits=text.split(/\s+\+\s+/);
+  const main=parsePart(bits[0]);if(!main)return null;
+  if(bits.length>1){
+    const more=[];
+    bits.slice(1).forEach(b=>{const p=parsePart(b);if(!p||p.dept==='OTHER'||p.dept==='FROZEN')return;const x={dept:p.dept};['sub','vsub','fa','fb','from','to','repeat'].forEach(k=>{if(p[k])x[k]=p[k];});more.push(x);});
+    if(more.length)main.more=more;
+  }
+  return main;
 }
 function cleanName(s){return String(s==null?'':s).replace(/\(([^)]*)\)/g,' ').replace(/\s+/g,' ').trim();}
 function affilFromName(s){const m=String(s||'').match(/\(([^)]*)\)/);if(!m)return'';const t=m[1].toUpperCase();if(/NAFEES|NAFIS|INH/.test(t))return'INH';if(/^AMH\b/.test(t))return'AMH';if(/KSA|SAUDI/.test(t))return'KSA';return'';}
@@ -692,7 +738,7 @@ function cleanMobile(raw){
   return{phone:pick,flag:pick?'Not an 8-digit number, please check':'No number'};
 }
 
-const APP_VERSION='4.5';
+const APP_VERSION='4.6';
 
 /* the groups a part-time intern rotates with (one row per group in the sheet) */
 function groupsOf(it){
@@ -1004,13 +1050,13 @@ function shortGridName(n,withMiddle){
 function shortNameMap(list){
   const m={},by={};
   list.forEach(it=>{const s=shortGridName(it.name,false);(by[s.toLowerCase()]=by[s.toLowerCase()]||[]).push(it);});
-  list.forEach(it=>{const s=shortGridName(it.name,false);m[it.id]=by[s.toLowerCase()].length>1?shortGridName(it.name,true):s;});
+  list.forEach(it=>{const s=shortGridName(it.name,false);m[it.id]=it.short&&String(it.short).trim()?String(it.short).trim():by[s.toLowerCase()].length>1?shortGridName(it.name,true):s;});
   return m;
 }
 function groupLine(it){
   const g=groupsOf(it),a=affilOf(it);
   const gl=g.length>3?g.slice(0,3).map(grpLabel).join(', ')+' +'+(g.length-3):g.map(grpLabel).join(', ');
-  return (a!=='SMC'?affilTag(a)+' ':'')+(gl?(a==='SMC'?'Group ':'')+gl:(it.plan.length?'':'no months yet'));
+  return (gl?(a==='SMC'?'Group ':'')+gl:(it.plan.length?'':'no months yet'));
 }
 function electiveUnit(sub){
   const s=String(sub||'').toLowerCase();if(!s)return'';
@@ -1080,10 +1126,10 @@ function ovTraining0(){
   const active=list.filter(it=>internStatus(it).k==='active').length,frozen=list.filter(it=>internStatus(it).k==='frozen').length;
   const fin=list.filter(it=>{const d=ymIdx(planEnd(it))-ymIdx(ym);return d>=0&&d<3;}).length;
   const dec=needsTraining(),wait=waitingOnCoord();
-  const counts={};list.forEach(it=>{const e=entryAt(it,ym);if(e&&e.dept!=='FROZEN')counts[e.dept]=(counts[e.dept]||0)+1;});
+  const counts={};list.forEach(it=>{const e=entryAt(it,ym);if(e&&e.dept!=='FROZEN')[...new Set(entryParts(e).map(p=>p.dept))].forEach(d=>{counts[d]=(counts[d]||0)+1;});});const PAIRO={MED:'MSS',GS:'SSS'};
   const top=Math.max(1,...BLOCKS.map(b=>counts[b]||0));
   const rows=BLOCKS.map(b=>{const n=counts[b]||0,mn=CFG.min[b]||0,low=mn>0&&n<mn;
-    return'<tr><td>'+chip(b,BLOCK_NAME[b])+'</td><td class="mcol"><div class="meter"><i style="width:'+Math.round(n/top*100)+'%"></i></div></td><td>'+n+(low?' <span class="tag info">below minimum</span>':'')+(electivesIn(b,ym).length?' <span class="muted small" title="Interns on an elective in this department, counted under Elective">+'+electivesIn(b,ym).length+' elective</span>':'')+'</td></tr>';}).join('');
+    return'<tr><td>'+chip(b,BLOCK_NAME[b])+'</td><td class="mcol"><div class="meter"><i style="width:'+Math.round(n/top*100)+'%"></i></div></td><td class="ovc">'+n+(PAIRO[b]?'<span class="tot" title="'+esc(BLOCK_NAME[b]+' + '+BLOCK_NAME[PAIRO[b]])+'">'+(n+(counts[PAIRO[b]]||0))+'</span>':'')+(low?' <span class="tag info">below minimum</span>':'')+(electivesIn(b,ym).length?' <span class="muted small" title="Interns on an elective in this department, counted under Elective">+'+electivesIn(b,ym).length+' elective</span>':'')+'</td></tr>';}).join('');
   return head('Overview',fmtYm(ym)+' at a glance')+
   '<div class="kpis"><div class="kpi"><b>'+list.length+'</b><span>interns in the system</span></div><div class="kpi"><b>'+active+'</b><span>on a rotation now</span></div><div class="kpi"><b>'+frozen+'</b><span>frozen now</span></div><div class="kpi"><b>'+fin+'</b><span>finishing within 3 months</span></div></div>'+
   '<div class="cols"><section class="panel"><h2>This month by rotation</h2><table class="tbl"><thead><tr><th>Rotation</th><th></th><th>Interns</th></tr></thead><tbody>'+rows+'</tbody></table><p class="hint">The split surgical month is counted once under its own rotation.</p></section>'+
@@ -1124,17 +1170,17 @@ function viewRotations(){
   const cohorts=[...new Set(Object.values(S.interns).map(planStart))].sort();
   const nf=[UI.fBlock,UI.fGroup,UI.fCohort,UI.q].filter(Boolean).length,coordOn=!tr&&myUnits().length>0;
   const bar='<div class="bar"><div class="seg"><button class="'+(UI.tab==='grid'?'on':'')+'" data-act="tab" data-v="grid">Intern grid</button><button class="'+(UI.tab==='capacity'?'on':'')+'" data-act="tab" data-v="capacity">Capacity by month</button></div>'+
-    '<button class="btn" data-act="gridmove" data-n="-6">Earlier</button><button class="btn" data-act="gridmove" data-n="0">Today</button><button class="btn" data-act="gridmove" data-n="6">Later</button>'+
+    '<button class="btn" data-act="gridmove" data-n="-12" aria-label="Previous year">‹</button><button class="btn mlabel" data-act="gridmove" data-n="0" title="Back to this academic year">'+acadLabel(months[0])+'</button><button class="btn" data-act="gridmove" data-n="12" aria-label="Next year">›</button>'+
     (UI.tab==='grid'?'<button class="btn'+(UI.showF||nf?' pri':'')+'" data-act="tog" data-k="showF">Filters'+(nf?' ('+nf+')':'')+'</button><button class="btn'+(UI.showKey?' pri':'')+'" data-act="tog" data-k="showKey">Key</button>'+((coordOn||isDualMe())?'<button class="btn'+(UI.focus?' pri':'')+'" data-act="tog" data-k="focus" title="Grey out the rotations that are not yours">'+(UI.focus?'Showing my rotations':'Focus on my rotations')+'</button>':''):'')+'</div>'+
     (UI.tab==='grid'&&(UI.showF||nf)?'<div class="bar"><input type="search" id="gq" data-bind="q" placeholder="Search name or number" value="'+esc(UI.q)+'" aria-label="Search interns">'+
-    '<select data-bind="fBlock" aria-label="Rotation filter"><option value="">Any rotation</option>'+BLOCKS.map(b=>'<option value="'+b+'"'+(UI.fBlock===b?' selected':'')+'>'+BLOCK_NAME[b]+'</option>').join('')+'</select>'+
+    '<select data-bind="fBlock" aria-label="Rotation filter"><option value="">Any rotation</option>'+BLOCKS.map(b=>'<option value="'+b+'"'+(UI.fBlock===b?' selected':'')+'>'+BLOCK_NAME[b]+'</option>').join('')+'</select>'+(UI.fBlock?'<select data-bind="fMonth" aria-label="Month for the rotation filter">'+months.map(m=>'<option value="'+m+'"'+(fMonthOf(months)===m?' selected':'')+'>in '+fmtYm(m)+'</option>').join('')+'</select>':'')+
     '<select data-bind="fGroup" aria-label="Group filter"><option value="">Any group</option>'+PGROUPS.map(g=>'<option value="'+g+'"'+(UI.fGroup===g?' selected':'')+'>Group '+grpLabel(g)+'</option>').join('')+'</select>'+
     '<select data-bind="fCohort" aria-label="Start month filter"><option value="">Any start month</option>'+cohorts.map(c=>'<option value="'+c+'"'+(UI.fCohort===c?' selected':'')+'>Started '+fmtYm(c)+'</option>').join('')+'</select></div>':'');
   const legend=UI.showKey?'<div class="row small" style="margin:0 0 12px">'+BLOCKS.map(b=>chip(b,BLOCK_SHORT[b])+' '+esc(BLOCK_NAME[b])).join(' &nbsp; ')+'</div>':'';
   const actions=UI.tab==='grid'?'<button class="btn" data-act="export-rot">Download CSV</button>':'';
   if(UI.tab==='capacity'){
     const counts={};months.forEach(m=>counts[m]={});
-    Object.values(S.interns).forEach(it=>months.forEach(m=>{const e=entryAt(it,m);if(e&&e.dept!=='FROZEN')counts[m][e.dept]=(counts[m][e.dept]||0)+1;}));
+    Object.values(S.interns).forEach(it=>months.forEach(m=>{const e=entryAt(it,m);if(e&&e.dept!=='FROZEN')[...new Set(entryParts(e).map(p=>p.dept))].forEach(d=>{counts[m][d]=(counts[m][d]||0)+1;});}));
     const PAIR={MED:'MSS',GS:'SSS'};
     const rows=BLOCKS.map(b=>{const mn=CFG.min[b]||0;return'<tr><td class="stick">'+chip(b,BLOCK_NAME[b])+(mn>0?'<small>minimum '+mn+'</small>':'')+'</td>'+months.map(m=>{const n=counts[m][b]||0,cls=mn>0&&n<mn?'low':'',el=electivesIn(b,m).length;const tot=PAIR[b]?'<span class="tot" title="'+esc(BLOCK_NAME[b]+' + '+BLOCK_NAME[PAIR[b]]+', '+fmtYm(m))+'">'+(n+(counts[m][PAIR[b]]||0))+'</span>':'';return'<td class="'+cls+'" title="'+esc(BLOCK_NAME[b]+', '+fmtYm(m)+': '+n+(el?' (plus '+el+' on elective here)':''))+'">'+n+tot+'</td>';}).join('')+'</tr>';}).join('');
     const tot='<tr><td class="stick"><b>Interns on a rotation</b></td>'+months.map(m=>'<td><b>'+Object.values(counts[m]).reduce((a,b)=>a+b,0)+'</b></td>').join('')+'</tr>';
@@ -1185,7 +1231,7 @@ function viewInterns(){
 }
 function internForm(it,withGroup){
   it=it||{};
-  return'<label for="f-name">Full name</label><input type="text" id="f-name" value="'+esc(it.name||'')+'" autocomplete="off">'+
+  return'<label for="f-name">Full name</label><input type="text" id="f-name" value="'+esc(it.name||'')+'" autocomplete="off"><label for="f-short">Short name <span class="muted small">(shown in grids and lists; leave empty for the automatic one)</span></label><input type="text" id="f-short" value="'+esc(it.short||'')+'" autocomplete="off" maxlength="30">'+
   '<div class="grid2"><div><label for="f-phone">Contact number</label><input type="tel" id="f-phone" value="'+esc(it.phone||'')+'"></div><div><label for="f-email">Email</label><input type="email" id="f-email" value="'+esc(it.email||'')+'"></div></div>'+(withGroup?'<label for="f-group">Group</label><select id="f-group" style="width:100%"><option value="">No group yet</option>'+GROUPS.map(g=>'<option value="'+g+'"'+(it.group===g?' selected':'')+'>Group '+grpLabel(g)+'</option>').join('')+'</select>':'');
 }
 function phoneTaken(raw,exceptId){const k=phoneKey(raw);if(!k)return false;return Object.values(S.interns).some(i=>i.id!==exceptId&&phoneKey(i.phone)===k)||Object.values(S.people).some(p=>p.id!==exceptId&&phoneKey(p.phone)===k);}
@@ -1545,7 +1591,7 @@ function viewOncall(){
   if(!UI.ocUnit||!ONCALL_UNITS.includes(UI.ocUnit))UI.ocUnit=defaultOcUnit();
   const unit=UI.ocUnit,ym=UI.ocYm||(UI.ocYm=ymOf(todayStr())),edit=canRota(unit),n=dim(ym),lead=dow(ym+'-01'),mine=e.internId;
   const tabs='<div class="bar">'+ONCALL_UNITS.map(u=>'<button class="btn sm'+(u===unit?' pri':'')+'" data-act="ocunit" data-u="'+u+'">'+esc(UNIT_NAME[u])+'</button>').join('')+'</div>';
-  const nav='<div class="bar"><button class="btn" data-act="ocmonth" data-n="-1">Previous month</button><b style="min-width:110px;text-align:center">'+fmtYm(ym)+'</b><button class="btn" data-act="ocmonth" data-n="1">Next month</button><button class="btn" data-act="ocmonth" data-n="0">This month</button><span class="sp"></span><button class="btn" data-act="export-oc">Download CSV</button></div>';
+  const nav='<div class="bar"><button class="btn" data-act="ocmonth" data-n="-1" aria-label="Previous month">‹</button><button class="btn mlabel" data-act="ocmonth" data-n="0" title="Back to this month">'+fmtYm(ym)+'</button><button class="btn" data-act="ocmonth" data-n="1" aria-label="Next month">›</button><span class="sp"></span><button class="btn" data-act="export-oc">Download CSV</button></div>';
   let cells=DAYS.map((d,i)=>'<div class="dh'+(CFG.weekendDays.includes(i)?' wk':'')+'">'+d+'</div>').join('');
   for(let i=0;i<lead;i++)cells+='<div class="day blank"></div>';
   for(let d=1;d<=n;d++){
@@ -1554,7 +1600,7 @@ function viewOncall(){
     cells+='<button class="day'+(wk?' wk':'')+(UI.ocDay===date?' sel':'')+'" data-act="ocday" data-d="'+date+'" aria-label="'+esc(fmtDate(date))+'"><span class="dn">'+d+'</span>'+(hol?'<span class="hol">'+esc(hol.label||'Holiday')+'</span>':'')+cov+'<span class="who">'+rec.ids.slice(0,4).map(id=>'<i class="'+(id===mine?'mine':'')+'">'+esc(shortName((S.interns[id]||{}).name))+'</i>').join('')+(rec.ids.length>4?'<i>+'+(rec.ids.length-4)+' more</i>':'')+'</span></button>';
   }
   const panel=UI.ocDay&&ymOf(UI.ocDay)===ym?dayPanel(unit,UI.ocDay,edit):'<section class="panel"><h2>Pick a day</h2><p class="muted" style="margin:0">'+(edit?'Select a day to set how many interns you need and assign them.':'Select a day to see who is on call.')+'</p></section>';
-  const pool=new Map();eligibleFor(unit,ym+'-01').concat(eligibleFor(unit,ym+'-16')).forEach(it=>pool.set(it.id,it));
+  const pool=new Map();['01','08','16','23','28'].reduce((a,d)=>a.concat(eligibleFor(unit,ym+'-'+d)),[]).forEach(it=>pool.set(it.id,it));
   const sh=[...pool.values()].map(it=>{
     const all=shiftsOf(it.id).filter(s=>ymOf(s.date)===ym),here=all.filter(s=>s.unit===unit);
     return{it,total:all.length,here:here.length,wk:all.filter(s=>isWkDay(s.date)).length};
@@ -1596,7 +1642,7 @@ function viewSurgery(){
     const s=S.surgery[it.id]||{};
     return'<tr><td>'+internLink(it.id)+'</td><td><select data-sg-id="'+it.id+'" data-sg-f="spec" aria-label="Subspecialty for '+esc(it.name)+'"'+(edit?'':' disabled')+'><option value="">Not assigned</option>'+CFG.surgSpecs.map(x=>'<option'+(s.spec===x?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select></td><td><select data-sg-id="'+it.id+'" data-sg-f="order" aria-label="Order for '+esc(it.name)+'"'+(edit?'':' disabled')+'><option value="spec"'+(!s.orthFirst?' selected':'')+'>Subspecialty 1st to 15th, then orthopedics</option><option value="ort"'+(s.orthFirst?' selected':'')+'>Orthopedics 1st to 15th, then subspecialty</option></select></td></tr>';}).join('');
   return head('Surgery split',edit?'Choose each intern’s surgical subspecialty and which half of the month comes first.':'Who is doing which surgical placement.','')+
-  '<div class="bar"><button class="btn" data-act="sgmonth" data-n="-1">Previous month</button><b style="min-width:110px;text-align:center">'+fmtYm(ym)+'</b><button class="btn" data-act="sgmonth" data-n="1">Next month</button><button class="btn" data-act="sgmonth" data-n="0">This month</button></div>'+
+  '<div class="bar"><button class="btn" data-act="sgmonth" data-n="-1" aria-label="Previous month">‹</button><button class="btn mlabel" data-act="sgmonth" data-n="0" title="Back to this month">'+fmtYm(ym)+'</button><button class="btn" data-act="sgmonth" data-n="1" aria-label="Next month">›</button></div>'+
   (list.length?'<div class="scroll"><table class="tbl"><thead><tr><th>Intern</th><th>Surgical subspecialty</th><th>Order</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="hint">The on-call lists follow these choices. An intern doing the neurosurgery subspecialty is placed on the Neurosurgery rota and with its coordinators; any other subspecialty is on the Surgical rota. The orthopedics half is on the Orthopedics rota.</p>':emptyBox('No one has the split surgical month in '+fmtYm(ym)+'.'));
 }
 
@@ -2123,7 +2169,7 @@ function wardLine(rota,rec,pos){const w=wardsFor(rota,rec.ids.length,pos);return
 function ocNav(unit,ym){
   const sel='<select class="ocsel" data-bind="ocUnit" aria-label="Rota">'+ocUnits().map(u=>'<option value="'+u+'"'+(u===unit?' selected':'')+'>'+esc(ocName(u))+'</option>').join('')+'</select>';
   const view=unit==='EMERGENCY'?'':'<div class="seg"><button class="'+(ocView(unit)==='table'?'on':'')+'" data-act="ocview" data-v="table">Table</button><button class="'+(ocView(unit)==='calendar'?'on':'')+'" data-act="ocview" data-v="calendar">Calendar</button></div>';
-  return'<div class="bar">'+sel+'<span class="mnav"><button class="btn" data-act="ocmonth" data-n="-1" aria-label="Previous month">‹</button><b style="min-width:96px;text-align:center">'+fmtYm(ym)+'</b><button class="btn" data-act="ocmonth" data-n="1" aria-label="Next month">›</button><button class="btn" data-act="ocmonth" data-n="0">This month</button></span><span class="sp"></span>'+view+'<button class="btn" data-act="export-oc">Download CSV</button></div>';
+  return'<div class="bar">'+sel+'<span class="mnav"><button class="btn" data-act="ocmonth" data-n="-1" aria-label="Previous month">‹</button><button class="btn mlabel" data-act="ocmonth" data-n="0" title="Back to this month">'+fmtYm(ym)+'</button><button class="btn" data-act="ocmonth" data-n="1" aria-label="Next month">›</button></span><span class="sp"></span>'+view+'<button class="btn" data-act="export-oc">Download CSV</button></div>';
 }
 function ocView(unit){UI.ocViewBy=UI.ocViewBy||{};return UI.ocViewBy[unit]||(unit==='SURGICAL'?'table':'calendar');}
 function myOnCallPanel(){
@@ -2155,7 +2201,7 @@ function viewOncall0(){
     main='<div class="cal">'+cells+'</div><p class="hint">Friday, Saturday and flagged holidays are shaded. A split surgical month changes placement on the 16th.</p>';
   }
   const panel=UI.ocDay&&ymOf(UI.ocDay)===ym?dayPanel(unit,UI.ocDay,edit):'<section class="panel"><h2>Pick a day</h2><p class="muted" style="margin:0">'+(edit?'Select a day to '+(sur?'see and arrange who is on call.':'set how many interns you need and assign them.'):'Select a day to see who is on call.')+'</p></section>';
-  const pool=new Map();eligibleFor(unit,ym+'-01').concat(eligibleFor(unit,ym+'-16')).forEach(it=>pool.set(it.id,it));
+  const pool=new Map();['01','08','16','23','28'].reduce((a,d)=>a.concat(eligibleFor(unit,ym+'-'+d)),[]).forEach(it=>pool.set(it.id,it));
   const sh=[...pool.values()].map(it=>{const all=shiftsOf(it.id).filter(s=>ymOf(s.date)===ym),here=all.filter(s=>s.unit===unit);return{it,total:all.length,here:here.length,wk:all.filter(s=>isWkDay(s.date)).length};}).sort((a,b)=>a.total-b.total||a.it.name.localeCompare(b.it.name));
   const fair='<section class="panel"><h2>Who has done what in '+fmtYm(ym)+'</h2><p class="hint" style="margin:0 0 8px">Lightest load first. Totals count every rota the intern is on this month.</p>'+(sh.length?'<div class="scroll" style="max-height:340px"><table class="tbl stk"><thead><tr><th>Intern</th><th>Here</th><th>All rotas</th><th>Weekend and holiday</th><th>Last call before this month</th></tr></thead><tbody>'+sh.map(x=>{
     const split=entryAt(x.it,ym)&&entryAt(x.it,ym).dept==='SSS',wkLim=split?CFG.wkHalfWarn*2:CFG.wkMonthWarn,max=split?CFG.shiftHalfMax*2:CFG.shiftMonthMax;
@@ -2278,7 +2324,7 @@ function groupSelect(id,cur,withNone){
 }
 function internForm(it,withGroup){
   it=it||{};
-  return'<label for="f-name">Full name</label><input type="text" id="f-name" value="'+esc(it.name||'')+'" autocomplete="off">'+
+  return'<label for="f-name">Full name</label><input type="text" id="f-name" value="'+esc(it.name||'')+'" autocomplete="off"><label for="f-short">Short name <span class="muted small">(shown in grids and lists; leave empty for the automatic one)</span></label><input type="text" id="f-short" value="'+esc(it.short||'')+'" autocomplete="off" maxlength="30">'+
   '<div class="grid2"><div><label for="f-phone">Contact number</label><input type="tel" id="f-phone" value="'+esc(it.phone||'')+'"></div><div><label for="f-email">Email</label><input type="email" id="f-email" value="'+esc(it.email||'')+'"></div></div>'+
   (withGroup?'<label for="f-group">Group</label>'+groupSelect('f-group',it.group,!it.id):'');
 }
@@ -2419,7 +2465,7 @@ function affilTag(a){return'<span class="afl a-'+a+'" title="'+esc(AFFIL_NAME[a]
 function affilSelect(id,cur){return'<select id="'+id+'" style="width:100%">'+AFFIL.map(a=>'<option value="'+a+'"'+(a===cur?' selected':'')+'>'+a+' – '+esc(AFFIL_NAME[a])+'</option>').join('')+'</select>';}
 function internForm(it,withGroup){
   it=it||{};
-  return'<label for="f-name">Full name</label><input type="text" id="f-name" value="'+esc(it.name||'')+'" autocomplete="off">'+
+  return'<label for="f-name">Full name</label><input type="text" id="f-name" value="'+esc(it.name||'')+'" autocomplete="off"><label for="f-short">Short name <span class="muted small">(shown in grids and lists; leave empty for the automatic one)</span></label><input type="text" id="f-short" value="'+esc(it.short||'')+'" autocomplete="off" maxlength="30">'+
   '<div class="grid2"><div><label for="f-phone">Mobile</label><input type="tel" id="f-phone" value="'+esc(it.phone||'')+'"></div><div><label for="f-email">Email</label><input type="email" id="f-email" value="'+esc(it.email||'')+'"></div></div>'+
   (withGroup?'<div class="grid2"><div><label for="f-affil">Tag</label>'+affilSelect('f-affil',affilOf(it))+'</div><div><label for="f-group">Group (SMC interns)</label>'+groupSelect('f-group',it.group,!it.id)+'</div></div>':'');
 }
@@ -2439,7 +2485,7 @@ async function saveIntern(id){
   }
   const it=S.interns[id];
   if(sm&&it.group&&it.group!==group&&affilOf(it)==='SMC'){GC={id,name,phone,email,group,affil};return openGroupChange();}
-  await mut('interns',id,b=>{b.name=name;b.phone=phone;b.email=email;b.affil=affil;if(sm)b.group=group;else delete b.group;return b;});
+  await mut('interns',id,b=>{b.name=name;b.phone=phone;b.email=email;b.affil=affil;{const sh=($('f-short')||{}).value;if(sh&&sh.trim())b.short=sh.trim();else delete b.short;}if(sm)b.group=group;else delete b.group;return b;});
   logEv('Edited details for '+name);closeModal();toast('Saved.');
 }
 async function applyGroupChange(rebuild){
@@ -3004,8 +3050,9 @@ Object.assign(ACT,{
 
 /* ---------- Surgical allocation ---------- */
 const isNeuroSpec=s=>!!s&&!!CFG.neuroSpec&&String(s).trim().toLowerCase()===String(CFG.neuroSpec).trim().toLowerCase();
-const gsInterns=ym=>Object.values(S.interns).filter(it=>{const e=entryAt(it,ym);return e&&e.dept==='GS';}).sort((a,b)=>a.name.localeCompare(b.name));
-const sssInterns=ym=>Object.values(S.interns).filter(it=>{const e=entryAt(it,ym);return e&&e.dept==='SSS';}).sort((a,b)=>a.name.localeCompare(b.name));
+const isVisitor=it=>affilOf(it)!=='SMC';
+const gsInterns=ym=>Object.values(S.interns).filter(it=>{const e=entryAt(it,ym);return e&&e.dept==='GS'&&!isVisitor(it);}).sort((a,b)=>a.name.localeCompare(b.name));
+const sssInterns=ym=>Object.values(S.interns).filter(it=>{const e=entryAt(it,ym);return e&&e.dept==='SSS'&&!isVisitor(it);}).sort((a,b)=>a.name.localeCompare(b.name));
 function firmsDone(it,exceptYm){const s=new Set();it.plan.forEach(e=>{if(e.dept==='GS'&&e.ym!==exceptYm){if(e.fa)s.add(e.fa);if(e.fb)s.add(e.fb);}});return s;}
 function firmCounts(ym,override){
   const c={a:{},b:{}};FIRMS.forEach(f=>{c.a[f]=0;c.b[f]=0;});
@@ -3059,8 +3106,8 @@ function sgSss(ym,edit){
   if(!list.length)return emptyBox('No one has the split surgical month in '+fmtYm(ym)+'.');
   const rows=list.map(it=>{
     const s=S.surgery[it.id]||{},sel='<select data-sg2="'+it.id+'" aria-label="Subspecialty for '+esc(it.name)+'"'+(edit?'':' disabled')+'>'+specOptions(s.spec)+'</select>',ort='<span class="chip" style="--uh:'+(HUE.ORT!=null?HUE.ORT:30)+'">Orthopedics</span>';
-    return'<tr><td>'+internLink(it.id)+'</td><td>'+(s.orthFirst?ort:sel)+'</td><td class="swc">'+(edit?'<button class="sw big" data-act="sg-swap" data-id="'+it.id+'" title="Switch the halves" aria-label="Switch the halves for '+esc(it.name)+'">⇄</button>':'')+'</td><td>'+(s.orthFirst?sel:ort)+'</td></tr>';}).join('');
-  return'<div class="scroll"><table class="tbl sg"><thead><tr><th>Intern</th><th>First half <span class="muted small">(1st to 15th)</span></th><th></th><th>Second half <span class="muted small">(16th to end)</span></th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="hint">The on-call lists follow these choices. An intern doing Neurosurgery is placed on the Neurosurgery rota; any other subspecialty is on the Surgical rota; the Orthopedics half is on the Orthopedics rota. In the Google Sheet this is the month cell, for example “Urology /Ortho”.</p>';
+    return'<tr><td>'+internLink(it.id)+'</td><td>'+(s.orthFirst?ort:sel)+'</td><td class="swc">'+(edit?'<button class="sw big" data-act="sg-swap" data-id="'+it.id+'" title="Switch the halves" aria-label="Switch the halves for '+esc(it.name)+'">⇄</button>':'')+'</td><td>'+(s.orthFirst?sel:ort)+'</td><td class="small"><input type="number" min="5" max="27" class="dnum" data-sgs="'+it.id+'" value="'+((entryAt(it,ym)||{}).split||'')+'" placeholder="15"'+(edit?'':' disabled')+' aria-label="Last day of the first half for '+esc(it.name)+'"></td></tr>';}).join('');
+  return'<div class="scroll"><table class="tbl sg"><thead><tr><th>Intern</th><th>First half</th><th></th><th>Second half</th><th>First half ends on day <span class="muted small">(usual 15)</span></th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="hint">The on-call lists follow these choices. An intern doing Neurosurgery is placed on the Neurosurgery rota; any other subspecialty is on the Surgical rota; the Orthopedics half is on the Orthopedics rota. In the Google Sheet this is the month cell, for example “Urology /Ortho”.</p>';
 }
 function sgGs(ym,edit){
   const list=gsInterns(ym);
@@ -3074,6 +3121,68 @@ function sgGs(ym,edit){
   return'<div class="firmbox">'+strip+'</div>'+(edit?'<div class="row" style="margin:8px 0"><button class="btn" data-act="gs-suggest">Suggest allocation</button><span class="small muted">Fills every intern’s two halves so they cover all four firms, using the firms already done in earlier months. You can change it afterwards.</span></div>':'')+
     '<div class="scroll"><table class="tbl"><thead><tr><th>Intern</th><th>First half</th><th>Second half</th><th>Earlier months</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="hint">In the Google Sheet the firms are in the month cell, for example “G. Surg I /II”. Interns see their own firms and the people in them.</p>';
 }
+
+/* ---------- visitors (AMH, INH, KSA): one line each ---------- */
+function visitInterns(ym){return Object.values(S.interns).filter(it=>{if(!isVisitor(it))return false;const e=entryAt(it,ym);return e&&entryParts(e).some(p=>p.dept==='GS'||p.dept==='SSS');}).sort((a,b)=>a.name.localeCompare(b.name));}
+const visitSpecs=()=>(CFG.surgSpecs||[]).filter(x=>!isNeuroSpec(x)&&!/ortho/i.test(x));
+function slotVal(p){return!p?'':p.dept==='GS'?'G:'+(p.fa||''):p.dept==='SSS'?'S:'+(p.vsub||''):'K';}
+function slotSel(id,i,p,edit){
+  if(p&&p.dept!=='GS'&&p.dept!=='SSS')return'<span class="chip" style="--uh:'+(HUE[p.dept]||0)+'">'+esc(BLOCK_NAME[p.dept]||p.dept)+'</span><input type="hidden" data-vp="'+id+'" data-slot="'+i+'" data-k="sel" value="K">';
+  const v=slotVal(p),specs=visitSpecs().slice();if(p&&p.dept==='SSS'&&p.vsub&&!specs.some(x=>x.toLowerCase()===p.vsub.toLowerCase()))specs.push(p.vsub);
+  return'<select data-vp="'+id+'" data-slot="'+i+'" data-k="sel" aria-label="Placement '+(i+1)+'"'+(edit?'':' disabled')+'><option value="">None</option><optgroup label="General surgery">'+FIRMS.map(f=>'<option value="G:'+f+'"'+(v==='G:'+f?' selected':'')+'>Firm '+f+'</option>').join('')+'<option value="G:"'+(v==='G:'?' selected':'')+'>Firm not set</option></optgroup><optgroup label="Subspecialty">'+specs.map(x=>'<option value="S:'+esc(x)+'"'+(v==='S:'+x?' selected':'')+'>'+esc(x)+'</option>').join('')+'<option value="S:"'+(v==='S:'?' selected':'')+'>Not chosen yet</option></optgroup></select>';
+}
+function sgVisit(ym,edit){
+  const list=visitInterns(ym);
+  if(!list.length)return emptyBox('No visiting interns have a surgical placement in '+fmtYm(ym)+'.');
+  const rows=list.map(it=>{
+    const e=entryAt(it,ym),parts=entryParts(e),n=Math.max(2,Math.min(3,parts.length+(parts.length<3?1:0)));
+    const cell=i=>{const p=parts[i];return'<td>'+slotSel(it.id,i,p,edit)+(p||i<2?'<div class="dr"><input type="number" class="dnum" min="1" max="31" data-vp="'+it.id+'" data-slot="'+i+'" data-k="from" value="'+(p&&p.from||'')+'" placeholder="from"'+(edit?'':' disabled')+' aria-label="From day"> <span class="muted">to</span> <input type="number" class="dnum" min="1" max="31" data-vp="'+it.id+'" data-slot="'+i+'" data-k="to" value="'+(p&&p.to||'')+'" placeholder="end"'+(edit?'':' disabled')+' aria-label="To day"></div>':'')+'</td>';};
+    return'<tr><td>'+internLink(it.id)+' <span class="tag mute">'+esc(affilOf(it))+'</span></td>'+[0,1,2].map(cell).join('')+'</tr>';
+  }).join('');
+  return'<p class="hint" style="margin-top:0">Visiting interns do part of the month in General surgery and part in subspecialties. Give each placement its days; leave the days empty for the whole month. Orthopedics and Neurosurgery do not apply to visitors.</p><div class="scroll"><table class="tbl sg"><thead><tr><th>Intern</th><th>Placement 1</th><th>Placement 2</th><th>Placement 3</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+function planWarnings(it,ym,newEntry){
+  const out=[],copy=Object.assign({},it,{plan:it.plan.map(x=>x.ym===ym?newEntry:x)});
+  {const rr=entryParts(newEntry).map(p=>[p.from||1,p.to||31]);let ov=false;rr.forEach((x,i)=>rr.forEach((y,j)=>{if(j>i&&x[0]<=y[1]&&y[0]<=x[1])ov=true;}));if(ov)out.push('Two placements share some days. Give each one its own days.');}
+  shiftsOf(it.id,true).filter(s=>ymOf(s.date)===ym).forEach(s=>{
+    const u=rotaOf(placementAt(copy,s.date,S.surgery[it.id]));
+    if(u!==s.unit)out.push('On call on '+fmtDate(s.date)+' in the '+(UNIT_NAME[s.unit]||s.unit)+' rota, but after this change they will not be in that rota that day.');
+  });
+  leaveReqs(it.id).filter(r=>!['declined','cancelled','withdrawn'].includes(r.status)).forEach(r=>{
+    const a=Math.max(+r.from.slice(8,10),1),b=r.to.slice(0,7)===ym?+r.to.slice(8,10):31;
+    if(r.from.slice(0,7)<=ym&&r.to.slice(0,7)>=ym){const d0=r.from.slice(0,7)===ym?a:1;const days=[];for(let d=d0;d<=b;d++)days.push(d);
+      const outside=days.some(d=>!partAt(newEntry,d));if(outside)out.push((KIND_NAME[r.kind]||'Leave')+' from '+fmtDate(r.from)+' falls on days when they are no longer with us.');}
+  });
+  return out;
+}
+async function savePlanEntry(id,ym,newEntry,what){
+  const it=S.interns[id],old=entryAt(it,ym);
+  const w=planWarnings(it,ym,newEntry);
+  if(w.length&&!(await askConfirm('Check before saving','<ul style="margin:0 0 8px 18px;padding:0">'+w.slice(0,6).map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>You can still save it. The coordinators involved will be told.','Save anyway')))return false;
+  await mut('interns',id,b=>Object.assign({},b,{plan:b.plan.map(x=>x.ym===ym?newEntry:x)}));
+  logEv(what+' for '+it.name+', '+fmtYm(ym));
+  if(w.length)await notifyStaff(coordIdsC(['GS','SSS']).concat(trainingIdsC()),'surgery','Clash for '+it.name+' in '+fmtYm(ym)+' after a change to their placements: '+w.slice(0,3).join(' '));
+  return true;
+}
+async function saveVisit(id){
+  const ym=UI.sgYm,it=S.interns[id],e=entryAt(it,ym);if(!e)return;
+  const old=entryParts(e),parts=[];
+  for(let i=0;i<3;i++){
+    const g=k=>document.querySelector('[data-vp="'+id+'"][data-slot="'+i+'"][data-k="'+k+'"]');
+    const sel=g('sel');if(!sel)continue;const v=sel.value;if(!v)continue;
+    const fr=g('from')?+g('from').value||0:0,to=g('to')?+g('to').value||0:0;
+    if(v==='K'){const o=old[i];if(o)parts.push(Object.assign({},o));continue;}
+    const p=v.startsWith('G:')?{dept:'GS'}:{dept:'SSS'};
+    if(p.dept==='GS'&&v.slice(2))p.fa=v.slice(2);if(p.dept==='SSS'&&v.slice(2))p.vsub=v.slice(2);
+    if(fr>1)p.from=fr;if(to&&to<28)p.to=to;
+    if(fr&&to&&fr>to){toast('The first day must come before the last day.');return;}
+    parts.push(p);
+  }
+  if(!parts.length){toast('Keep at least one placement.');scheduleRender();return;}
+  const ne={ym};['note','repeat','g'].forEach(k=>{if(e[k])ne[k]=e[k];});
+  Object.assign(ne,parts[0]);if(parts.length>1)ne.more=parts.slice(1);
+  await savePlanEntry(id,ym,ne,'Changed the visiting placements');
+}
 function staffGroups(){return FIRMS.map(f=>({key:f,label:'Firm '+f})).concat((CFG.surgSpecs||[]).filter(x=>!isNeuroSpec(x)&&!/ortho/i.test(x)).map(x=>({key:x,label:x})));}
 function sgStaff(edit){
   const cards=staffGroups().map(g=>{
@@ -3085,10 +3194,10 @@ function sgStaff(edit){
 }
 function viewSurgery(){
   const ym=UI.sgYm||(UI.sgYm=ymOf(todayStr())),edit=canSurg(),tab=UI.sgTab||'sss';
-  const seg='<div class="seg"><button class="'+(tab==='sss'?'on':'')+'" data-act="sgtab" data-v="sss">SSS and Orthopedics</button><button class="'+(tab==='gs'?'on':'')+'" data-act="sgtab" data-v="gs">General surgery firms</button><button class="'+(tab==='staff'?'on':'')+'" data-act="sgtab" data-v="staff">Firm and subspecialty staff</button></div>';
-  const nav=tab==='staff'?'':'<button class="btn" data-act="sgmonth" data-n="-1">Previous month</button><b style="min-width:110px;text-align:center">'+fmtYm(ym)+'</b><button class="btn" data-act="sgmonth" data-n="1">Next month</button><button class="btn" data-act="sgmonth" data-n="0">This month</button>';
-  return head('Surgical allocation',tab==='sss'?'Subspecialty and orthopedics, half by half.':tab==='gs'?'Which firm each General surgery intern is in, half by half.':'Who the interns work with.','')+
-    '<div class="bar">'+seg+nav+'</div>'+(tab==='sss'?sgSss(ym,edit):tab==='gs'?sgGs(ym,edit):sgStaff(edit));
+  const seg='<div class="seg"><button class="'+(tab==='sss'?'on':'')+'" data-act="sgtab" data-v="sss">SSS and Orthopedics</button><button class="'+(tab==='gs'?'on':'')+'" data-act="sgtab" data-v="gs">General surgery firms</button><button class="'+(tab==='visit'?'on':'')+'" data-act="sgtab" data-v="visit">Visiting interns</button><button class="'+(tab==='staff'?'on':'')+'" data-act="sgtab" data-v="staff">Firm and subspecialty staff</button></div>';
+  const nav=tab==='staff'?'':'<button class="btn" data-act="sgmonth" data-n="-1" aria-label="Previous month">‹</button><button class="btn mlabel" data-act="sgmonth" data-n="0" title="Back to this month">'+fmtYm(ym)+'</button><button class="btn" data-act="sgmonth" data-n="1" aria-label="Next month">›</button>';
+  return head('Surgical allocation',tab==='sss'?'Subspecialty and orthopedics, half by half.':tab==='gs'?'Which firm each General surgery intern is in, half by half.':tab==='visit'?'Interns from other hospitals, placement by placement.':'Who the interns work with.','')+
+    '<div class="bar">'+seg+nav+'</div>'+(tab==='sss'?sgSss(ym,edit):tab==='gs'?sgGs(ym,edit):tab==='visit'?sgVisit(ym,edit):sgStaff(edit));
 }
 async function setFirm(id,k,val){
   const ym=UI.sgYm,it=S.interns[id],e=entryAt(it,ym);if(!e)return;
@@ -3127,6 +3236,8 @@ Object.assign(ACT,{
 document.addEventListener('change',ev=>{
   const t=ev.target;if(!t||!t.dataset)return;
   if(t.dataset.sg2){const id=t.dataset.sg2,s=S.surgery[id]||{spec:null,orthFirst:false};if(!canSurg())return;sgApply(id,{spec:t.value||null,orthFirst:!!s.orthFirst}).then(()=>scheduleRender());return;}
+  if(t.dataset.vp){if(!canSurg())return;saveVisit(t.dataset.vp).then(()=>scheduleRender());return;}
+  if(t.dataset.sgs){if(!canSurg())return;const id=t.dataset.sgs,it=S.interns[id],e=entryAt(it,UI.sgYm),v=+t.value||0;if(!e)return;const ne=Object.assign({},e);if(v>=5&&v<=27&&v!==15)ne.split=v;else delete ne.split;savePlanEntry(id,UI.sgYm,ne,'Set the changeover day of the surgical split').then(()=>scheduleRender());return;}
   if(t.dataset.gs){if(!canSurg())return;setFirm(t.dataset.gs,t.dataset.half,t.value).then(()=>scheduleRender());return;}
 });
 
@@ -3150,6 +3261,7 @@ function placeDetail(it,date){
   const ym=ymOf(date),e=entryAt(it,ym),u=placementAt(it,date,S.surgery[it.id]);
   if(!e||!u)return'';
   const sg=S.surgery[it.id]||{};
+  {const pt=partAt(e,+date.slice(8,10));if(pt){if(pt.dept==='SSS'&&pt.vsub)return pt.vsub;if(pt.dept==='GS'&&(pt!==e||isVisitor(it)))return pt.fa?'Firm '+pt.fa:'';if(pt.dept==='MSS'&&pt.sub)return pt.sub;}}
   if(e.dept==='MSS'&&e.sub)return e.sub;
   if(e.dept==='SSS'&&u==='NEURO')return CFG.neuroSpec||'Neurosurgery';
   if(e.dept==='SSS'&&u==='ORT')return'Orthopedics';
@@ -3163,6 +3275,16 @@ function myTeamLine(p){
   if(!out.length)return'';
   return out.map(c=>esc(c.name)).join(', ');
 }
+function attentionPanel(){
+  const tr=isTr(),dec=tr?needsTraining():myDecisions(),abs=openAbsences(),pr=profreqPanel();
+  const strip=h=>h.replace(/^<section class="panel[^"]*"><h2>.*?<\/h2>/s,'').replace(/<\/section>$/,'');
+  const absH=absencePanel(),n=dec.length+abs.length+(pr?Object.values(S.profreq).filter(x=>x.status==='pending'&&x.personId!==ME.staffId).length:0);
+  let b='';
+  if(dec.length)b+='<h3>Requests</h3><ul class="list">'+dec.slice(0,6).map(r=>'<li><span>'+internLink(r.internId)+', '+esc((r.type==='leave'?(KIND_NAME[r.kind]||'leave'):r.type==='elective'?'an elective ('+(r.elective||'')+')':'a freeze')).toLowerCase()+(r.from?' '+fmtDate(r.from):'')+'</span><a class="small" href="#requests">Review</a></li>').join('')+'</ul>'+(dec.length>6?'<p class="hint">And '+(dec.length-6)+' more. <a href="#requests">Open all requests</a></p>':'');
+  if(abs.length)b+='<h3'+(b?' style="margin-top:14px"':'')+'>Interns who could not be reached</h3>'+strip(absH);
+  if(pr)b+='<h3'+(b?' style="margin-top:14px"':'')+'>Detail changes to approve</h3>'+strip(pr);
+  return'<section class="panel"><h2>Needs your attention'+(n?' <span class="tag info">'+n+'</span>':'')+'</h2>'+(b||'<p class="muted" style="margin:0">Nothing is waiting for you.</p>')+'</section>';
+}
 function ovCoord(){
   const e=E(),p=S.people[e.personId||ME.staffId]||S.people[ME.staffId];if(!p)return emptyBox('Your profile could not be found.');
   const units=(isDualMe()&&!e.personId?ME.units:p.units)||[],today=todayStr(),ym=ymOf(today);
@@ -3170,21 +3292,20 @@ function ovCoord(){
   const eles=[];units.forEach(u=>electivesIn(u,ym).forEach(it=>{if(!eles.find(x=>x.id===it.id))eles.push(it);}));
   const team=myTeamLine(p);
   const sub='You are '+esc(roleTitle(p).replace(/^Training and /,'').toLowerCase().replace(/^./,c=>c.toUpperCase()))+(team?'. '+(p.role==='deputy'?'Your coordinator is ':'Your deputy is ')+team:'');
-  const rowOf=(it,tag)=>'<tr><td>'+internLink(it.id)+'</td><td>'+chip(placementAt(it,today,S.surgery[it.id])||'ELE',UNIT_NAME[placementAt(it,today,S.surgery[it.id])]||'Elective')+(placeDetail(it,today)?' <span class="small">'+esc(placeDetail(it,today))+'</span>':'')+(tag||'')+'</td><td><a href="'+telHref(it.phone)+'">'+esc(it.phone)+'</a></td></tr>';
+  const rowOf=(it,tag)=>{const u=placementAt(it,today,S.surgery[it.id]);return'<tr><td>'+internLink(it.id)+'</td><td>'+chip(u||'ELE',UNIT_NAME[u]||'Elective')+(placeDetail(it,today)?' <span class="small">'+esc(placeDetail(it,today))+'</span>':'')+(tag||'')+'</td><td><a href="'+telHref(it.phone)+'">'+esc(it.phone)+'</a></td></tr>';};
   const rows=now.map(it=>rowOf(it)).join('')+eles.filter(it=>!now.find(x=>x.id===it.id)).map(it=>rowOf(it,' <span class="tag mute">elective</span>')).join('');
   const nn=now.length+eles.filter(it=>!now.find(x=>x.id===it.id)).length;
-  return head(isDualMe()?'My rotation':'My rotation',sub)+
+  return head('My rotation',sub)+
   '<div class="kpis"><div class="kpi"><b>'+nn+'</b><span>interns with you now</span></div><div class="kpi"><b>'+dec.length+'</b><span>approvals waiting for you</span></div><div class="kpi"><b>'+iss.length+'</b><span>things to look at</span></div></div>'+
-  '<div class="cols">'+noticesPanel()+absencePanel()+
+  '<div class="cols">'+attentionPanel()+noticesPanel()+
   '<section class="panel"><h2>Interns with you today</h2>'+(nn?'<div class="scroll" style="max-height:420px"><table class="tbl"><thead><tr><th>Intern</th><th>Placement</th><th>Contact</th></tr></thead><tbody>'+rows+'</tbody></table></div>':emptyBox('No interns are placed with you today.'))+'</section>'+
-  '<section class="panel"><h2>Approvals waiting</h2>'+(dec.length?'<ul class="list">'+dec.slice(0,6).map(r=>'<li><span>'+internLink(r.internId)+', '+esc(KIND_NAME[r.kind]||r.type).toLowerCase()+' '+(r.from?fmtDate(r.from):'')+'</span><a class="small" href="#requests">Review</a></li>').join('')+'</ul>':'<p class="muted" style="margin:0">Nothing waiting.</p>')+'</section>'+
   issuesPanel(iss,8)+'</div>';
 }
 function ovTraining(){
   let h=ovTraining0();
-  const extra=noticesPanel()+absencePanel()+profreqPanel();
-  if(!extra)return h;
-  const i=h.lastIndexOf('</div>');return h.slice(0,i)+extra+h.slice(i);
+  h=h.replace(/<section class="panel"><h2>Needs your decision.*?<\/section>/s,attentionPanel());
+  const nt=noticesPanel();if(!nt)return h;
+  const i=h.lastIndexOf('</div>');return h.slice(0,i)+nt+h.slice(i);
 }
 function routeContent(){
   if(UI.route==="myrot")return ovCoord();
@@ -3373,6 +3494,84 @@ Object.assign(ACT,{
     return mut('oncall',ocKey(unit,ymOf(date)),b=>{b=b||{unit,ym:ymOf(date),days:{}};b.unit=unit;b.ym=ymOf(date);b.days=b.days||{};const r=ensureDay(b.days,date);if(!r.ids.includes(id))r.ids.push(id);b.ovr=[dayKey(date)+':'+id];return b;});
   }
 });
+
+/* ===================== version 4.6 additions ===================== */
+/* ---------- academic year (July to June) ---------- */
+function acadStart(ym){ym=ym||ymOf(todayStr());const y=+ym.slice(0,4),m=+ym.slice(5,7);return(m>=7?y:y-1)+'-07';}
+function acadLabel(ym0){const y=+ym0.slice(0,4);return y+'-'+(y+1);}
+function gridMonths(){if(!UI.gridYm)UI.gridYm=acadStart();return Array.from({length:12},(_,i)=>ymAdd(UI.gridYm,i));}
+function fMonthOf(months){const cur=ymOf(todayStr());return months.includes(UI.fMonth)?UI.fMonth:(months.includes(cur)?cur:months[0]);}
+Object.assign(ACT,{gridmove:el=>{const n=+el.dataset.n;UI.gridYm=n===0?acadStart():ymAdd(UI.gridYm||acadStart(),n);UI.fMonth='';}});
+function filteredInterns(months){
+  const q=UI.q.trim().toLowerCase(),fm=fMonthOf(months);
+  return Object.values(S.interns).filter(it=>{
+    if(q&&!(it.name.toLowerCase().includes(q)||String(it.phone||'').includes(q)))return false;
+    if(UI.fCohort&&planStart(it)!==UI.fCohort)return false;
+    if(UI.fGroup&&!inGroup(it,UI.fGroup))return false;
+    if(UI.fAffil&&affilOf(it)!==UI.fAffil)return false;
+    if(UI.fBlock){const e=entryAt(it,fm);if(!(e&&entryParts(e).some(p=>p.dept===UI.fBlock)))return false;}
+    return true;
+  }).sort((a,b)=>planStart(a)<planStart(b)?-1:planStart(a)>planStart(b)?1:a.name.localeCompare(b.name));
+}
+
+/* ---------- grid cell: every placement of the month, with its days ---------- */
+function cellChip(e,it){
+  if(!e)return'';
+  if(e.dept==='FROZEN')return chip('FROZEN','Frozen','frozen');
+  const mineU=d=>(BLOCK_UNITS[d]||[]).some(u=>myUnits().includes(u)||(isDualMe()&&(ME.units||[]).includes(u)));
+  const parts=entryParts(e),multi=parts.length>1;
+  const one=p=>{
+    let inner=chip(p.dept,BLOCK_SHORT[p.dept]||p.dept,p.repeat?'rep':'');
+    const sub=p.dept==='SSS'&&p.vsub?p.vsub:(p.dept==='GS'&&(p.fa&&(multi||isVisitor(it)))?'Firm '+p.fa:p.sub);
+    if(sub&&(p.dept==='ELE'||p.dept==='SSS'||p.dept==='GS'||p.dept==='MSS'&&false))inner+='<small class="esub">'+esc(sub)+'</small>';
+    const a=p.from||0,b=p.to||0;
+    if(a||b)inner+='<small class="esub dts">'+(a&&b?a+' to '+b:a?'from '+a:'until '+b)+'</small>';
+    return inner;
+  };
+  const html=parts.map(one).join('');
+  return'<span class="cc'+(parts.some(p=>mineU(p.dept))?' f1':'')+(multi?' multi':'')+'">'+html+'</span>';
+}
+
+/* ---------- editor for visiting interns: placements with days ---------- */
+function expandPE(){
+  if(PE.expanded)return;PE.expanded=true;const out=[];
+  PE.plan.forEach(e=>{const more=e.more;const x=Object.assign({},e);delete x.more;out.push(x);(more||[]).forEach(p=>out.push(Object.assign({ym:e.ym},p)));});
+  PE.plan=out;
+}
+function paintPartPE(){
+  const it=S.interns[PE.id];expandPE();
+  const seen={};
+  const rows=PE.plan.map((e,i)=>{
+    const first=!seen[e.ym];seen[e.ym]=1;
+    const dl=e.dept==='SSS'?'<input type="text" list="pe-specs" data-pe4="'+i+'" data-k="vsub" value="'+esc(e.vsub||'')+'" placeholder="Specialty" aria-label="Specialty">':e.dept==='MSS'||e.dept==='ELE'?'<input type="text" data-pe4="'+i+'" data-k="sub" value="'+esc(e.sub||'')+'" placeholder="'+(e.dept==='ELE'?'Elective':'Subspecialty')+'" aria-label="Detail">':e.dept==='GS'?'<select data-pe4="'+i+'" data-k="fa" aria-label="Firm"><option value="">Firm not set</option>'+FIRMS.map(f=>'<option value="'+f+'"'+(e.fa===f?' selected':'')+'>Firm '+f+'</option>').join('')+'</select>':'';
+    return'<tr><td>'+(first?fmtYm(e.ym):'<span class="muted small">same month</span>')+'</td><td><select data-pe-dept="'+i+'" aria-label="Rotation for '+fmtYm(e.ym)+'"><option value="">Not with us</option>'+BLOCKS.concat(['OTHER']).map(b=>'<option value="'+b+'"'+(e.dept===b?' selected':'')+'>'+BLOCK_NAME[b]+'</option>').join('')+'</select></td><td>'+(e.dept?dl+'<div class="dr"><input type="number" class="dnum" min="1" max="31" data-pe4="'+i+'" data-k="from" value="'+(e.from||'')+'" placeholder="from" aria-label="From day"> <span class="muted">to</span> <input type="number" class="dnum" min="1" max="31" data-pe4="'+i+'" data-k="to" value="'+(e.to||'')+'" placeholder="end" aria-label="To day"></div>':'')+'</td><td>'+(e.dept?'<select data-pe-g="'+i+'" aria-label="Group for '+fmtYm(e.ym)+'"><option value="">No group</option>'+GROUPS.map(g=>'<option value="'+g+'"'+(e.g===g?' selected':'')+'>'+grpLabel(g)+'</option>').join('')+'</select>':'')+'</td><td>'+(e.dept?'<input type="text" data-pe-note="'+i+'" value="'+esc(e.note||'')+'" placeholder="Note" aria-label="Note for '+fmtYm(e.ym)+'">':'')+'</td><td>'+(e.dept?'<button class="btn sm" data-act="pe-more" data-i="'+i+'" title="Add another placement in this month" aria-label="Add another placement in '+fmtYm(e.ym)+'">+</button>':'')+'</td></tr>';
+  }).join('');
+  $('modal').querySelector('.modal').innerHTML='<h2>Months with us: '+esc(it.name)+' '+affilTag(affilOf(it))+'</h2><p class="hint" style="margin-top:0">A visiting schedule has only the months this intern spends with us, so the 12-month pattern does not apply. Give the days when the placement covers part of a month, and use + to add a second placement in the same month. In the sheet this reads, for example, “Surg SMC (Urology) from 1 - 22”.</p><datalist id="pe-specs">'+visitSpecs().map(x=>'<option value="'+esc(x)+'">').join('')+'</datalist><div class="scroll" style="max-height:52vh"><table class="tbl"><thead><tr><th>Month</th><th>Rotation</th><th>Detail and days</th><th>Group</th><th>Note</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div><div id="pe-msg"></div><div class="foot"><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="pe-save">Save months</button></div>';
+}
+async function savePartPE(){
+  const id=PE.id,by={};
+  PE.plan.filter(e=>e.dept).forEach(e=>{
+    const x={dept:e.dept};['sub','vsub','fa','fb'].forEach(k=>{if(e[k])x[k]=e[k];});
+    if(+e.from>1)x.from=+e.from;if(+e.to&&+e.to<28)x.to=+e.to;
+    if(e.dept==='SSS'&&!x.vsub)delete x.vsub;
+    const r=by[e.ym]=by[e.ym]||{ym:e.ym,parts:[]};r.parts.push(Object.assign(x,{_g:e.g,_note:e.note,_rep:e.repeat,_split:e.split}));
+  });
+  const plan=[];
+  for(const ym of Object.keys(by).sort()){
+    const r=by[ym],p0=r.parts[0],ent={ym};
+    Object.keys(p0).filter(k=>k[0]!=='_').forEach(k=>ent[k]=p0[k]);
+    if(p0._g)ent.g=p0._g;if(p0._note&&String(p0._note).trim())ent.note=String(p0._note).trim();if(p0._rep)ent.repeat=true;if(p0._split)ent.split=p0._split;
+    const bad=r.parts.find(p=>p.from&&p.to&&p.from>p.to);if(bad){toast('In '+fmtYm(ym)+' a start day is after its end day.');return;}
+    if(r.parts.length>1){ent.more=r.parts.slice(1).map(p=>{const q={};Object.keys(p).filter(k=>k[0]!=='_').forEach(k=>q[k]=p[k]);return q;});
+      const rg=parts=>parts.map(p=>[p.from||1,p.to||31]),rr=rg(r.parts);let ov=false;rr.forEach((a,i)=>rr.forEach((b,j)=>{if(j>i&&a[0]<=b[1]&&b[0]<=a[1])ov=true;}));
+      if(ov&&!(await askConfirm('Placements overlap','Two placements in '+fmtYm(ym)+' share some days. Save anyway?','Save anyway')))return;}
+    plan.push(ent);
+  }
+  await mut('interns',id,b=>{b.plan=plan;b.startYm=plan.length?plan[0].ym:'';return b;});
+  logEv('Updated the months for '+S.interns[id].name);closeModal();toast('Saved.');
+}
+Object.assign(ACT,{'pe-more':el=>{expandPE();const i=+el.dataset.i,e=PE.plan[i];PE.plan.splice(i+1,0,{ym:e.ym,dept:''});paintPartPE();}});
+document.addEventListener('change',ev=>{const t=ev.target;if(!t||!t.dataset||t.dataset.pe4===undefined||!PE||!PE.part)return;const e=PE.plan[+t.dataset.pe4];if(!e)return;const k=t.dataset.k;e[k]=(k==='from'||k==='to')?(+t.value||0):t.value;if(k==='from'||k==='to')paintPartPE();});
 
 /*V45-JS-END*/
 init();
