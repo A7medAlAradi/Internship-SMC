@@ -284,6 +284,18 @@ button.shift{cursor:pointer}
 .tbl td.ovc .tot{position:absolute;left:34px;bottom:-9px;font-size:.68rem;line-height:1;color:var(--ink3);background:var(--surface);padding:1px 6px;border-radius:8px;border:1px solid var(--line2);z-index:1}
 .tbl td.ovc{white-space:nowrap}
 .tbl td.ovc .tot{left:12px}
+/* 4.7 checklists */
+.lbwrap{max-height:74vh}.lbt2 th,.lbt2 td{vertical-align:middle}.lbt2 .lbname{white-space:nowrap;text-align:left;font-weight:600}
+.lbn{background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(128,128,128,.12) 6px 8px)}.lbx{font-size:11px;color:var(--muted)}
+.lbb{display:flex;flex-direction:column;align-items:center;gap:1px;width:100%;min-width:92px;padding:6px 8px;border:2px solid var(--line,#ccc);border-radius:10px;background:var(--panel,#fff);cursor:pointer;font:inherit;color:inherit}
+.lbb .lbi{font-size:15px;line-height:1}.lbb .lbt{font-size:12px;font-weight:700}.lbb .lbr{font-size:11px;color:var(--muted)}
+.lbb.lb-sched{border-style:dashed}.lbb.lb-now{border-width:3px;border-color:var(--accent,#2563eb)}
+.lbb.lb-missing{background:#fff4d6;border-color:#d99a00;color:#6b4a00}
+.lbb.lb-submitted{background:#e6f0ff;border-color:#4a7fd6}.lbb.lb-sent_back{background:#ffe9e3;border-color:#d0603f}
+.lbb.lb-scored{background:#e4f6e8;border-color:#3d9a58}
+.lbsum{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.lbs{padding:6px 12px;border-radius:999px;border:1px solid var(--line,#ccc);font-size:13px}
+.lbs.lb-missing{background:#fff4d6}.lbs.lb-submitted{background:#e6f0ff}.lbs.lb-sent_back{background:#ffe9e3}.lbs.lb-scored{background:#e4f6e8}
+.lba{align-items:center;margin-bottom:6px}.lba .lbin{width:90px}.edl{gap:6px;margin-bottom:6px}.edl .edll{flex:0 0 32%}.edl .edlu{flex:1}
 
 /*V45-CSS-END*/
 </style>
@@ -331,7 +343,7 @@ const DEFAULT_CFG={
   medSubs:['Cardiology','Gastroenterology','Nephrology','Neurology','Pulmonology','Endocrinology'],
   surgSpecs:['Neurosurgery','Pediatric surgery','Urology','Vascular surgery','Plastic surgery'],
   electives:['Anesthesia','Radiology','Dermatology','Psychiatry','ENT','Ophthalmology','Family medicine','Pathology'],
-  neuroSpec:'Neurosurgery',intakeYm:'',wards:{'2':['11, 12, 41, 42, 413','33, 43, 45, 46, 206'],'3':['11, 12, 41','33, 42, 43, 206','45, 46, 413'],'4':['11, 12, 41, 42, 413','11, 12, 41, 42, 413','33, 43, 45, 46, 206','33, 43, 45, 46, 206']},annualDays:15,capPerMonthDays:7,shiftMonthMax:6,shiftHalfMax:3,wkMonthWarn:2,wkHalfWarn:1,weekendDays:[5,6],prefix:'973',defaultNeed:2
+  neuroSpec:'Neurosurgery',intakeYm:'',halfHist:'2026-11:14',wards:{'2':['11, 12, 41, 42, 413','33, 43, 45, 46, 206'],'3':['11, 12, 41','33, 42, 43, 206','45, 46, 413'],'4':['11, 12, 41, 42, 413','11, 12, 41, 42, 413','33, 43, 45, 46, 206','33, 43, 45, 46, 206']},annualDays:15,capPerMonthDays:7,shiftMonthMax:6,shiftHalfMax:3,wkMonthWarn:2,wkHalfWarn:1,weekendDays:[5,6],prefix:'973',defaultNeed:2
 };
 
 /* ============ Small helpers ============ */
@@ -367,7 +379,7 @@ function chip(u,label,extra){return '<span class="chip '+(extra||'')+'" style="-
 function downloadCsv(rows){return rows.map(r=>r.map(c=>{c=String(c==null?'':c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(',')).join('\r\n');}
 
 /* ============ State (shared) ============ */
-const S={config:null,interns:{},people:{},requests:{},checklists:{},surgery:{},oncall:{},eshift:{},holidays:[],log:[],firmstaff:{},notices:{},absences:{},profreq:{},board:{GS:{},SSS:{}},peerLeave:[],leaveFlags:{}};
+const S={config:null,interns:{},people:{},requests:{},checklists:{},surgery:{},oncall:{},eshift:{},holidays:[],log:[],firmstaff:{},notices:{},absences:{},profreq:{},logbooks:{},sessions:{},inotices:{},presentN:{},board:{GS:{},SSS:{}},peerLeave:[],leaveFlags:{}};
 let CFG=mergeCfg(null);
 function mergeCfg(c){
   c=c||{};const d=DEFAULT_CFG;
@@ -393,6 +405,8 @@ function validatePlan(plan,cfg){
 }
 function entryAt(it,ym){return ((it&&it.plan)||[]).find(e=>e.ym===ym)||null;}
 function entryParts(e){return[e].concat((e&&e.more)||[]);}
+/* last day of the first half of a month: the default changes from a given month onward; earlier months keep what applied then (15 before the first entry) */
+function halfDay(ym){let d=15;String(CFG.halfHist||'').split(';').map(x=>x.trim().split(':')).filter(a=>a.length===2&&/^\d{4}-\d{2}$/.test(a[0])&&+a[1]>=5&&+a[1]<=27).sort((a,b)=>a[0]<b[0]?-1:1).forEach(a=>{if(a[0]<=ym)d=+a[1];});return d;}
 function partAt(e,day){return entryParts(e).find(p=>day>=(p.from||1)&&day<=(p.to||31))||null;}
 function placementAt(it,date,surg){
   const e=entryAt(it,ymOf(date));if(!e||e.dept==='FROZEN')return null;
@@ -401,7 +415,7 @@ function placementAt(it,date,surg){
   if(p!==e||e.vsub)return'SSS';
   const sub=surg&&surg.spec&&CFG.neuroSpec&&String(surg.spec).trim().toLowerCase()===String(CFG.neuroSpec).trim().toLowerCase()?'NEURO':'SSS';
   const first=surg&&surg.orthFirst?'ORT':sub,second=surg&&surg.orthFirst?sub:'ORT';
-  return day<=(e.split||15)?first:second;
+  return day<=(e.split||halfDay(e.ym))?first:second;
 }
 function planStart(it){return it.plan&&it.plan.length?it.plan[0].ym:it.startYm;}
 function planEnd(it){return it.plan&&it.plan.length?it.plan[it.plan.length-1].ym:it.startYm;}
@@ -479,7 +493,7 @@ const dayKey=d=>'d'+d.slice(8,10);
 function dayRec(unit,date){const doc=S.oncall[ocKey(unit,ymOf(date))];const r=doc&&doc.days&&doc.days[dayKey(date)];return r?{need:r.need==null?null:r.need,ids:r.ids||[]}:{need:null,ids:[]};}
 function holidayOf(date){return S.holidays.find(h=>h.d===date)||null;}
 function isWkDay(date){return CFG.weekendDays.includes(dow(date))||!!holidayOf(date);}
-function periodKey(it,date){const e=entryAt(it,ymOf(date));if(e&&e.dept==='SSS'&&!e.vsub)return ymOf(date)+(+date.slice(8,10)<=(e.split||15)?'a':'b');return ymOf(date);}
+function periodKey(it,date){const e=entryAt(it,ymOf(date));if(e&&e.dept==='SSS'&&!e.vsub)return ymOf(date)+(+date.slice(8,10)<=(e.split||halfDay(e.ym))?'a':'b');return ymOf(date);}
 /* a day on which the intern was off sick, on emergency leave or confirmed absent doesn't count as an on-call */
 function excusedOn(internId,date){
   return Object.values(S.requests||{}).some(r=>r.type==='leave'&&r.internId===internId&&r.status==='approved'&&(r.kind==='sick'||r.kind==='emergency')&&r.from<=date&&date<=r.to)||Object.values(S.absences||{}).some(a=>a.internId===internId&&a.date===date&&a.status==='absent');
@@ -738,7 +752,7 @@ function cleanMobile(raw){
   return{phone:pick,flag:pick?'Not an 8-digit number, please check':'No number'};
 }
 
-const APP_VERSION='4.6';
+const APP_VERSION='4.7';
 
 /* the groups a part-time intern rotates with (one row per group in the sheet) */
 function groupsOf(it){
@@ -770,7 +784,7 @@ async function loadAll(){
   const j=await call('load');
   const d=j.data;
   S.interns=d.interns||{};S.people=d.people||{};S.requests=d.requests||{};S.checklists=d.checklists||{};S.surgery=d.surgery||{};S.oncall=d.oncall||{};
-  S.eshift=d.eshift||{};S.firmstaff=d.firmstaff||{};S.notices=d.notices||{};S.absences=d.absences||{};S.profreq=d.profreq||{};S.board=d.board||{GS:{},SSS:{}};S.peerLeave=d.peerLeave||[];S.leaveFlags=d.leaveFlags||{};S.sheetIssues=d.sheetIssues||[];S.config=d.config||null;CFG=mergeCfg(S.config);S.holidays=d.holidays||[];S.log=d.log||[];
+  S.eshift=d.eshift||{};S.firmstaff=d.firmstaff||{};S.notices=d.notices||{};S.absences=d.absences||{};S.profreq=d.profreq||{};S.logbooks=d.logbooks||{};S.sessions=d.sessions||{};S.inotices=d.inotices||{};S.presentN=d.presentN||{};S.board=d.board||{GS:{},SSS:{}};S.peerLeave=d.peerLeave||[];S.leaveFlags=d.leaveFlags||{};S.sheetIssues=d.sheetIssues||[];S.config=d.config||null;CFG=mergeCfg(S.config);S.holidays=d.holidays||[];S.log=d.log||[];
   ME=Object.assign({},j.me);VER=j.v;SERVER_VER=j.ver||'';LOADED=true;LOADERR='';
   if(PREVIEW){const ok=PREVIEW.role==='intern'?S.interns[PREVIEW.internId]:S.people[PREVIEW.personId];if(!ok)PREVIEW=null;}
   scheduleRender();
@@ -994,7 +1008,7 @@ function parseRoute(){
   if(!r)return dflt;
   const base=r.split('-')[0];
   const ok={
-    training:['overview','rotations','oncall','requests','surgery','checklists','interns','coordinators','activity','setup','intern','person'],
+    training:['overview','rotations','oncall','requests','surgery','checklists','education','interns','coordinators','activity','setup','intern','person'],
     coordinator:['overview','rotations','oncall','requests','surgery','checklists','intern','person'],
     intern:['myyear','oncall','requests']
   }[e.role]||[];
@@ -1426,7 +1440,7 @@ function viewProfile0(id){
     (span.length?'<p class="small" style="margin:6px 0 0">This rotation ('+plural(span.length,'month')+'): <b>'+ru+'</b> of '+cap+' days used.</p>':'')+
     '<p class="small muted" style="margin:6px 0 0">Sick leave taken: '+plural(used2[0],'day')+'. Emergency leave taken: '+plural(used2[1],'day')+'. These do not count against the balance.</p></section>'+
   '<section class="panel"><h2>On-call</h2><p style="margin:0 0 6px" class="small">This month: <b>'+thisM.length+'</b> on-calls, <b>'+thisM.filter(s=>isWkDay(s.date)).length+'</b> on a weekend or holiday.</p>'+
-    (upcoming.length?'<ul class="list">'+upcoming.slice(0,6).map(s=>{const rec=s.rota!=='EMERGENCY'?dayRec(s.rota,s.date):null,pos=rec?rec.ids.indexOf(id):-1,w=rec&&pos>=0?wardsFor(s.rota,rec.ids.length,pos):'';return'<li><span>'+fmtDate(s.date)+(onLeave(id,s.date)?' <span class="tag warn">on leave</span>':'')+' <span class="muted small">'+esc(s.label)+'</span>'+(w?'<span class="ward">Wards '+esc(w)+'</span>':'')+'</span>'+(self?'<button class="btn sm" data-act="sw-open" data-r="'+s.rota+'" data-d="'+s.date+'">Ask to swap</button>':'')+'</li>';}).join('')+'</ul>':'<p class="muted small" style="margin:0">No upcoming on-calls.</p>')+'</section></div>'+
+    (upcoming.length?'<ul class="list">'+upcoming.slice(0,6).map(s=>{const rec=s.rota!=='EMERGENCY'?dayRec(s.rota,s.date):null,pos=rec?rec.ids.indexOf(id):-1,w=rec&&pos>=0?(wardsAt(s.rota,s.date,rec,id)||''):'';return'<li><span>'+fmtDate(s.date)+(onLeave(id,s.date)?' <span class="tag warn">on leave</span>':'')+' <span class="muted small">'+esc(s.label)+'</span>'+(w?'<span class="ward">Wards '+esc(w)+'</span>':'')+'</span>'+(self?'<button class="btn sm" data-act="sw-open" data-r="'+s.rota+'" data-d="'+s.date+'">Ask to swap</button>':'')+'</li>';}).join('')+'</ul>':'<p class="muted small" style="margin:0">No upcoming on-calls.</p>')+'</section></div>'+
   '<section class="panel"><h2>Twelve-month plan</h2><div class="tl">'+tl+'</div></section>'+
   '<section class="panel"><h2>Requests</h2>'+reqBtns+(reqs.length?reqs.map(reqCard).join(''):'<p class="muted" style="margin:0">No requests yet.</p>')+'</section>'+
   '<section class="panel"><h2>Rotation checklist</h2><div class="scroll"><table class="tbl checks"><thead><tr><th>Rotation</th>'+ITEMS.map(i=>'<th>'+esc(i[1])+'</th>').join('')+'</tr></thead><tbody>'+chk+'</tbody></table></div><p class="hint">'+(self?'Your coordinator ticks these off.':'Coordinators tick the items for their own rotation. The Training department can change any of them.')+'</p></section>';
@@ -1609,7 +1623,7 @@ function viewOncall(){
     const split=entryAt(x.it,ym)&&entryAt(x.it,ym).dept==='SSS',wkLim=split?CFG.wkHalfWarn*2:CFG.wkMonthWarn,max=split?CFG.shiftHalfMax*2:CFG.shiftMonthMax;
     return'<tr><td>'+internLink(x.it.id)+'</td><td>'+x.here+'</td><td>'+x.total+' <span class="muted small">of '+max+'</span>'+(x.total>=max?' <span class="tag mute">full</span>':'')+'</td><td>'+x.wk+(x.wk>wkLim?' <span class="tag warn">over</span>':'')+'</td><td class="small">'+lastCallText(x.it.id,ym)+'</td></tr>';}).join('')+'</tbody></table></div>':'<p class="muted" style="margin:0">No interns are placed here this month.</p>')+'</section>';
   return head(e.role==='intern'?'On-call':'On-call rota',esc(UNIT_NAME[unit])+' rota. '+esc(ROTA_HELP[unit]||'')+'.'+(edit?'':' You can view this rota but not change it.')+(e.role!=='intern'?' You can also fill it in on the “'+esc(ROTA_TAB[unit]||'')+'” tab of the Google Sheet.':''),(e.role!=='intern'&&editableRotas().length)?'<button class="btn" data-act="rota-import">Import from Excel</button>':'')+tabs+nav+
-  '<div class="cols" style="grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr)"><div><div class="cal">'+cells+'</div><p class="hint">Friday, Saturday and flagged holidays are shaded. A split surgical month changes placement on the 16th.</p></div><div>'+panel+'</div></div>'+(e.role==='intern'?'':'<div style="margin-top:16px">'+fair+'</div>');
+  '<div class="cols" style="grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr)"><div><div class="cal">'+cells+'</div><p class="hint">Friday, Saturday and flagged holidays are shaded. A split surgical month changes placement the day after the first half ends (set in Setup).</p></div><div>'+panel+'</div></div>'+(e.role==='intern'?'':'<div style="margin-top:16px">'+fair+'</div>');
 }
 function dayPanel(unit,date,edit){
   const rec=dayRec(unit,date),hol=holidayOf(date),wk=isWkDay(date);
@@ -1624,6 +1638,7 @@ function dayPanel(unit,date,edit){
     h+='<h3 style="margin-top:14px">Add someone ('+el.length+' placed here)</h3>'+(el.length?'<div class="scroll" style="max-height:340px"><table class="tbl"><tbody>'+el.map(it=>{
       const pc=periodCounts(it.id,date),ck=assignCheck(unit,it.id,date),max=pc.split?CFG.shiftHalfMax:CFG.shiftMonthMax;
       return'<tr><td>'+esc(it.name)+'<div class="small muted">'+pc.total+' of '+max+(pc.split?' this half':' this month')+', '+pc.wk+' weekend/holiday</div>'+ck.warn.map(w=>'<div class="small"><span class="tag warn">Warning</span> '+esc(w)+'</div>').join('')+'</td><td style="text-align:right">'+(ck.block.length?'<span class="small muted">'+esc(ck.block[0])+'</span>'+(ck.annual&&ck.block.length===1&&isTr()?' <button class="btn sm" data-act="assign-ovr" data-d="'+date+'" data-i="'+it.id+'">Add anyway</button>':''):'<button class="btn sm pri" data-act="assign" data-d="'+date+'" data-i="'+it.id+'">Assign</button>')+'</td></tr>';}).join('')+'</tbody></table></div>':'<p class="muted small" style="margin:0">No other interns are placed here on this date.</p>');
+    h+=crossRotaBox(unit,date,rec);
   }
   return h+'</section>';
 }
@@ -1681,14 +1696,14 @@ function viewSetup(){
   return head('Setup','Rules and lists that the whole app follows.','<button class="btn pri" data-act="setup-save">Save setup</button>')+
   '<div class="cols"><section class="panel"><h2>Rotation pattern</h2><p class="hint" style="margin-top:0">Months per rotation in each intern’s year (now '+total+' in total). Plans that do not match are rejected, so change this only when the program changes. There is no maximum number of interns per rotation.</p><table class="tbl"><thead><tr><th>Rotation</th><th>Months</th><th>Minimum interns (0 for none)</th></tr></thead><tbody>'+pat+'</tbody></table></section>'+
   '<section class="panel"><h2>Leave rules</h2><div class="grid2">'+num('cf-annual','Annual leave days in the training period',c.annualDays)+num('cf-cap','Annual leave days per month of a rotation',c.capPerMonthDays)+'</div><p class="hint">Both leave limits only warn. Days are counted as calendar days.</p>'+
-  '<h2 style="margin-top:18px">On-call rules</h2><div class="grid2">'+num('cf-smax','Most on-calls in a month (strict)',c.shiftMonthMax)+num('cf-hmax','Most on-calls in each half of a split month (strict)',c.shiftHalfMax)+num('cf-wmax','Weekend and holiday days in a month (warning)',c.wkMonthWarn)+num('cf-whmax','Weekend and holiday days in each half (warning)',c.wkHalfWarn)+num('cf-need','Interns needed per day, suggested',c.defaultNeed)+'</div>'+
+  '<h2 style="margin-top:18px">On-call rules</h2><div class="grid2">'+num('cf-half','Last day of the first half of a month (surgical split and General surgery halves)',halfDay(ymOf(todayStr())))+num('cf-smax','Most on-calls in a month (strict)',c.shiftMonthMax)+num('cf-hmax','Most on-calls in each half of a split month (strict)',c.shiftHalfMax)+num('cf-wmax','Weekend and holiday days in a month (warning)',c.wkMonthWarn)+num('cf-whmax','Weekend and holiday days in each half (warning)',c.wkHalfWarn)+num('cf-need','Interns needed per day, suggested',c.defaultNeed)+'</div>'+
   '<label>Weekend days</label><div>'+DAYS.map((d,i)=>'<label class="inline"><input type="checkbox" name="cf-wk" value="'+i+'"'+(c.weekendDays.includes(i)?' checked':'')+'>'+d+'</label>').join('')+'</div>'+
   '<label for="cf-prefix">Country code to ignore in contact numbers</label><input type="text" id="cf-prefix" value="'+esc(c.prefix)+'" style="width:120px"></section></div>'+
   '<div class="cols" style="margin-top:16px"><section class="panel"><h2>Lists</h2><p class="hint" style="margin-top:0">One item per line.</p><label for="cf-intake">Intake start month (every new intern starts here)</label><input type="month" id="cf-intake" value="'+esc(c.intakeYm||'')+'" style="width:auto"><p class="hint">The group then sets their 12 months. If this is empty, the current month is used.</p><label for="cf-neuro">Subspecialty with its own coordinators and rota</label><input type="text" id="cf-neuro" value="'+esc(c.neuroSpec||'')+'"><p class="hint">Must match its name in the list below. Interns doing it are placed on their own rota.</p><label for="cf-sub">Medical subspecialties</label><textarea id="cf-sub">'+esc(c.medSubs.join('\n'))+'</textarea><label for="cf-spec">Surgical subspecialties</label><textarea id="cf-spec">'+esc(c.surgSpecs.join('\n'))+'</textarea><label for="cf-ele">Electives interns can choose</label><textarea id="cf-ele">'+esc(c.electives.join('\n'))+'</textarea></section>'+
   '<section class="panel"><h2>Surgical wards by position</h2><p class="hint" style="margin-top:0">One line per position, first position first. Used for 2, 3 and 4 interns on a day.</p>'+['2','3','4'].map(k=>'<label for="cf-w'+k+'">'+k+' interns</label><textarea id="cf-w'+k+'" rows="'+k+'">'+esc(((c.wards||{})[k]||[]).join('\n'))+'</textarea>').join('')+'</section>'+
   '<section class="panel"><h2>National holidays</h2>'+(hol.length?'<ul class="list">'+hol.map(h=>'<li><span>'+fmtDateY(h.d)+' '+esc(h.label||'')+'</span><button class="btn sm" data-act="hol-del-setup" data-d="'+h.d+'">Remove</button></li>').join('')+'</ul>':'<p class="muted" style="margin:0">None flagged. Flag holidays from the on-call calendar.</p>')+
   '<h2 style="margin-top:20px">Who can sign in</h2><p class="small" style="margin:0">Only people listed in the Staff or Interns tab of your Google Sheet. Each person signs in with their contact number and personal access code. Use “Download access codes” on the Interns and Coordinators pages to hand them out. Training members are listed in the Staff tab with the role “training”.</p><p class="hint">Page version '+APP_VERSION+'. Google script version '+(SERVER_VER||'older than 4.1')+'.</p>'+(Object.keys(S.interns).length?'':'<div class="note info" style="margin-top:14px"><b>The board is empty.</b> Add interns from the Interns page, or load sample data to try it out.<div style="margin-top:8px"><button class="btn sm" data-act="load-sample">Load sample data</button></div></div>')+
-  (sampleCount()?'<div class="note warn" style="margin-top:14px"><b>Sample data is loaded</b> ('+sampleCount()+' sample interns with their coordinators, requests and rotas). Clear it before you add the real list.<div style="margin-top:8px"><button class="btn bad sm" data-act="clear-sample">Clear sample data</button></div></div>':'')+'</section></div>';
+  (sampleCount()?'<div class="note warn" style="margin-top:14px"><b>Sample data is loaded</b> ('+sampleCount()+' sample interns with their coordinators, requests and rotas). Clear it before you add the real list.<div style="margin-top:8px"><button class="btn bad sm" data-act="clear-sample">Clear sample data</button></div></div>':'')+'</section></div>'+changelogPanel();
 }
 function readLines(id){return $(id).value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);}
 async function saveSetup(){
@@ -1697,6 +1712,7 @@ async function saveSetup(){
   if(!BLOCKS.reduce((s,b)=>s+cfg.pattern[b],0))bad='The pattern needs at least one month.';
   const ids={annualDays:'cf-annual',capPerMonthDays:'cf-cap',shiftMonthMax:'cf-smax',shiftHalfMax:'cf-hmax',wkMonthWarn:'cf-wmax',wkHalfWarn:'cf-whmax',defaultNeed:'cf-need'};
   Object.keys(ids).forEach(k=>{const v=n(ids[k]);if(!Number.isFinite(v)||v<0)bad='Use whole numbers of zero or more.';cfg[k]=v;});
+  {const hv=n('cf-half'),cur=ymOf(todayStr());if(!Number.isFinite(hv)||hv<5||hv>27)bad='The last day of the first half must be between 5 and 27.';else if(hv!==halfDay(cur)){const m={};String(CFG.halfHist||'').split(';').forEach(x=>{const a=x.trim().split(':');if(a.length===2)m[a[0]]=a[1];});m[cur]=String(hv);cfg.halfHist=Object.keys(m).sort().map(k=>k+':'+m[k]).join(';');}else cfg.halfHist=CFG.halfHist;}
   cfg.weekendDays=[...document.querySelectorAll('input[name=cf-wk]:checked')].map(x=>+x.value);
   cfg.prefix=$('cf-prefix').value.replace(/\D/g,'');cfg.neuroSpec=$('cf-neuro').value.trim();cfg.intakeYm=/^\d{4}-\d{2}$/.test($('cf-intake').value)?$('cf-intake').value:'';cfg.wards={};['2','3','4'].forEach(k=>{cfg.wards[k]=readLines('cf-w'+k);});
   cfg.medSubs=readLines('cf-sub');cfg.surgSpecs=readLines('cf-spec');cfg.electives=readLines('cf-ele');
@@ -1996,7 +2012,7 @@ function navItems(){
   if(e.role==='training')return[
     {r:'overview',t:'Overview',g:'Home'},{r:'rotations',t:'Rotations',g:'Plan'},{r:'oncall',t:'On-call',g:'Plan'},{r:'surgery',t:'Surgery split',g:'Plan'},
     {r:'interns',t:'Interns',g:'People',alt:x=>x.startsWith('intern-')},{r:'coordinators',t:'Coordinators',g:'People',alt:x=>x.startsWith('person-')},
-    {r:'requests',t:'Requests',g:'Requests',badge:dec||''},{r:'checklists',t:'Checklists',g:'Tracking'},{r:'activity',t:'Activity',g:'Admin'},{r:'setup',t:'Setup',g:'Admin'}];
+    {r:'requests',t:'Requests',g:'Requests',badge:dec||''},{r:'checklists',t:'Checklists',g:'Tracking'},{r:'education',t:'Education',g:'Tracking'},{r:'activity',t:'Activity',g:'Admin'},{r:'setup',t:'Setup',g:'Admin'}];
   if(e.role==='coordinator'){
     const a=[{r:'overview',t:'My rotation',g:'Home'},{r:'rotations',t:'Rotations',g:'Plan'},{r:'oncall',t:'On-call rota',g:'Plan'}];
     if(canSurg())a.push({r:'surgery',t:'Surgery split',g:'Plan'});
@@ -2165,7 +2181,7 @@ function myShifts(id){
   Object.values(S.eshift||{}).forEach(d=>{const g=(d.grid||{})[id];if(!g)return;for(let i=0;i<g.length;i++){if(g[i]!=='O'){const date=d.ym+'-'+pad(i+1);if(date>=today)out.push({rota:'EMERGENCY',date,label:'Emergency, '+SHIFTS[g[i]]});}}});
   return out.sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0);
 }
-function wardLine(rota,rec,pos){const w=wardsFor(rota,rec.ids.length,pos);return w?'<span class="ward">Wards '+esc(w)+'</span>':'';}
+function wardLine(rota,rec,pos,date){if(date){const w=wardsAt(rota,date,rec,rec.ids[pos]);if(w===null)return'<span class="ward">Absent, not counted</span>';return w?'<span class="ward">Wards '+esc(w)+'</span>':'';}const w=wardsFor(rota,rec.ids.length,pos);return w?'<span class="ward">Wards '+esc(w)+'</span>':'';}
 function ocNav(unit,ym){
   const sel='<select class="ocsel" data-bind="ocUnit" aria-label="Rota">'+ocUnits().map(u=>'<option value="'+u+'"'+(u===unit?' selected':'')+'>'+esc(ocName(u))+'</option>').join('')+'</select>';
   const view=unit==='EMERGENCY'?'':'<div class="seg"><button class="'+(ocView(unit)==='table'?'on':'')+'" data-act="ocview" data-v="table">Table</button><button class="'+(ocView(unit)==='calendar'?'on':'')+'" data-act="ocview" data-v="calendar">Calendar</button></div>';
@@ -2176,7 +2192,7 @@ function myOnCallPanel(){
   const e=E();if(e.role!=='intern')return'';
   const list=myShifts(e.internId).slice(0,8);
   return'<section class="panel" style="margin-bottom:16px"><h2>My on-calls</h2>'+(list.length?'<ul class="list">'+list.map(s=>{
-    const rec=s.rota!=='EMERGENCY'?dayRec(s.rota,s.date):null,pos=rec?rec.ids.indexOf(e.internId):-1,w=rec&&pos>=0?wardsFor(s.rota,rec.ids.length,pos):'';
+    const rec=s.rota!=='EMERGENCY'?dayRec(s.rota,s.date):null,pos=rec?rec.ids.indexOf(e.internId):-1,w=rec&&pos>=0?(wardsAt(s.rota,s.date,rec,e.internId)||''):'';
     return'<li><span>'+fmtDate(s.date)+' <span class="muted small">'+esc(s.label)+'</span>'+(w?'<span class="ward">Wards '+esc(w)+'</span>':'')+'</span><button class="btn sm" data-act="sw-open" data-r="'+s.rota+'" data-d="'+s.date+'">Ask to swap</button></li>';}).join('')+'</ul>':'<p class="muted" style="margin:0">No upcoming on-calls.</p>')+'</section>';
 }
 function viewOncall0(){
@@ -2195,10 +2211,10 @@ function viewOncall0(){
     for(let i=0;i<lead;i++)cells+='<div class="day blank"></div>';
     for(let d=1;d<=n;d++){
       const date=ym+'-'+pad(d),rec=dayRec(unit,date),hol=holidayOf(date),wk=isWkDay(date);
-      const cov=rec.need!=null&&!sur?'<span class="cov '+(rec.ids.length<rec.need?'short':'full')+'">'+rec.ids.length+'/'+rec.need+'</span>':(rec.ids.length?'<span class="cov">'+rec.ids.length+'</span>':'');
+      const cn=rec.ids.filter(i=>!flagOf(unit,date,i)).length,cov=rec.need!=null&&!sur?'<span class="cov '+(cn<rec.need?'short':'full')+'">'+cn+'/'+rec.need+'</span>':(cn?'<span class="cov">'+cn+'</span>':'');
       cells+='<button class="day'+(wk?' wk':'')+(UI.ocDay===date?' sel':'')+'" data-act="ocday" data-d="'+date+'" aria-label="'+esc(fmtDate(date))+'"><span class="dn">'+d+'</span>'+(hol?'<span class="hol">'+esc(hol.label||'Holiday')+'</span>':'')+cov+'<span class="who">'+rec.ids.slice(0,4).map(id=>'<i class="'+(id===mine?'mine':'')+'">'+esc(shortName((S.interns[id]||{}).name))+'</i>').join('')+(rec.ids.length>4?'<i>+'+(rec.ids.length-4)+' more</i>':'')+'</span></button>';
     }
-    main='<div class="cal">'+cells+'</div><p class="hint">Friday, Saturday and flagged holidays are shaded. A split surgical month changes placement on the 16th.</p>';
+    main='<div class="cal">'+cells+'</div><p class="hint">Friday, Saturday and flagged holidays are shaded. A split surgical month changes placement the day after the first half ends (set in Setup).</p>';
   }
   const panel=UI.ocDay&&ymOf(UI.ocDay)===ym?dayPanel(unit,UI.ocDay,edit):'<section class="panel"><h2>Pick a day</h2><p class="muted" style="margin:0">'+(edit?'Select a day to '+(sur?'see and arrange who is on call.':'set how many interns you need and assign them.'):'Select a day to see who is on call.')+'</p></section>';
   const pool=new Map();['01','08','16','23','28'].reduce((a,d)=>a.concat(eligibleFor(unit,ym+'-'+d)),[]).forEach(it=>pool.set(it.id,it));
@@ -2222,7 +2238,7 @@ function ocTable(unit,ym,mine){
   for(let d=1;d<=n;d++){
     const date=ym+'-'+pad(d),rec=dayRec(unit,date),wk=isWkDay(date),hol=holidayOf(date);
     h+='<tr class="'+(wk?'wk ':'')+(UI.ocDay===date?'sel ':'')+'" data-act="ocday" data-d="'+date+'"><th>'+d+' '+DAYS[dow(date)]+(hol?'<span class="ward">'+esc(hol.label||'Holiday')+'</span>':'')+'</th>';
-    for(let p=0;p<K;p++){const id=rec.ids[p];h+='<td>'+(id?'<span class="'+(id===mine?'mine':'')+'">'+esc((S.interns[id]||{}).name||'?')+'</span>'+flagTag(unit,date,id)+(sur?wardLine(unit,rec,p):''):'<span class="muted">'+(sur?'—':'')+'</span>')+'</td>';}
+    for(let p=0;p<K;p++){const id=rec.ids[p];h+='<td>'+(id?'<span class="'+(id===mine?'mine':'')+'">'+esc((S.interns[id]||{}).name||'?')+'</span>'+flagTag(unit,date,id)+(sur?wardLine(unit,rec,p,date):''):'<span class="muted">'+(sur?'—':'')+'</span>')+'</td>';}
     h+='</tr>';
   }
   return h+'</tbody></table></div><p class="hint">Friday, Saturday and flagged holidays are shaded. Select a day to change it.'+(sur?' The wards follow each intern’s place in the day.':'')+'</p>';
@@ -2233,12 +2249,13 @@ function dayPanel(unit,date,edit){
   if(edit)h+=hol?'<div class="row" style="margin-bottom:8px"><button class="btn sm" data-act="hol-del" data-d="'+date+'">Remove holiday flag</button></div>':'<div class="row" style="margin-bottom:8px"><input type="text" id="oc-hol" placeholder="Holiday name (optional)" style="width:190px"><button class="btn sm" data-act="hol-add" data-d="'+date+'">Flag as national holiday</button></div>';
   if(!sur)h+='<div class="row" style="margin:6px 0 10px"><b>Interns needed:</b> '+(rec.need==null?'<span class="muted">not set</span>':'<b>'+rec.need+'</b>')+(edit?'<button class="btn sm" data-act="oc-need" data-d="'+date+'" data-n="-1" aria-label="One fewer needed"'+(rec.need==null||rec.need<=0?' disabled':'')+'>−</button><button class="btn sm" data-act="oc-need" data-d="'+date+'" data-n="1" aria-label="One more needed">+</button>':'')+'</div>';
   h+='<h3>On call ('+rec.ids.length+')</h3>'+(rec.ids.length?'<ul class="list">'+rec.ids.map((id,p)=>{const it=S.interns[id];
-    return'<li><span>'+(sur?'<span class="muted small">'+(p+1)+'.</span> ':'')+(it?internLink(id):'Removed intern')+(onLeave(id,date)?' <span class="tag warn">on leave</span>':'')+flagTag(unit,date,id)+(sur?wardLine(unit,rec,p):'')+'</span><span class="row">'+(edit&&sur?'<button class="btn sm" data-act="oc-move" data-d="'+date+'" data-i="'+id+'" data-n="-1" aria-label="Move up"'+(p===0?' disabled':'')+'>↑</button><button class="btn sm" data-act="oc-move" data-d="'+date+'" data-i="'+id+'" data-n="1" aria-label="Move down"'+(p===rec.ids.length-1?' disabled':'')+'>↓</button>':'')+(edit?'<button class="btn sm bad" data-act="unassign" data-d="'+date+'" data-i="'+id+'">Remove</button>':'')+'</span></li>';}).join('')+'</ul>':'<p class="muted small" style="margin:0 0 6px">No one yet.</p>');
+    return'<li><span>'+(sur?'<span class="muted small">'+(p+1)+'.</span> ':'')+(it?internLink(id):'Removed intern')+(onLeave(id,date)?' <span class="tag warn">on leave</span>':'')+flagTag(unit,date,id)+rotaMoveTag(unit,date,id)+(sur?wardLine(unit,rec,p,date):'')+'</span><span class="row">'+(edit&&sur?'<button class="btn sm" data-act="oc-move" data-d="'+date+'" data-i="'+id+'" data-n="-1" aria-label="Move up"'+(p===0?' disabled':'')+'>↑</button><button class="btn sm" data-act="oc-move" data-d="'+date+'" data-i="'+id+'" data-n="1" aria-label="Move down"'+(p===rec.ids.length-1?' disabled':'')+'>↓</button>':'')+(edit?'<button class="btn sm bad" data-act="unassign" data-d="'+date+'" data-i="'+id+'">Remove</button>':'')+'</span></li>';}).join('')+'</ul>':'<p class="muted small" style="margin:0 0 6px">No one yet.</p>');
   if(edit){
     const el=eligibleFor(unit,date).filter(it=>!rec.ids.includes(it.id));
     h+='<h3 style="margin-top:14px">Add someone ('+el.length+' placed here)</h3>'+(el.length?'<div class="scroll" style="max-height:340px"><table class="tbl"><tbody>'+el.map(it=>{
       const pc=periodCounts(it.id,date),ck=assignCheck(unit,it.id,date),max=pc.split?CFG.shiftHalfMax:CFG.shiftMonthMax;
       return'<tr><td>'+esc(it.name)+'<div class="small muted">'+pc.total+' of '+max+(pc.split?' this half':' this month')+', '+pc.wk+' weekend/holiday</div>'+ck.warn.map(w=>'<div class="small"><span class="tag warn">Warning</span> '+esc(w)+'</div>').join('')+'</td><td style="text-align:right">'+(ck.block.length?'<span class="small muted">'+esc(ck.block[0])+'</span>'+(ck.annual&&ck.block.length===1&&isTr()?' <button class="btn sm" data-act="assign-ovr" data-d="'+date+'" data-i="'+it.id+'">Add anyway</button>':''):'<button class="btn sm pri" data-act="assign" data-d="'+date+'" data-i="'+it.id+'">Add</button>')+'</td></tr>';}).join('')+'</tbody></table></div>':'<p class="muted small" style="margin:0">No other interns are placed here on this date.</p>');
+    h+=crossRotaBox(unit,date,rec);
   }
   return h+'</section>';
 }
@@ -2654,6 +2671,7 @@ function routeContent0(){
     case'requests':return viewRequests();
     case'surgery':return viewSurgery();
     case'checklists':return viewChecklists();
+    case'education':return viewEducation();
     case'interns':return viewInterns();
     case'coordinators':return viewCoordinators();
     case'activity':return viewActivity();
@@ -2923,13 +2941,13 @@ function navItems(){
   if(e.role==='training')return[
     {r:'overview',t:'Overview',g:'Home'}].concat(myRot,[{r:'rotations',t:'Rotations',g:'Plan'},{r:'oncall',t:'On-call',g:'Plan'},{r:'surgery',t:'Surgical allocation',g:'Plan'},
     {r:'interns',t:'Interns',g:'People',alt:x=>x.startsWith('intern-')},{r:'coordinators',t:'Coordinators',g:'People',alt:x=>x.startsWith('person-')},
-    {r:'requests',t:'Requests',g:'Requests',badge:dec||''},{r:'checklists',t:'Checklists',g:'Tracking'},{r:'activity',t:'Activity',g:'Admin'},{r:'setup',t:'Setup',g:'Admin'}]);
+    {r:'requests',t:'Requests',g:'Requests',badge:dec||''},{r:'checklists',t:'Checklists',g:'Tracking'},{r:'education',t:'Education',g:'Tracking'},{r:'activity',t:'Activity',g:'Admin'},{r:'setup',t:'Setup',g:'Admin'}]);
   if(e.role==='coordinator'){
     const a=[{r:'overview',t:'My rotation',g:'Home'},{r:'rotations',t:'Rotations',g:'Plan'},{r:'oncall',t:'On-call rota',g:'Plan'}];
     if(canSurg())a.push({r:'surgery',t:'Surgical allocation',g:'Plan'});
-    a.push({r:'requests',t:'Approvals',g:'Requests',badge:dec||''},{r:'checklists',t:'Checklists',g:'Tracking'});return a;
+    a.push({r:'requests',t:'Approvals',g:'Requests',badge:dec||''},{r:'checklists',t:'Checklists',g:'Tracking'},{r:'education',t:'Education',g:'Tracking'});return a;
   }
-  return[{r:'myyear',t:'My year',g:'Home'},{r:'oncall',t:'On-call',g:'Plan'},{r:'requests',t:'My requests',g:'Requests',badge:dec||''}];
+  return[{r:'myyear',t:'My year',g:'Home'},{r:'oncall',t:'On-call',g:'Plan'},{r:'requests',t:'My requests',g:'Requests',badge:dec||''},{r:'checklists',t:'My logbooks',g:'Tracking'},{r:'education',t:'Education',g:'Tracking'}];
 }
 function parseRoute(){
   let r=(location.hash||'').replace(/^#/,'');const e=E();
@@ -2937,9 +2955,9 @@ function parseRoute(){
   if(!r)return dflt;
   const base=r.split('-')[0];
   const ok={
-    training:['overview','myrot','rotations','oncall','requests','surgery','checklists','interns','coordinators','activity','setup','intern','person'],
-    coordinator:['overview','rotations','oncall','requests','surgery','checklists','intern'],
-    intern:['myyear','oncall','requests']
+    training:['overview','myrot','rotations','oncall','requests','surgery','checklists','education','interns','coordinators','activity','setup','intern','person'],
+    coordinator:['overview','rotations','oncall','requests','surgery','checklists','education','intern'],
+    intern:['myyear','oncall','requests','checklists','education']
   }[e.role]||[];
   if(!ok.includes(base))return dflt;
   if(base==='surgery'&&!canSurg())return dflt;
@@ -2950,7 +2968,7 @@ function bottomItems(){
   const e=E(),dec=myDecisions().length;
   if(e.role==='training')return[['overview','Home','home'],['rotations','Rotations','grid'],['oncall','On-call','cal'],['requests','Requests','inbox',dec],['more','More','more']];
   if(e.role==='coordinator')return[['overview','Home','home'],['oncall','On-call','cal'],['requests','Approvals','inbox',dec],['checklists','Checklists','check'],['more','More','more']];
-  return[['myyear','Home','home'],['oncall','On-call','cal'],['requests','Requests','inbox',dec]];
+  return[['myyear','Home','home'],['oncall','On-call','cal'],['requests','Requests','inbox',dec],['checklists','Logbooks','check'],['more','More','more']];
 }
 
 /* ---------- the panel that opens when you tap your name ---------- */
@@ -3078,7 +3096,7 @@ function surgClashes(it,ym,oldS,nextS){
   });
   leaveReqs(it.id).filter(r=>r.status!=='declined'&&(ymOf(r.from)===ym||ymOf(r.to)===ym)).forEach(r=>out.push((KIND_NAME[r.kind]||'Leave')+' '+fmtDateY(r.from)+(r.to!==r.from?' to '+fmtDateY(r.to):'')+(r.status==='approved'?' (approved).':' (requested).')));
   Object.values(S.requests).filter(r=>r.type==='swap'&&(r.internId===it.id||r.peerId===it.id)&&r.status!=='approved'&&r.status!=='declined').forEach(()=>out.push('An on-call swap request is still open.'));
-  [[1,15],[16,n]].forEach(([a,b])=>{const c=shiftsOf(it.id).filter(s=>{const d=+s.date.slice(8);return ymOf(s.date)===ym&&d>=a&&d<=b;}).length;if(c>CFG.shiftHalfMax)out.push('Already has '+c+' on-calls in the '+(a===1?'first':'second')+' half (limit '+CFG.shiftHalfMax+').');});
+  const hd=(entryAt(it,ym)||{}).split||halfDay(ym);[[1,hd],[hd+1,n]].forEach(([a,b])=>{const c=shiftsOf(it.id).filter(s=>{const d=+s.date.slice(8);return ymOf(s.date)===ym&&d>=a&&d<=b;}).length;if(c>CFG.shiftHalfMax)out.push('Already has '+c+' on-calls in the '+(a===1?'first':'second')+' half (limit '+CFG.shiftHalfMax+').');});
   return out;
 }
 async function sgApply(id,next){
@@ -3107,7 +3125,7 @@ function sgSss(ym,edit){
   const rows=list.map(it=>{
     const s=S.surgery[it.id]||{},sel='<select data-sg2="'+it.id+'" aria-label="Subspecialty for '+esc(it.name)+'"'+(edit?'':' disabled')+'>'+specOptions(s.spec)+'</select>',ort='<span class="chip" style="--uh:'+(HUE.ORT!=null?HUE.ORT:30)+'">Orthopedics</span>';
     return'<tr><td>'+internLink(it.id)+'</td><td>'+(s.orthFirst?ort:sel)+'</td><td class="swc">'+(edit?'<button class="sw big" data-act="sg-swap" data-id="'+it.id+'" title="Switch the halves" aria-label="Switch the halves for '+esc(it.name)+'">⇄</button>':'')+'</td><td>'+(s.orthFirst?sel:ort)+'</td><td class="small"><input type="number" min="5" max="27" class="dnum" data-sgs="'+it.id+'" value="'+((entryAt(it,ym)||{}).split||'')+'" placeholder="15"'+(edit?'':' disabled')+' aria-label="Last day of the first half for '+esc(it.name)+'"></td></tr>';}).join('');
-  return'<div class="scroll"><table class="tbl sg"><thead><tr><th>Intern</th><th>First half</th><th></th><th>Second half</th><th>First half ends on day <span class="muted small">(usual 15)</span></th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="hint">The on-call lists follow these choices. An intern doing Neurosurgery is placed on the Neurosurgery rota; any other subspecialty is on the Surgical rota; the Orthopedics half is on the Orthopedics rota. In the Google Sheet this is the month cell, for example “Urology /Ortho”.</p>';
+  return'<div class="scroll"><table class="tbl sg"><thead><tr><th>Intern</th><th>First half</th><th></th><th>Second half</th><th>First half ends on day <span class="muted small">(usual '+halfDay(UI.sgYm)+')</span></th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="hint">The on-call lists follow these choices. An intern doing Neurosurgery is placed on the Neurosurgery rota; any other subspecialty is on the Surgical rota; the Orthopedics half is on the Orthopedics rota. In the Google Sheet this is the month cell, for example “Urology /Ortho”.</p>';
 }
 function sgGs(ym,edit){
   const list=gsInterns(ym);
@@ -3237,7 +3255,7 @@ document.addEventListener('change',ev=>{
   const t=ev.target;if(!t||!t.dataset)return;
   if(t.dataset.sg2){const id=t.dataset.sg2,s=S.surgery[id]||{spec:null,orthFirst:false};if(!canSurg())return;sgApply(id,{spec:t.value||null,orthFirst:!!s.orthFirst}).then(()=>scheduleRender());return;}
   if(t.dataset.vp){if(!canSurg())return;saveVisit(t.dataset.vp).then(()=>scheduleRender());return;}
-  if(t.dataset.sgs){if(!canSurg())return;const id=t.dataset.sgs,it=S.interns[id],e=entryAt(it,UI.sgYm),v=+t.value||0;if(!e)return;const ne=Object.assign({},e);if(v>=5&&v<=27&&v!==15)ne.split=v;else delete ne.split;savePlanEntry(id,UI.sgYm,ne,'Set the changeover day of the surgical split').then(()=>scheduleRender());return;}
+  if(t.dataset.sgs){if(!canSurg())return;const id=t.dataset.sgs,it=S.interns[id],e=entryAt(it,UI.sgYm),v=+t.value||0;if(!e)return;const ne=Object.assign({},e);if(v>=5&&v<=27&&v!==halfDay(UI.sgYm))ne.split=v;else delete ne.split;savePlanEntry(id,UI.sgYm,ne,'Set the changeover day of the surgical split').then(()=>scheduleRender());return;}
   if(t.dataset.gs){if(!canSurg())return;setFirm(t.dataset.gs,t.dataset.half,t.value).then(()=>scheduleRender());return;}
 });
 
@@ -3266,7 +3284,7 @@ function placeDetail(it,date){
   if(e.dept==='SSS'&&u==='NEURO')return CFG.neuroSpec||'Neurosurgery';
   if(e.dept==='SSS'&&u==='ORT')return'Orthopedics';
   if(e.dept==='SSS'&&sg.spec)return sg.spec;
-  if(e.dept==='GS'){const half=+date.slice(8,10)<=15?e.fa:e.fb;return half?'Firm '+half:'';}
+  if(e.dept==='GS'){const half=+date.slice(8,10)<=(e.split||halfDay(e.ym))?e.fa:e.fb;return half?'Firm '+half:'';}
   if(e.dept==='ELE'&&e.sub)return e.sub;
   return'';
 }
@@ -3309,7 +3327,9 @@ function ovTraining(){
 }
 function routeContent(){
   if(UI.route==="myrot")return ovCoord();
-  return routeContent0();
+  const h=routeContent0();
+  if(UI.route==='myyear'&&E().role==='intern'&&typeof internHomeExtras==='function')return internHomeExtras(h);
+  return h;
 }
 
 /* ---------- requests: with coordinators for more than a week ---------- */
@@ -3572,6 +3592,305 @@ async function savePartPE(){
 }
 Object.assign(ACT,{'pe-more':el=>{expandPE();const i=+el.dataset.i,e=PE.plan[i];PE.plan.splice(i+1,0,{ym:e.ym,dept:''});paintPartPE();}});
 document.addEventListener('change',ev=>{const t=ev.target;if(!t||!t.dataset||t.dataset.pe4===undefined||!PE||!PE.part)return;const e=PE.plan[+t.dataset.pe4];if(!e)return;const k=t.dataset.k;e[k]=(k==='from'||k==='to')?(+t.value||0):t.value;if(k==='from'||k==='to')paintPartPE();});
+
+/* ===================== version 4.7 additions ===================== */
+/* ---------- change log (Training, Setup page) ---------- */
+const CHANGELOG=[
+ {v:'4.7',t:'Checklists, logbooks, Education, on-call rules, change log',items:[
+  'Checklists page replaced: filter by group (1A to 2C, INH, AMH, KSA); one row per intern, one fixed column per rotation (a rotation shows once even if it has several months). Each cell shows its state in words and icons: not scheduled, scheduled, now, done with no logbook, submitted, sent back, scored. Not-scheduled cells are hidden for visitors and part-year interns. A summary bar counts missing logbooks.',
+  'Logbooks: interns upload one PDF (up to about 5 MB) per rotation. Files go to a private Drive folder owned by the script account and open only through the app. The rotation’s coordinators are notified on upload.',
+  'Scores: coordinators of the rotation (and Training) score each logbook out of 100 = average of assessment forms (each out of 50) + presentation skill (10) + procedure skill (10) + punctuality and professionalism (30). Interns never see scores. A coordinator can send a logbook back with a comment; Training can upload for anyone and override anything.',
+  'Education page (new): Training creates sessions with title, presenter, venue, date and time, audience (all interns, a group, or a rotation) and material as Google Drive links. Upcoming and Past tabs; interns see only their sessions and get a reminder on their home page.',
+  'On-call: the list of people for a day now offers only interns who are in that rota on that exact date (split and changeover days respected; Ortho and Neuro interns are not offered on the Surgical rota during their days). Existing calls that no longer match show a warning. Training can add someone from another rota with a confirmation.',
+  'Setup: new “Last day of the first half” (default 14) for the surgical split and General surgery halves. It applies from the current month onward; earlier months keep the 15th. An intern’s own changeover day overrides it.',
+  'Surgical rota: “Fill the gaps” button per day moves everyone up so wards are covered in order; an absent intern goes last, marked absent and not counted.',
+  'Interns get in-app notices for any change to their rota (added, removed, moved, swapped, marked absent, gap-fill). Several changes on the same day are combined; unread count on the home page; history kept.',
+  'Coordinator and staff names are always shown in full.',
+  'Change log added to the Setup page (this list).']},
+ {v:'4.6',t:'Dated placements and visiting interns',items:[
+  'Exact dates inside a month: “from 1 - 22 Jan”, a changeover day for the surgical split, and several placements in one month.',
+  'AMH, INH and KSA visiting interns appear in Rotations and Surgical allocation (Visiting interns tab), with a part-time plan editor, counted in capacity, and leave limits scaled to the days they are with us.',
+  'Visiting interns’ surgical specialty is recorded and shown.',
+  'Rotations page: academic-year view (July to June) with arrows, filter by current rotation, search by any start month, editable short names for interns.',
+  'Overview: this-month cards by rota show Medicine plus subspecialty and Surgery plus subspecialty totals.',
+  'Notices and warnings merged into one “needs your decision” list.']},
+ {v:'4.5',t:'Staff, requests and codes',items:[
+  'Firm staff (Consultant, Chief, Senior, Junior) with phone numbers; roles shown as titles such as “Surgical coordinator” or “Training and Surgical coordinator”.',
+  'Notices to coordinators and Training; profile-change requests from staff that Training approves.',
+  'Absences (sick, emergency, absent) flagged on on-call days; annual-leave blocks and Training override when assigning calls.',
+  'Overview attention panel, “Send me my code” on sign-in, send-codes dialog, safer CSV download.']},
+ {v:'4.4 and earlier',t:'Core app',items:[
+  'Sign-in with contact number and access code; roles for Training, coordinators and deputies, and interns.',
+  'Rotation plans per intern and group (1A to 2C), rotation pattern and leave rules in Setup, annual leave and requests.',
+  'On-call rotas with strict monthly limits and weekend and holiday rules, Surgical allocation by wards, Checklists, Activity log, Setup, and everything stored in your Google Sheet.']}
+];
+function changelogPanel(){
+  return'<section class="panel" style="margin-top:16px"><h2>Change log</h2><p class="hint" style="margin-top:0">New features in each version of the app. Visible to Training only.</p>'+
+  CHANGELOG.map((r,i)=>'<details'+(i===0?' open':'')+' style="margin:8px 0"><summary style="cursor:pointer;font-weight:600">Version '+esc(r.v)+' — '+esc(r.t)+(r.v===APP_VERSION?' <span class="small">(this version)</span>':'')+'</summary><ul style="margin:6px 0 0 18px">'+r.items.map(x=>'<li class="small" style="margin:4px 0">'+esc(x)+'</li>').join('')+'</ul></details>').join('')+'</section>';
+}
+
+/* ---------- on-call: out-of-rota calls and Training cross-rota add ---------- */
+function rotaMoveTag(unit,date,id){
+  const it=S.interns[id];if(!it)return'';
+  const now=rotaOf(placementAt(it,date,S.surgery[id]));
+  return now===unit?'':' <span class="tag warn">'+(now?'Now in the '+esc(UNIT_NAME[now]||now)+' rota that day':'Not placed that day')+'</span>';
+}
+function crossRotaBox(unit,date,rec){
+  if(!isTr())return'';
+  const ids=new Set(eligibleFor(unit,date).map(x=>x.id));
+  const others=Object.values(S.interns).filter(it=>!ids.has(it.id)&&!rec.ids.includes(it.id)).sort((a,b)=>a.name.localeCompare(b.name));
+  if(!others.length)return'';
+  return'<details style="margin-top:12px"><summary class="small" style="cursor:pointer"><b>Add someone from another rota</b> (Training only)</summary><div class="row" style="margin-top:8px"><select id="oc-x" aria-label="Intern from another rota">'+others.map(it=>{const r=rotaOf(placementAt(it,date,S.surgery[it.id]));return'<option value="'+it.id+'">'+esc(it.name)+(r?' ('+esc(UNIT_NAME[r]||r)+' that day)':' (not placed that day)')+'</option>';}).join('')+'</select><button class="btn sm" data-act="assign-x" data-d="'+date+'">Add</button></div></details>';
+}
+Object.assign(ACT,{
+  'assign-x':async el=>{
+    const date=el.dataset.d,id=$('oc-x').value,unit=UI.ocUnit,it=S.interns[id];if(!isTr()||!it)return;
+    const r=rotaOf(placementAt(it,date,S.surgery[id]));
+    if(!(await askConfirm('Add from another rota',esc(it.name)+' is '+(r?'in the '+esc(UNIT_NAME[r]||r)+' rota':'not placed')+' on '+esc(fmtDate(date))+'. Add them to the '+esc(UNIT_NAME[unit]||unit)+' rota anyway?','Add anyway')))return;
+    logEv('Put '+it.name+' on the '+UNIT_NAME[unit]+' rota for '+fmtDate(date)+' from another rota');
+    return mut('oncall',ocKey(unit,ymOf(date)),b=>{b=b||{unit,ym:ymOf(date),days:{}};b.unit=unit;b.ym=ymOf(date);b.days=b.days||{};const r2=ensureDay(b.days,date);if(!r2.ids.includes(id))r2.ids.push(id);b.ovr=[dayKey(date)+':'+id+':x'];return b;});
+  }
+});
+
+/* ---------- wards with an absent intern last and not counted ---------- */
+function wardsAt(rota,date,rec,id){
+  if(rota!=='SURGICAL')return'';
+  const key=ocKey(rota,ymOf(date)),dk=dayKey(date),fl=(S.leaveFlags&&S.leaveFlags[key]&&S.leaveFlags[key][dk])||{};
+  if(fl[id])return null;
+  const pn=S.presentN&&S.presentN[key]&&S.presentN[key][dk];
+  const known=rec.ids.filter(i=>!fl[i]);
+  const count=pn!=null?pn:known.length,pos=known.indexOf(id);
+  return wardsFor(rota,count,pos<0?rec.ids.indexOf(id):pos);
+}
+
+/* ---------- Fill the gaps (surgical rota, one day) ---------- */
+function fillGapsPreview(unit,date){
+  const rec=dayRec(unit,date),ab=rec.ids.filter(i=>flagOf(unit,date,i)),pr=rec.ids.filter(i=>!flagOf(unit,date,i));
+  return{rec,ab,order:pr.concat(ab),changed:ab.length>0&&pr.concat(ab).some((x,i)=>x!==rec.ids[i])};
+}
+(function(){
+  const old=dayPanel;
+  /* add the button right under the on-call list of the Surgical rota */
+  window.dayPanel=function(unit,date,edit){
+    let h=old(unit,date,edit);
+    if(unit==='SURGICAL'&&edit){
+      const f=fillGapsPreview(unit,date);
+      const btn='<div class="row" style="margin:6px 0 10px"><button class="btn sm" data-act="oc-fill" data-d="'+date+'"'+(f.changed?'':' disabled')+'>Fill the gaps</button><span class="small muted">'+(f.ab.length?(f.changed?'Moves everyone up and puts the absent intern last.':'Absent intern is already last.'):'Needs someone marked absent or on leave that day.')+'</span></div>';
+      const i=h.indexOf('<h3 style="margin-top:14px">Add someone');
+      h=i<0?h:h.slice(0,i)+btn+h.slice(i);
+    }
+    return h;
+  };
+})();
+Object.assign(ACT,{
+  'oc-fill':async el=>{
+    const date=el.dataset.d,unit='SURGICAL',f=fillGapsPreview(unit,date);if(!f.changed)return;
+    logEv('Filled the gaps on the Surgical rota for '+fmtDate(date));
+    return mut('oncall',ocKey(unit,ymOf(date)),b=>{b=b||{unit,ym:ymOf(date),days:{}};b.unit=unit;b.ym=ymOf(date);b.days=b.days||{};const r=ensureDay(b.days,date);r.ids=f.order.slice();return b;});
+  }
+});
+
+/* ---------- Checklists: one table, one column per rotation ---------- */
+const LB_ICON={scored:'✓',submitted:'●',sent_back:'↩',missing:'!',now:'▶',sched:'◷'};
+const LB_TEXT={scored:'Scored',submitted:'Submitted',sent_back:'Sent back',missing:'Missing',now:'Now',sched:'Scheduled'};
+const lbBlocks=()=>BLOCKS;
+const lbUnitsOf=b=>b==='SSS'?['SSS','ORT','NEURO']:[b];
+const canReviewLb=b=>isTr()||(E().role==='coordinator'&&myUnits().some(u=>lbUnitsOf(b).includes(u)));
+const lbId=(iid,b)=>'lb_'+iid+'_'+b;
+function rotMonths(it,b){const ms=[];(it.plan||[]).forEach(e=>{if(e.dept===b||(e.more||[]).some(p=>p.dept===b))ms.push(e.ym);});return ms.sort();}
+function lastRun(ms){if(!ms.length)return[];const run=[ms[ms.length-1]];for(let i=ms.length-2;i>=0;i--){if(ymIdx(ms[i])===ymIdx(run[0])-1)run.unshift(ms[i]);else break;}return run;}
+function runLabel(run){
+  if(!run.length)return'';const a=run[0],z=run[run.length-1],ma=MONTHS[+a.slice(5)-1],mz=MONTHS[+z.slice(5)-1];
+  if(run.length===1)return fmtYmShort(a);
+  return a.slice(0,4)===z.slice(0,4)?ma+' to '+mz+' '+z.slice(2,4):ma+' '+a.slice(2,4)+' to '+mz+' '+z.slice(2,4);
+}
+function isFullYear(it){return !isVisitor(it)&&(it.plan||[]).length>=BLOCKS.reduce((s,b)=>s+(CFG.pattern[b]||0),0);}
+function lbState(it,b){
+  const ms=rotMonths(it,b);if(!ms.length)return{k:'none',full:isFullYear(it)};
+  const run=lastRun(ms),cur=ymOf(todayStr()),last=run[run.length-1],first=run[0];
+  const timing=ms.includes(cur)?'now':ymIdx(last)<ymIdx(cur)?'done':ymIdx(first)<=ymIdx(cur)?'now':'sched';
+  const lb=S.logbooks[lbId(it.id,b)];
+  let k=timing==='done'?'missing':timing;
+  if(lb)k=lb.status==='scored'?'scored':lb.status==='sent_back'?'sent_back':'submitted';
+  return{k,timing,lb,range:runLabel(run),run};
+}
+function lbGroups(){return PGROUPS.map(g=>g.toUpperCase());}
+function lbInGroup(it,g){
+  if(!g)return true;const G=g.toLowerCase();
+  if(['inh','amh','ksa'].includes(G))return String(affilOf(it)).toLowerCase()===G;
+  return !isVisitor(it)&&String(it.group||'').toLowerCase()===G;
+}
+function lbCell(it,b){
+  const st=lbState(it,b);
+  if(st.k==='none')return'<td class="lbn">'+(st.full?'<span class="lbx" title="Not scheduled">Not scheduled</span>':'')+'</td>';
+  const showScore=st.k==='scored'&&st.lb&&st.lb.total!=null&&(isTr()||canReviewLb(b));
+  const can=canReviewLb(b)||(E().role==='intern'&&it.id===E().internId)||isTr();
+  return'<td class="lbc"><button class="lbb lb-'+st.k+'" data-act="lb-open" data-i="'+it.id+'" data-b="'+b+'" aria-label="'+esc(BLOCK_NAME[b]+', '+LB_TEXT[st.k]+', '+st.range)+'"><span class="lbi" aria-hidden="true">'+LB_ICON[st.k]+'</span><span class="lbt">'+LB_TEXT[st.k]+(showScore?' '+st.lb.total:'')+'</span><span class="lbr">'+esc(st.range)+'</span></button></td>';
+}
+function viewChecklists(){
+  const e=E(),mineOnly=e.role==='intern';
+  if(UI.chkG==null)UI.chkG='';
+  let list=Object.values(S.interns).filter(it=>mineOnly?it.id===e.internId:lbInGroup(it,UI.chkG)).sort((a,b)=>a.name.localeCompare(b.name));
+  const tot={missing:0,submitted:0,sent_back:0,scored:0};
+  list.forEach(it=>BLOCKS.filter(b=>mineOnly||canReviewLb(b)).forEach(b=>{const k=lbState(it,b).k;if(tot[k]!=null)tot[k]++;}));
+  const bar=mineOnly?'':'<div class="bar"><select data-bind="chkG" aria-label="Group"><option value="">All groups</option>'+lbGroups().map(g=>'<option value="'+g+'"'+(UI.chkG===g?' selected':'')+'>'+g+'</option>').join('')+'</select></div>';
+  const sum='<div class="lbsum" role="status"><span class="lbs lb-missing"><b>'+tot.missing+'</b> missing</span><span class="lbs lb-submitted"><b>'+tot.submitted+'</b> waiting for review</span><span class="lbs lb-sent_back"><b>'+tot.sent_back+'</b> sent back</span>'+(mineOnly?'':'<span class="lbs lb-scored"><b>'+tot.scored+'</b> scored</span>')+'</div>';
+  const legend='<p class="hint">Each column is one rotation. '+(mineOnly?'Tap a rotation to upload your logbook as a PDF.':'Tap a cell to open the logbook'+(isTr()||E().role==='coordinator'?', enter scores or send it back.':'.'))+'</p>';
+  const rows=list.map(it=>'<tr><th scope="row" class="lbname">'+(mineOnly?esc(it.name):internLink(it.id))+'</th>'+BLOCKS.map(b=>lbCell(it,b)).join('')+'</tr>').join('');
+  return head(mineOnly?'My logbooks':'Checklists',mineOnly?'Upload one PDF logbook for each rotation.':'Logbooks and scores for every rotation.','')+bar+sum+
+   (list.length?'<div class="scroll lbwrap"><table class="tbl lbt2"><thead><tr><th>Intern</th>'+BLOCKS.map(b=>'<th>'+esc(BLOCK_NAME[b].replace('Surgical subspecialty and orthopedics','Surgical subspecialty'))+'</th>').join('')+'</tr></thead><tbody>'+rows+'</tbody></table></div>':emptyBox('No interns in this group.'))+legend;
+}
+function lbModal(iid,b){
+  const it=S.interns[iid];if(!it)return;const st=lbState(it,b),lb=st.lb,e=E(),own=e.role==='intern'&&e.internId===iid;
+  const review=canReviewLb(b),started=st.k!=='sched'&&st.k!=='none';
+  const sc=(lb&&lb.scores)||{assess:[]};
+  let h='<h2>'+esc(BLOCK_NAME[b])+' logbook</h2><p class="small muted" style="margin-top:-6px">'+esc(it.name)+' · '+esc(st.range)+' · <b>'+esc(LB_TEXT[st.k])+'</b></p>';
+  if(lb){h+='<div class="row" style="margin:8px 0"><span class="small">Uploaded '+fmtTs(lb.uploadedAt)+(lb.uploadedBy==='Training'?' by Training':'')+' · '+esc(lb.fileName||'logbook.pdf')+'</span><button class="btn sm" data-act="lb-view" data-id="'+lb.id+'">Open PDF</button></div>';}
+  if(lb&&lb.status==='sent_back'&&lb.comment)h+='<div class="note warn small"><b>Sent back:</b> '+esc(lb.comment)+'</div>';
+  if((own&&started)||isTr()){
+    h+='<div style="margin:10px 0"><label for="lb-file">'+(lb?'Replace the file':'Upload the logbook')+' (PDF, up to 5 MB)</label><input type="file" id="lb-file" accept="application/pdf,.pdf"><div style="margin-top:8px"><button class="btn pri" data-act="lb-upload" data-i="'+iid+'" data-b="'+b+'">'+(lb?'Upload new file':'Upload')+'</button></div></div>';
+  }else if(own&&!started)h+='<p class="muted small">You can upload once this rotation has started.</p>';
+  if(review&&lb){
+    const rowsA=(sc.assess&&sc.assess.length?sc.assess:['']).map(v=>'<div class="row lba"><input type="number" min="0" max="50" step="0.5" class="lbin" value="'+esc(v)+'" aria-label="Assessment form score out of 50"><span class="small muted">/ 50</span><button class="btn sm" data-act="lb-rm" type="button" aria-label="Remove this score">×</button></div>').join('');
+    h+='<div id="lb-sc" style="margin-top:10px"><h3>Scores</h3><label>Assessment forms (average counts, out of 50)</label><div id="lb-as">'+rowsA+'</div><button class="btn sm" data-act="lb-add" type="button">+ Add another assessment form</button>'+
+     '<div class="grid2" style="margin-top:8px"><div><label for="lb-pres">Presentation skill form (out of 10)</label><input type="number" id="lb-pres" min="0" max="10" step="0.5" value="'+esc(sc.pres!=null?sc.pres:'')+'"></div><div><label for="lb-proc">Procedure skill form (out of 10)</label><input type="number" id="lb-proc" min="0" max="10" step="0.5" value="'+esc(sc.proc!=null?sc.proc:'')+'"></div></div>'+
+     '<label for="lb-punct">Punctuality and professionalism (out of 30)</label><input type="number" id="lb-punct" min="0" max="30" step="0.5" value="'+esc(sc.punct!=null?sc.punct:'')+'" style="width:120px"><p style="margin:10px 0"><b>Total: <span id="lb-tot">0</span> / 100</b></p>'+
+     '<label for="lb-cmt">Comment for the intern (needed to send back)</label><textarea id="lb-cmt" rows="2">'+esc(lb.status==='sent_back'?lb.comment||'':'')+'</textarea></div>'+
+     '<div class="foot"><button class="btn" data-act="close-modal">Close</button><button class="btn" data-act="lb-back" data-id="'+lb.id+'">Send back to intern</button><button class="btn pri" data-act="lb-score" data-id="'+lb.id+'">Save scores</button></div>';
+  }else h+='<div class="foot"><button class="btn" data-act="close-modal">Close</button></div>';
+  openModal(h,false,()=>{lbCalc();});
+}
+function lbRead(){
+  const num=id=>{const v=($(id)||{}).value;return v===''||v==null?0:Number(v);};
+  const assess=[...document.querySelectorAll('#lb-as .lbin')].map(x=>x.value).filter(v=>v!=='').map(Number);
+  return{assess,pres:num('lb-pres'),proc:num('lb-proc'),punct:num('lb-punct')};
+}
+function lbTotalC(sc){const a=sc.assess,avg=a.length?a.reduce((x,y)=>x+y,0)/a.length:0;return Math.round((avg+sc.pres+sc.proc+sc.punct)*10)/10;}
+function lbCalc(){const t=$('lb-tot');if(t)t.textContent=lbTotalC(lbRead());}
+document.addEventListener('input',ev=>{if(ev.target.closest&&ev.target.closest('#lb-sc'))lbCalc();});
+function lbOk(sc){
+  if(sc.assess.some(v=>!(v>=0&&v<=50)))return'Each assessment score must be between 0 and 50.';
+  if(!(sc.pres>=0&&sc.pres<=10))return'Presentation must be between 0 and 10.';
+  if(!(sc.proc>=0&&sc.proc<=10))return'Procedure must be between 0 and 10.';
+  if(!(sc.punct>=0&&sc.punct<=30))return'Punctuality and professionalism must be between 0 and 30.';
+  return'';
+}
+async function lbOpenFile(id){
+  try{
+    const j=await call('lbGet',{id});
+    const bytes=Uint8Array.from(atob(j.b64),c=>c.charCodeAt(0)),url=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));
+    const w=window.open(url,'_blank');if(!w){const a=document.createElement('a');a.href=url;a.download=j.name||'logbook.pdf';a.click();}
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+  }catch(err){toast(err.message);}
+}
+Object.assign(ACT,{
+  'lb-open':el=>lbModal(el.dataset.i,el.dataset.b),
+  'lb-view':el=>lbOpenFile(el.dataset.id),
+  'close-modal':()=>closeModal(),
+  'lb-add':()=>{const d=document.createElement('div');d.className='row lba';d.innerHTML='<input type="number" min="0" max="50" step="0.5" class="lbin" aria-label="Assessment form score out of 50"><span class="small muted">/ 50</span><button class="btn sm" data-act="lb-rm" type="button" aria-label="Remove this score">×</button>';$('lb-as').appendChild(d);d.querySelector('input').focus();},
+  'lb-rm':el=>{const r=el.closest('.lba');if(document.querySelectorAll('#lb-as .lba').length>1)r.remove();else r.querySelector('input').value='';lbCalc();},
+  'lb-upload':async el=>{
+    const f=($('lb-file')||{}).files&&$('lb-file').files[0];
+    if(!f){toast('Choose a PDF file first.');return;}
+    if(!/\.pdf$/i.test(f.name)&&f.type!=='application/pdf'){toast('Only PDF files can be uploaded.');return;}
+    if(f.size>5*1024*1024){toast('That file is larger than 5 MB.');return;}
+    el.disabled=true;el.textContent='Uploading…';
+    try{
+      const b64=await fileToB64(f);
+      await call('lbUpload',{block:el.dataset.b,internId:el.dataset.i,name:f.name,b64});
+      await loadAll();closeModal();toast('Logbook uploaded.');
+    }catch(err){toast(err.message);el.disabled=false;el.textContent='Upload';}
+  },
+  'lb-score':async el=>{
+    const id=el.dataset.id,sc=lbRead(),bad=lbOk(sc);
+    if(!sc.assess.length){toast('Enter at least one assessment form score.');return;}
+    if(bad){toast(bad);return;}
+    const lb=S.logbooks[id];logEv('Scored the '+(BLOCK_NAME[lb.block]||lb.block)+' logbook of '+((S.interns[lb.internId]||{}).name||'an intern'));
+    closeModal();
+    await mut('logbooks',id,b=>Object.assign({},b,{status:'scored',comment:'',scores:sc,total:lbTotalC(sc)}));
+  },
+  'lb-back':async el=>{
+    const id=el.dataset.id,c=($('lb-cmt')||{}).value||'';
+    if(!c.trim()){toast('Write a short comment for the intern.');return;}
+    const lb=S.logbooks[id];logEv('Sent back the '+(BLOCK_NAME[lb.block]||lb.block)+' logbook of '+((S.interns[lb.internId]||{}).name||'an intern'));
+    closeModal();
+    await mut('logbooks',id,b=>Object.assign({},b,{status:'sent_back',comment:c.trim()}));
+  }
+});
+
+/* ---------- Education ---------- */
+const edAudiences=()=>[['all','All interns']].concat(GROUPS.map(g=>['g:'+g,'Group '+g.toUpperCase()]),BLOCKS.map(b=>['r:'+b,'Rotation: '+BLOCK_NAME[b]]));
+const edAudLabel=a=>{const f=edAudiences().find(x=>x[0]===(a||'all'));return f?f[1]:'All interns';};
+function edWhen(s){return fmtDateY(s.date)+(s.time?' at '+s.time:'');}
+function edCard(s){
+  const tr=isTr();
+  const mat=(s.links||[]).length?'<ul class="list" style="margin:6px 0 0">'+s.links.map(l=>'<li><a href="'+esc(l.url)+'" target="_blank" rel="noopener noreferrer">'+esc(l.label||'Material')+'</a></li>').join('')+'</ul>':'<p class="muted small" style="margin:6px 0 0">Material not uploaded yet.</p>';
+  return'<section class="panel" style="margin-bottom:12px"><div class="row" style="justify-content:space-between;align-items:flex-start"><div><h2 style="margin:0">'+esc(s.title)+'</h2><p class="small" style="margin:4px 0 0">'+esc(edWhen(s))+(s.venue?' · '+esc(s.venue):'')+'</p>'+(s.presenter?'<p class="small" style="margin:2px 0 0">Presenter: '+esc(s.presenter)+'</p>':'')+'</div><span class="tag info">'+esc(edAudLabel(s.audience))+'</span></div>'+mat+
+   (tr?'<div class="row" style="margin-top:10px"><button class="btn sm" data-act="ed-edit" data-id="'+s.id+'">Edit</button><button class="btn sm bad" data-act="ed-del" data-id="'+s.id+'">Delete</button></div>':'')+'</section>';
+}
+function viewEducation(){
+  const tr=isTr(),today=todayStr();
+  if(!UI.edTab)UI.edTab='up';
+  const all=Object.values(S.sessions);
+  const up=all.filter(s=>s.date>=today).sort((a,b)=>(a.date+(a.time||''))<(b.date+(b.time||''))?-1:1),past=all.filter(s=>s.date<today).sort((a,b)=>(a.date+(a.time||''))<(b.date+(b.time||''))?1:-1);
+  const list=UI.edTab==='up'?up:past;
+  return head('Education','Teaching sessions and their material.',tr?'<button class="btn pri" data-act="ed-new">New session</button>':'')+
+   '<div class="row" style="margin-bottom:12px"><button class="btn sm '+(UI.edTab==='up'?'pri':'')+'" data-act="ed-tab" data-v="up">Upcoming ('+up.length+')</button><button class="btn sm '+(UI.edTab==='past'?'pri':'')+'" data-act="ed-tab" data-v="past">Past ('+past.length+')</button></div>'+
+   (list.length?list.map(edCard).join(''):emptyBox(UI.edTab==='up'?'No upcoming sessions.':'No past sessions yet.'));
+}
+function edForm(s){
+  s=s||{};const links=(s.links&&s.links.length?s.links:[{label:'',url:''}]);
+  const lr=l=>'<div class="row edl"><input type="text" class="edll" placeholder="Label (for example Slides)" value="'+esc(l.label||'')+'" aria-label="Link label"><input type="url" class="edlu" placeholder="https://drive.google.com/…" value="'+esc(l.url||'')+'" aria-label="Google Drive link"><button class="btn sm" type="button" data-act="ed-lrm" aria-label="Remove this link">×</button></div>';
+  return'<h2>'+(s.id?'Edit session':'New session')+'</h2><label for="ed-title">Title</label><input type="text" id="ed-title" value="'+esc(s.title||'')+'"><label for="ed-pres">Presenter</label><input type="text" id="ed-pres" value="'+esc(s.presenter||'')+'"><label for="ed-venue">Venue</label><input type="text" id="ed-venue" value="'+esc(s.venue||'')+'">'+
+   '<div class="grid2"><div><label for="ed-date">Date</label><input type="date" id="ed-date" value="'+esc(s.date||'')+'"></div><div><label for="ed-time">Time</label><input type="time" id="ed-time" value="'+esc(s.time||'')+'"></div></div>'+
+   '<label for="ed-aud">Who is it for</label><select id="ed-aud">'+edAudiences().map(a=>'<option value="'+a[0]+'"'+((s.audience||'all')===a[0]?' selected':'')+'>'+esc(a[1])+'</option>').join('')+'</select>'+
+   '<label>Material (Google Drive links)</label><div id="ed-links">'+links.map(lr).join('')+'</div><button class="btn sm" type="button" data-act="ed-ladd">+ Add a link</button><p class="hint">Upload the file to Google Drive, share it so interns can open it, and paste the link here. The app stores only the link.</p>'+
+   '<div class="foot"><button class="btn" data-act="close-modal">Cancel</button><button class="btn pri" data-act="ed-save" data-id="'+esc(s.id||'')+'">Save</button></div>';
+}
+Object.assign(ACT,{
+  'ed-tab':el=>{UI.edTab=el.dataset.v;},
+  'ed-new':()=>{if(isTr())openModal(edForm(),true);},
+  'ed-edit':el=>{if(isTr())openModal(edForm(S.sessions[el.dataset.id]),true);},
+  'ed-ladd':()=>{const d=document.createElement('div');d.className='row edl';d.innerHTML='<input type="text" class="edll" placeholder="Label (for example Slides)" aria-label="Link label"><input type="url" class="edlu" placeholder="https://drive.google.com/…" aria-label="Google Drive link"><button class="btn sm" type="button" data-act="ed-lrm" aria-label="Remove this link">×</button>';$('ed-links').appendChild(d);},
+  'ed-lrm':el=>{const r=el.closest('.edl');if(document.querySelectorAll('#ed-links .edl').length>1)r.remove();else r.querySelectorAll('input').forEach(i=>i.value='');},
+  'ed-save':async el=>{
+    if(!isTr())return;
+    const title=$('ed-title').value.trim(),date=$('ed-date').value;
+    if(!title){toast('Enter a title.');return;}if(!date){toast('Choose the date.');return;}
+    const links=[...document.querySelectorAll('#ed-links .edl')].map(r=>({label:r.querySelector('.edll').value.trim(),url:r.querySelector('.edlu').value.trim()})).filter(l=>l.url);
+    if(links.some(l=>!/^https:\/\//i.test(l.url))){toast('Links must start with https://');return;}
+    const id=el.dataset.id||uid('s'),data={title,presenter:$('ed-pres').value.trim(),venue:$('ed-venue').value.trim(),date,time:$('ed-time').value,audience:$('ed-aud').value,links};
+    logEv((el.dataset.id?'Edited':'Added')+' the education session “'+title+'”');
+    closeModal();await put('sessions',id,data);
+  },
+  'ed-del':async el=>{
+    const s=S.sessions[el.dataset.id];if(!s)return;
+    if(!(await askConfirm('Delete this session','Delete “'+esc(s.title)+'”? The material links are removed from the app. The files in Google Drive are not touched.','Delete',true)))return;
+    closeModal();logEv('Deleted the education session “'+s.title+'”');await del('sessions',s.id);
+  }
+});
+
+/* ---------- Intern home: notices and session reminders ---------- */
+function internNoticesPanel(){
+  const all=Object.values(S.inotices).sort((a,b)=>b.at-a.at),un=all.filter(n=>!n.seen),shown=UI.inh?all:un;
+  const li=n=>'<li class="'+(n.seen?'':'unseen')+'"><span>'+esc(n.text)+' <span class="muted small">'+fmtTs(n.at)+'</span></span></li>';
+  return'<section class="panel" style="margin-bottom:16px"><h2>Notices'+(un.length?' <span class="tag warn">'+un.length+' unread</span>':'')+'</h2><div class="row" style="margin-bottom:8px"><button class="btn sm '+(UI.inh?'':'pri')+'" data-act="inh" data-v="0">New</button><button class="btn sm '+(UI.inh?'pri':'')+'" data-act="inh" data-v="1">History</button>'+(un.length?'<button class="btn sm" data-act="inread">Mark all as read</button>':'')+'</div>'+
+   (shown.length?'<ul class="list">'+shown.slice(0,UI.inh?40:15).map(li).join('')+'</ul>':'<p class="muted" style="margin:0">'+(UI.inh?'Nothing in the history yet.':'No new notices.')+'</p>')+'</section>';
+}
+function edReminders(){
+  const it=S.interns[E().internId],t=todayStr(),tm=(()=>{const d=new Date(+t.slice(0,4),+t.slice(5,7)-1,+t.slice(8,10)+1);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());})();
+  const soon=Object.values(S.sessions).filter(s=>s.date===t||s.date===tm).sort((a,b)=>(a.date+(a.time||''))<(b.date+(b.time||''))?-1:1);
+  if(!soon.length)return'';
+  return'<section class="panel" style="margin-bottom:16px"><h2>Education</h2><ul class="list">'+soon.map(s=>'<li><span><b>'+(s.date===t?'Today':'Tomorrow')+(s.time?' '+esc(s.time):'')+'</b> · '+esc(s.title)+(s.venue?' · '+esc(s.venue):'')+'</span></li>').join('')+'</ul><p class="small" style="margin:6px 0 0"><a href="#education">All sessions</a></p></section>';
+}
+function internHomeExtras(h){
+  const box=internNoticesPanel()+edReminders(),i=h.indexOf('</header>');
+  return i<0?box+h:h.slice(0,i+9)+box+h.slice(i+9);
+}
+Object.assign(ACT,{
+  inh:el=>{UI.inh=el.dataset.v==='1';},
+  inread:async()=>{const ids=Object.values(S.inotices).filter(n=>!n.seen).map(n=>n.id);await mutMany('inotices',ids,b=>Object.assign({},b,{seen:true}));}
+});
 
 /*V45-JS-END*/
 init();
