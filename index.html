@@ -296,6 +296,94 @@ button.shift{cursor:pointer}
 .lbsum{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}.lbs{padding:6px 12px;border-radius:999px;border:1px solid var(--line,#ccc);font-size:13px}
 .lbs.lb-missing{background:#fff4d6}.lbs.lb-submitted{background:#e6f0ff}.lbs.lb-sent_back{background:#ffe9e3}.lbs.lb-scored{background:#e4f6e8}
 .lba{align-items:center;margin-bottom:6px}.lba .lbin{width:90px}.edl{gap:6px;margin-bottom:6px}.edl .edll{flex:0 0 32%}.edl .edlu{flex:1}
+/* ---- 4.8 rota planner ---- */
+.plbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0}.plbar .plsp{flex:1}.plmonth{min-width:120px;text-align:center}
+.plbar .btn.on{background:var(--accent-soft);border-color:var(--accent)}
+.plwarn{background:#fff6e0;border:1px solid #efc766;color:#6b4a00;border-radius:8px;padding:8px 12px;margin:8px 0;font-size:.86rem}.plwarn ul{margin:4px 0 0 18px;padding:0}
+.plcard{overflow:auto;max-height:76vh;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.pltbl{border-collapse:separate;border-spacing:0;font-size:.78rem;min-width:100%}
+.pltbl th,.pltbl td{border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);padding:0;text-align:center;height:30px;min-width:23px;background:var(--surface)}
+.pltbl thead th{position:sticky;top:0;z-index:3;background:var(--surface2);height:26px;font-weight:600}
+.pltbl thead tr:nth-child(2) th{top:26px;height:38px}
+.pltbl .pln{position:sticky;left:0;z-index:2;text-align:left;padding:0 10px;min-width:120px;max-width:170px;white-space:nowrap;background:var(--surface);border-right:2px solid var(--line)}
+.pltbl thead .pln{z-index:5;background:var(--surface2)}
+.pltbl .plf{min-width:42px;font-weight:600;font-size:.72rem}
+.pltbl .plg{font-size:.7rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.04em}
+.pltbl .thick{border-left:3px solid var(--ink3)}
+.plda{display:block;color:inherit;text-decoration:none;line-height:1.1;padding-top:3px}.plda small{display:block;font-weight:400;font-size:.62rem;color:var(--ink3)}
+.pltbl th.wk,.pltbl td.wk{background:#e6e9f2}.pltbl th.hol,.pltbl td.hol{background:#d5dcf2}
+.pltbl th.dsel{outline:2px solid var(--accent);outline-offset:-2px}
+.plc{cursor:pointer;position:relative}.plc:hover{filter:brightness(.95)}.plc:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.plc .tk{font-weight:700;color:#1d6b38;font-size:.95rem}
+.plc.wn{box-shadow:inset 0 0 0 2px #ee8a1f}
+.plc.lk .tk::after{content:"🔒";font-size:.5rem;position:absolute;right:1px;top:1px}
+.plc.out2{background:#4f5565!important;cursor:not-allowed}
+.plc.out{background:repeating-linear-gradient(45deg,#4f5565 0 4px,#6b7283 4px 8px)!important;cursor:not-allowed}
+.plc.sick{background:repeating-linear-gradient(45deg,#f6d98c 0 4px,#fdf0c9 4px 8px)!important}
+.plc.rest::after{content:"";position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2px 0 0 -2px;border-radius:50%;background:rgba(80,100,190,.28)}
+.plc.rest.sel::after{background:rgba(80,100,190,.6)}
+.plc.red{background:#f06a5b!important}.plc .rx{color:#fff;font-weight:700}
+.plc.y1{background:#fff2a8!important}.plc.y2{background:#f7d23a!important}
+.plc.pick{box-shadow:inset 0 0 0 3px var(--accent)}
+.plc.hasnote::before{content:"";position:absolute;right:0;top:0;border-left:8px solid transparent;border-top:8px solid #2b3a9b}
+.pltbl tr.plsel td.pln{background:var(--accent-soft)}
+.pltbl .lc{font-size:.72rem;padding:1px 6px;border-radius:999px}.pltbl .lc.lo{background:#ffd9a8}.pltbl .lc.lg{color:var(--ink3)}
+.pltbl td.st{min-width:30px;font-weight:600}.pltbl .st.sg{background:#e8f5ec}.pltbl .st.sb{background:#e6effc}.pltbl .st.wn{box-shadow:inset 0 0 0 2px #ee8a1f}
+.pltbl td.cnt{min-width:62px;font-weight:600;background:#eef0f6;white-space:nowrap;padding:0 6px}.pltbl td.cnt.full{background:#d8efe0}.pltbl td.cnt.over{background:#f6b3a8}
+.pltbl tr.plsep td{height:8px;background:var(--surface2)}
+.pllv{font-size:.66rem;color:var(--ink3);margin-top:-4px}
+.pltbl tr.plcov td{position:sticky;bottom:0;z-index:2;font-weight:700;background:var(--surface2)}.pltbl tr.plcov td.pln{z-index:4}
+.cv.cg,.sw.cg{background:#bfe8c8!important}.cv.co,.sw.co{background:#fde3ae!important}.cv.cr,.sw.cr{background:#f6b3a8!important}
+.pleg{display:flex;flex-wrap:wrap;gap:6px 14px;margin:10px 0;font-size:.74rem;color:var(--ink3)}.pleg span{display:inline-flex;align-items:center;gap:5px}
+.sw{display:inline-block;width:14px;height:14px;border:1px solid var(--line);border-radius:3px;background:#fff}
+.sw.out2{background:#4f5565}.sw.out{background:repeating-linear-gradient(45deg,#4f5565 0 3px,#6b7283 3px 6px)}.sw.sick{background:repeating-linear-gradient(45deg,#f6d98c 0 3px,#fdf0c9 3px 6px)}.sw.wn{box-shadow:inset 0 0 0 2px #ee8a1f}.sw.rest{background:radial-gradient(circle,rgba(80,100,190,.4) 2px,#fff 3px)}.sw.red{background:#f06a5b}.sw.y1{background:#fff2a8}.sw.y2{background:#f7d23a}
+.plpanels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:14px}
+.plnf{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}.plnf input[type=text]{flex:1 1 220px}
+.plnotes,.plver,.plul{list-style:none;margin:6px 0;padding:0}.plnotes li,.plver li,.plul li{padding:5px 0;border-bottom:1px solid var(--line2)}.plnotes li.done span{text-decoration:line-through;color:var(--ink3)}
+.plwhy{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:8px 0}
+.plbal{display:flex;flex-direction:column;gap:3px}.plbr{display:grid;grid-template-columns:120px 1fr 110px;gap:8px;align-items:center}.plbb{background:var(--line2);border-radius:4px;height:8px;overflow:hidden}.plbb i{display:block;height:100%;background:#5a70d6}
+.plchips{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}.plchip{position:relative}.plchip input{position:absolute;opacity:0}.plchip span{display:inline-block;min-width:30px;text-align:center;padding:4px 0;border:1px solid var(--line);border-radius:6px;cursor:pointer}.plchip input:checked+span{background:var(--accent);color:var(--accent-ink)}
+@media print{
+ @page{size:landscape;margin:8mm}
+ .side,.noprint,.topbar,.bottomnav,nav,header.mobhead,.toast{display:none!important}
+ .plcard{max-height:none;overflow:visible;border:0}.pltbl{font-size:8px}.pltbl th,.pltbl td{height:18px;min-width:15px}.pltbl thead th,.pltbl .pln,.pltbl tr.plcov td{position:static}
+ .pltbl *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+/* ---- 4.9 intern views, tables, editing ---- */
+.moon{width:.85em;height:.85em;vertical-align:-.08em;margin-left:2px;color:inherit}
+.iclv{background:#fff3d6;border:1px solid #f0cf86;color:#5b3b00;border-radius:10px;padding:8px 12px;font-size:.86rem;margin:8px 0}
+table.icT{border-collapse:collapse;width:100%;font-size:.8rem;table-layout:auto}
+table.icT th{background:var(--accent);color:var(--accent-ink);padding:6px 8px;text-align:left;font-size:.7rem;text-transform:uppercase;letter-spacing:.04em;position:sticky;top:0;z-index:2}
+table.icT td{border:1px solid var(--line2);padding:3px 8px;height:30px;white-space:nowrap;color:var(--accent)}
+table.icT td small{display:block;font-size:.66rem;color:var(--ink3);line-height:1.1}
+table.icT td.d{font-weight:700;text-align:right;width:26px;border-right:0;color:var(--ink)}table.icT td.dn{width:42px;color:var(--ink3);border-left:0;padding-left:10px}
+table.icT td.icst{width:84px;font-size:.74rem;color:var(--ink)}table.icT td.icst .on{color:var(--accent)}table.icT td.icst .lv{color:#8a5a00}table.icT td.icst .hl{color:#6a5cc4;font-size:.68rem}
+table.icT tr.we td{background:#e7e3fa}table.icT tr.hol td{background:#d9d1f7}
+table.icT tr.mine td:not(.me){background:#eef1ff}table.icT tr.mine.we td:not(.me){background:#dcdffb}
+table.icT td.me{background:var(--accent)!important;color:var(--accent-ink);font-weight:700}table.icT td.me small{color:rgba(255,255,255,.8)}
+table.icT tr.lvr td.d,table.icT tr.lvr td.dn,table.icT tr.lvr td.icst{background:#f5b63d!important;color:#5b3b00}table.icT tr.lvr td:not(.d):not(.dn):not(.icst){color:#b3b9c8}
+table.icT td.icsw{width:110px;text-align:center;padding:2px 6px}
+.icgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}.icdh{font-size:.7rem;color:var(--ink3);text-align:center;font-weight:600}
+.ict{border-radius:10px;background:var(--surface);padding:6px 7px;min-height:112px;border:1px solid var(--line);position:relative;text-align:left;font:inherit;color:var(--ink);cursor:pointer;display:block}
+.ict.empty{background:none;border:0;cursor:default}.ict .icn{font-weight:700;font-size:.9rem}
+.ict ul{list-style:none;margin:3px 0 0;padding:0;font-size:.7rem;line-height:1.5;color:var(--ink2)}.ict ul li.me{background:var(--accent);color:var(--accent-ink);font-weight:700;border-radius:4px;padding:0 5px;margin:1px -2px}
+.ict.we{background:#e7e3fa;border-color:#cfc8f1}.ict.hol{background:#d9d1f7;border-color:#a99be6}.ict .icsm{display:block;font-size:.62rem;color:#4a3fa0;font-weight:700}
+.ict.on{background:#e4e9ff;border:2px solid var(--accent)}.ict.on.we,.ict.on.hol{background:#d6d9fb}
+.ict .ictag{position:absolute;right:6px;top:6px;font-size:.6rem;font-weight:700;border-radius:999px;padding:1px 7px;background:var(--accent);color:var(--accent-ink)}
+.ict.sel{outline:3px solid #8fa0ff;outline-offset:1px}.ict.today{box-shadow:inset 0 4px 0 #d6541f}
+.ict.lv{padding-bottom:22px}.ict.lv ul{color:#a2a9ba}.ict .lvb{position:absolute;left:-1px;right:-6px;bottom:-1px;height:19px;background:#f5b63d;color:#5b3b00;font-size:.62rem;font-weight:700;line-height:19px;padding-left:8px}.ict.lv.lf .lvb{border-radius:0 0 0 10px}.ict.lv.ll .lvb{right:-1px;border-radius:0 0 10px 0}
+.icpanel .icrow{padding:7px 10px;border:1px solid var(--line2);margin-bottom:-1px;font-size:.84rem}.icpanel .icrow small{display:block;color:var(--ink3);font-size:.68rem}.icpanel .icrow.me{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}.icpanel .icrow.me small{color:rgba(255,255,255,.8)}
+table.wdT{border-collapse:collapse;width:100%;font-size:.78rem}table.wdT th{background:var(--accent);color:var(--accent-ink);padding:6px 8px;text-align:left;font-size:.7rem;text-transform:uppercase}
+table.wdT td{border:1px solid var(--line2);padding:8px;vertical-align:top;line-height:1.7}table.wdT td.per{background:#e8d6ee;font-weight:700;text-align:center;vertical-align:middle;width:84px}
+.wn{display:block;padding:0 4px;border-radius:3px}.wn.me{background:var(--accent);color:var(--accent-ink);font-weight:700}.wl{display:block;font-style:normal;color:#8a5a00;font-size:.68rem;background:#fff3d6;border-radius:3px;padding:0 4px}
+table.odT td.oc{cursor:pointer;min-width:110px}table.odT td.oc.em{background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(0,0,0,.025) 6px 12px)}
+table.odT td.oc:hover{filter:brightness(.95)}table.odT td.oc:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+table.odT td.chg{background:#fff2a8!important}table.odT td.wn{box-shadow:inset 0 0 0 2px #ee8a1f}table.odT td.blk{box-shadow:inset 0 0 0 2px #d0392b;background:#fde4e0!important}
+table.odT td.cv{text-align:center;font-weight:700;width:40px;color:var(--ink)}table.odT td.cv.cg{background:#bfe8c8}table.odT td.cv.co{background:#fde3ae}table.odT td.cv.cr{background:#f6b3a8}
+.odstrip{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px}.odch{background:var(--surface2);border-radius:8px;padding:5px 8px;font-size:.74rem;display:grid;grid-template-columns:1fr auto;gap:0 6px}.odch span{font-weight:700}.odch small{grid-column:1/3;color:var(--ink3);font-size:.64rem}
+.pklist{list-style:none;margin:8px 0 0;padding:0;max-height:48vh;overflow:auto}.pkr{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--line2)}
+.plwarn li.bad{color:#a02a1f}
+@media print{.noprint,.bar,.seg,.iclv{display:none!important}table.icT td{height:18px;font-size:8px}}
 
 /*V45-CSS-END*/
 </style>
@@ -379,7 +467,7 @@ function chip(u,label,extra){return '<span class="chip '+(extra||'')+'" style="-
 function downloadCsv(rows){return rows.map(r=>r.map(c=>{c=String(c==null?'':c);return /[",\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c;}).join(',')).join('\r\n');}
 
 /* ============ State (shared) ============ */
-const S={config:null,interns:{},people:{},requests:{},checklists:{},surgery:{},oncall:{},eshift:{},holidays:[],log:[],firmstaff:{},notices:{},absences:{},profreq:{},logbooks:{},sessions:{},inotices:{},presentN:{},board:{GS:{},SSS:{}},peerLeave:[],leaveFlags:{}};
+const S={config:null,interns:{},people:{},requests:{},checklists:{},surgery:{},oncall:{},eshift:{},holidays:[],log:[],firmstaff:{},notices:{},absences:{},profreq:{},logbooks:{},rotaplan:{},rotaver:{},rotadata:{},sessions:{},inotices:{},presentN:{},board:{GS:{},SSS:{}},peerLeave:[],leaveFlags:{}};
 let CFG=mergeCfg(null);
 function mergeCfg(c){
   c=c||{};const d=DEFAULT_CFG;
@@ -752,7 +840,7 @@ function cleanMobile(raw){
   return{phone:pick,flag:pick?'Not an 8-digit number, please check':'No number'};
 }
 
-const APP_VERSION='4.7';
+const APP_VERSION='4.9';
 
 /* the groups a part-time intern rotates with (one row per group in the sheet) */
 function groupsOf(it){
@@ -784,7 +872,7 @@ async function loadAll(){
   const j=await call('load');
   const d=j.data;
   S.interns=d.interns||{};S.people=d.people||{};S.requests=d.requests||{};S.checklists=d.checklists||{};S.surgery=d.surgery||{};S.oncall=d.oncall||{};
-  S.eshift=d.eshift||{};S.firmstaff=d.firmstaff||{};S.notices=d.notices||{};S.absences=d.absences||{};S.profreq=d.profreq||{};S.logbooks=d.logbooks||{};S.sessions=d.sessions||{};S.inotices=d.inotices||{};S.presentN=d.presentN||{};S.board=d.board||{GS:{},SSS:{}};S.peerLeave=d.peerLeave||[];S.leaveFlags=d.leaveFlags||{};S.sheetIssues=d.sheetIssues||[];S.config=d.config||null;CFG=mergeCfg(S.config);S.holidays=d.holidays||[];S.log=d.log||[];
+  S.eshift=d.eshift||{};S.firmstaff=d.firmstaff||{};S.notices=d.notices||{};S.absences=d.absences||{};S.profreq=d.profreq||{};S.logbooks=d.logbooks||{};S.rotaplan=d.rotaplan||{};S.rotaver=d.rotaver||{};S.rotadata=d.rotadata||{};S.sessions=d.sessions||{};S.inotices=d.inotices||{};S.presentN=d.presentN||{};S.board=d.board||{GS:{},SSS:{}};S.peerLeave=d.peerLeave||[];S.leaveFlags=d.leaveFlags||{};S.sheetIssues=d.sheetIssues||[];S.config=d.config||null;CFG=mergeCfg(S.config);S.holidays=d.holidays||[];S.log=d.log||[];
   ME=Object.assign({},j.me);VER=j.v;SERVER_VER=j.ver||'';LOADED=true;LOADERR='';
   if(PREVIEW){const ok=PREVIEW.role==='intern'?S.interns[PREVIEW.internId]:S.people[PREVIEW.personId];if(!ok)PREVIEW=null;}
   scheduleRender();
@@ -1008,7 +1096,7 @@ function parseRoute(){
   if(!r)return dflt;
   const base=r.split('-')[0];
   const ok={
-    training:['overview','rotations','oncall','requests','surgery','checklists','education','interns','coordinators','activity','setup','intern','person'],
+    training:['overview','rotations','oncall','requests','surgery','checklists','education','planner','interns','coordinators','activity','setup','intern','person'],
     coordinator:['overview','rotations','oncall','requests','surgery','checklists','intern','person'],
     intern:['myyear','oncall','requests']
   }[e.role]||[];
@@ -2672,6 +2760,7 @@ function routeContent0(){
     case'surgery':return viewSurgery();
     case'checklists':return viewChecklists();
     case'education':return viewEducation();
+    case'planner':return viewPlanner();
     case'interns':return viewInterns();
     case'coordinators':return viewCoordinators();
     case'activity':return viewActivity();
@@ -2945,7 +3034,7 @@ function navItems(){
   if(e.role==='coordinator'){
     const a=[{r:'overview',t:'My rotation',g:'Home'},{r:'rotations',t:'Rotations',g:'Plan'},{r:'oncall',t:'On-call rota',g:'Plan'}];
     if(canSurg())a.push({r:'surgery',t:'Surgical allocation',g:'Plan'});
-    a.push({r:'requests',t:'Approvals',g:'Requests',badge:dec||''},{r:'checklists',t:'Checklists',g:'Tracking'},{r:'education',t:'Education',g:'Tracking'});return a;
+    if(canPlan())a.push({r:'planner',t:'Rota planner',g:'Plan'});a.push({r:'requests',t:'Approvals',g:'Requests',badge:dec||''},{r:'checklists',t:'Checklists',g:'Tracking'},{r:'education',t:'Education',g:'Tracking'});return a;
   }
   return[{r:'myyear',t:'My year',g:'Home'},{r:'oncall',t:'On-call',g:'Plan'},{r:'requests',t:'My requests',g:'Requests',badge:dec||''},{r:'checklists',t:'My logbooks',g:'Tracking'},{r:'education',t:'Education',g:'Tracking'}];
 }
@@ -2955,8 +3044,8 @@ function parseRoute(){
   if(!r)return dflt;
   const base=r.split('-')[0];
   const ok={
-    training:['overview','myrot','rotations','oncall','requests','surgery','checklists','education','interns','coordinators','activity','setup','intern','person'],
-    coordinator:['overview','rotations','oncall','requests','surgery','checklists','education','intern'],
+    training:['overview','myrot','rotations','oncall','requests','surgery','checklists','education','planner','interns','coordinators','activity','setup','intern','person'],
+    coordinator:['overview','rotations','oncall','requests','surgery','checklists','education','planner','intern'],
     intern:['myyear','oncall','requests','checklists','education']
   }[e.role]||[];
   if(!ok.includes(base))return dflt;
@@ -3494,13 +3583,14 @@ function warnPanel(unit,ym){
     (list.length?'<ul class="list">'+list.map(w=>'<li><span><b>'+fmtDate(w.date)+'</b> '+(w.id?internLink(w.id)+': ':'')+esc(w.text)+'</span><button class="btn sm" data-act="ocgo" data-d="'+w.date+'">Open day</button></li>').join('')+'</ul>':'<p class="muted" style="margin:0">Nothing to look at in this rota this month.</p>')+
     '<p class="hint">Checked live: cover shortfalls, sick or emergency leave and absences, leave clashes, calls too close together (also across rotas and months), limits, and interns not placed in this rota.</p></section>';
 }
-function viewOncall(){
+function viewOncallStaff(){
   const h=viewOncall0(),e=E();
   const unit=UI.ocUnit,ym=UI.ocYm||ymOf(todayStr());
   if(e.role==='intern'||!unit||unit==='EMERGENCY')return h;
-  const cnt=ocWarnings(unit,ym).length,tab=UI.ocTab||'rota';
-  const seg='<div class="bar"><div class="seg"><button class="'+(tab==='rota'?'on':'')+'" data-act="octab" data-v="rota">Rota</button><button class="'+(tab==='warn'?'on':'')+'" data-act="octab" data-v="warn">Warnings'+(cnt?' ('+cnt+')':'')+'</button></div></div>';
+  const cnt=ocWarnings(unit,ym).length,hasT=unit!=='SURGICAL'&&canOc(unit),tab=UI.ocTab||(hasT?'table':'rota');
+  const seg='<div class="bar"><div class="seg">'+(hasT?'<button class="'+(tab==='table'?'on':'')+'" data-act="octab" data-v="table">Table</button>':'')+'<button class="'+(tab==='rota'?'on':'')+'" data-act="octab" data-v="rota">Calendar</button><button class="'+(tab==='warn'?'on':'')+'" data-act="octab" data-v="warn">Warnings'+(cnt?' ('+cnt+')':'')+'</button></div></div>';
   const i=h.indexOf('<div class="cols oc-cols">');if(i<0)return h;
+  if(tab==='table'&&hasT)return h.slice(0,i).replace(/<div class="seg"><button[^>]*data-act="ocview"[\s\S]*?<\/div>/,'').replace(/<button class="btn" data-act="export-oc">Download CSV<\/button>/,'')+seg+staffTableTab(unit,ym);
   if(tab==='warn')return h.slice(0,i)+seg+warnPanel(unit,ym);
   return h.slice(0,i)+seg+h.slice(i);
 }
@@ -3596,6 +3686,16 @@ document.addEventListener('change',ev=>{const t=ev.target;if(!t||!t.dataset||t.d
 /* ===================== version 4.7 additions ===================== */
 /* ---------- change log (Training, Setup page) ---------- */
 const CHANGELOG=[
+ {v:'4.9',t:'Smarter rota import, easy rota editing, and new intern views',items:['On-call import now recognises names by who is rotating in that rota that day (short names, initials, duplicates), with a dropdown to fix unknown names, an option to remember spellings, and “Import anyway” for rule-blocked rows (coordinators, deputies and Training; only Training can add someone not placed in the rota).','Import reads dates like 1\\10, day-number-only sheets, place columns and late-coverage marks; skipped rows can be downloaded.','Coordinators, deputies and Training can edit Gynae, Medicine, Orthopedics, Neurosurgery and Pediatrics rotas directly as a draft and save once; interns are notified only about their own changes.','Surgical allocation: import and export the Surgical Department Interns sheet (firms, sub-specialties, # for Neurosurgery), with preview, fix dropdowns, and leave notes like L1-4 creating approved annual leave.','Places and Pediatrics morning ward distribution can be edited, imported and exported; rota downloads are Excel files in the department layouts.','Interns see every rota as a Calendar or Table with their own days highlighted, weekends and holidays shaded and approved leave shown; no counts or comparisons are shown to interns.']},
+ {v:'4.8',t:'Rota planner for the Surgical coordinators',items:[
+  'New page “Rota planner”, visible only to the Surgical coordinator and deputy. Training sees the live Surgical rota only, never drafts, versions or notes.',
+  'Work on a draft of the month: interns see nothing until you publish. The draft saves by itself, one draft per month, with undo and redo (Ctrl+Z).',
+  'Grid: one row per intern with firm for each half (GS1 to GS4, VAS, PLS, URO, PED, SSS), last call of the previous month, a tick per call, weekends and holidays always shaded, W, T, H and T+F+S counts and calls against the limit.',
+  'The same rules as the on-call rota: blocked if the intern is not in the Surgical rota that day, on annual leave, or at the limit; warned for weekend limits, fewer than two free days, other leave, sick or absent. Faint dots show days too close to another call.',
+  'Cover row against targets you set per month (weekdays, weekends and holidays, and specific days): green full, amber adequate, red short. Click a day to see who can still be added.',
+  'Versions: publish replaces the whole month, saves a named version (v1.0, v1.1, 2.0) and notifies only the interns whose calls changed. Compare with any older version: removed calls red, moved calls yellow.',
+  'Approved swaps while a draft is open are applied to the draft. Notes for the next version (optional intern and day, tick when done), balance panel, swap two calls, lock a call, Suggest, hide names, print.'
+ ]},
  {v:'4.7',t:'Checklists, logbooks, Education, on-call rules, change log',items:[
   'Checklists page replaced: filter by group (1A to 2C, INH, AMH, KSA); one row per intern, one fixed column per rotation (a rotation shows once even if it has several months). Each cell shows its state in words and icons: not scheduled, scheduled, now, done with no logbook, submitted, sent back, scored. Not-scheduled cells are hidden for visitors and part-year interns. A summary bar counts missing logbooks.',
   'Logbooks: interns upload one PDF (up to about 5 MB) per rotation. Files go to a private Drive folder owned by the script account and open only through the app. The rotation’s coordinators are notified on upload.',
@@ -3890,6 +3990,1326 @@ function internHomeExtras(h){
 Object.assign(ACT,{
   inh:el=>{UI.inh=el.dataset.v==='1';},
   inread:async()=>{const ids=Object.values(S.inotices).filter(n=>!n.seen).map(n=>n.id);await mutMany('inotices',ids,b=>Object.assign({},b,{seen:true}));}
+});
+
+/* ===================== version 4.8: Surgical rota planner ===================== */
+const PL_UNIT='SURGICAL';
+const canPlan=()=>E().role==='coordinator'&&myUnits().some(u=>['GS','SSS'].includes(u));
+const plKey=ym=>'rp_'+ym;
+const plDefTargets=()=>({wd:{full:4,adq:3},we:{full:3,adq:2},days:{}});
+function plDoc(ym){
+  const d=S.rotaplan[plKey(ym)];
+  if(!d)return{ym,draft:null,notes:[],targets:plDefTargets()};
+  const c=JSON.parse(JSON.stringify(d));delete c.id;c.notes=c.notes||[];c.targets=c.targets||plDefTargets();c.targets.days=c.targets.days||{};return c;
+}
+const liveDays=ym=>{const d=S.oncall[ocKey(PL_UNIT,ym)],o={};Object.keys((d&&d.days)||{}).forEach(k=>{const ids=(d.days[k].ids||[]).slice();if(ids.length)o[k]=ids;});return o;};
+const plVers=ym=>Object.values(S.rotaver).filter(v=>v.ym===ym).sort((a,b)=>a.n-b.n);
+const dcopy=o=>JSON.parse(JSON.stringify(o||{}));
+const dk2=d=>'d'+pad(d);
+const callsOf=(days,i)=>Object.keys(days).filter(k=>(days[k]||[]).includes(i)).map(k=>+k.slice(1));
+function plHist(ym){UI.pHist=UI.pHist||{};return UI.pHist[ym]=UI.pHist[ym]||{u:[],r:[]};}
+function plHidden(){if(UI.pHide===undefined){try{UI.pHide=localStorage.getItem('plHide')==='1';}catch(e){UI.pHide=false;}}return UI.pHide;}
+
+/* ----- labels ----- */
+function plHalf(it,ym,half){
+  const hd=halfDay(ym),day=half===1?Math.max(1,Math.min(hd,5)):Math.min(dim(ym),hd+3),date=ym+'-'+pad(day);
+  if(rotaOf(placementAt(it,date,S.surgery[it.id]))!==PL_UNIT)return'—';
+  const e=entryAt(it,ym),p=e&&partAt(e,day);if(!p)return'—';
+  if(p.dept==='GS'){const f=half===1?(p.fa||p.fb):(p.fb||p.fa);const RM={I:1,II:2,III:3,IV:4};const fs=String(f||'').trim().toUpperCase();return f?'GS'+(RM[fs]||(/^\d+$/.test(fs)?fs:fs)):'GS';}
+  if(p.vsub){const v=String(p.vsub).toLowerCase();return v.indexOf('vas')===0?'VAS':v.indexOf('plas')===0?'PLS':v.indexOf('uro')===0?'URO':v.indexOf('ped')===0?'PED':String(p.vsub).slice(0,3).toUpperCase();}
+  return'SSS';
+}
+function plOut(it,date){
+  if(rotaOf(placementAt(it,date,S.surgery[it.id]))!==PL_UNIT)return'notin';
+  const lv=leaveReqs(it.id).find(r=>r.status==='approved'&&r.from<=date&&date<=r.to);
+  return lv?(lv.kind==='annual'?'annual':'sick'):'';
+}
+function plRows(ym,days,base){
+  const set=new Set();
+  [days,liveDays(ym),base||{}].forEach(m=>Object.values(m).forEach(a=>a.forEach(i=>set.add(i))));
+  const n=dim(ym);
+  Object.values(S.interns).forEach(it=>{for(let d=1;d<=n;d++){if(rotaOf(placementAt(it,ym+'-'+pad(d),S.surgery[it.id]))===PL_UNIT){set.add(it.id);break;}}});
+  const arr=[...set].filter(i=>S.interns[i]).map(i=>S.interns[i]);
+  arr.sort((a,b)=>(isVisitor(a)-isVisitor(b))||(plHalf(a,ym,1)<plHalf(b,ym,1)?-1:plHalf(a,ym,1)>plHalf(b,ym,1)?1:0)||a.name.localeCompare(b.name));
+  return arr.map(x=>x.id);
+}
+function plName(id,rows){const it=S.interns[id];if(!it)return'Unknown';return plHidden()?'Intern '+(rows.indexOf(id)+1):it.name;}
+function plLast(id,ym){
+  const first=ym+'-01';let best='';
+  shiftsOf(id,true).forEach(s=>{if(s.date<first&&s.date>best)best=s.date;});
+  if(!best)return{txt:'—',near:false};
+  const gap=dayCount(best,first);
+  return{txt:(+best.slice(8,10))+' '+MONTHS[+best.slice(5,7)-1],near:gap<MIN_GAP+0,gap};
+}
+const MIN_GAP_PL=3;
+function otherDates(id,ym){return shiftsOf(id,true).filter(s=>!(s.unit===PL_UNIT&&ymOf(s.date)===ym)).map(s=>s.date);}
+
+/* ----- rule checks (same as the live rota; each call checked as if added on its own) ----- */
+function plWith(ym,days,fn){
+  const key=ocKey(PL_UNIT,ym),saved=S.oncall[key];
+  try{
+    const tmp={id:key,unit:PL_UNIT,ym,days:{}};Object.keys(days).forEach(k=>{tmp.days[k]={need:null,ids:(days[k]||[]).slice()};});
+    S.oncall[key]=tmp;return fn(tmp);
+  }finally{if(saved)S.oncall[key]=saved;else delete S.oncall[key];}
+}
+function plCheckOne(ym,days,i,k){
+  const dd=dcopy(days);dd[k]=(dd[k]||[]).filter(x=>x!==i);
+  return plWith(ym,dd,()=>assignCheck(PL_UNIT,i,ym+'-'+k.slice(1)));
+}
+let PL_CACHE={key:'',val:null};
+function plCheckAll(ym,days){
+  const key=ym+'|'+VER+'|'+JSON.stringify(days);if(PL_CACHE.key===key)return PL_CACHE.val;
+  const out={block:[],warn:[]};
+  Object.keys(days).sort().forEach(k=>days[k].forEach(i=>{const ck=plCheckOne(ym,days,i,k);ck.block.forEach(m=>out.block.push({i,k,msg:m}));ck.warn.forEach(m=>out.warn.push({i,k,msg:m}));}));
+  PL_CACHE={key,val:out};return out;
+}
+function plCan(ym,days,i,k){
+  const it=S.interns[i];const date=ym+'-'+k.slice(1);
+  const o=plOut(it,date);
+  if(o==='notin')return{ok:false,msg:'Not placed in the Surgical rota on this date.'};
+  const ck=plCheckOne(ym,Object.assign({},days,{[k]:(days[k]||[]).filter(x=>x!==i)}),i,k);
+  const bl=ck.block.filter(m=>!/^Already on this day/.test(m));
+  return{ok:!bl.length,msg:bl[0]||'',warn:ck.warn};
+}
+
+/* ----- targets and cover ----- */
+function plTarget(rp,k){
+  const date=rp.ym+'-'+k.slice(1),t=rp.targets;
+  return(t.days&&t.days[k])||(isWkDay(date)?t.we:t.wd)||{full:0,adq:0};
+}
+/* ----- compare ----- */
+function plBaseInfo(ym,rp){
+  const vs=plVers(ym);
+  if(UI.pCmp&&UI.pCmp!=='auto'){const v=vs.find(x=>x.label===UI.pCmp);if(v)return{days:v.days,label:v.label};}
+  if(vs.length){const v=vs[vs.length-1];return{days:v.days,label:v.label};}
+  if(rp.draft&&rp.draft.base&&Object.keys(rp.draft.base.days||{}).length)return{days:rp.draft.base.days,label:'the rota when you started'};
+  return{days:null,label:''};
+}
+function plDiffFor(id,days,base){
+  if(!base)return{rem:[],add:[]};
+  const a=callsOf(base,id),b=callsOf(days,id);
+  return{rem:a.filter(x=>!b.includes(x)),add:b.filter(x=>!a.includes(x))};
+}
+
+/* ----- the view ----- */
+function viewPlanner(){
+  if(!canPlan())return head('Rota planner','')+emptyBox('The rota planner is for the Surgical coordinator and deputy.');
+  const ym=UI.pYm||ymOf(todayStr());UI.pYm=ym;
+  const rp=plDoc(ym),dr=rp.draft,edit=!!dr,days=dr?dr.days:liveDays(ym),vers=plVers(ym);
+  const bi=plBaseInfo(ym,rp),base=UI.pCmpOn===false?null:bi.days;
+  const rows=plRows(ym,days,base),n=dim(ym),hd=halfDay(ym);
+  const chk=edit?plCheckAll(ym,days):{block:[],warn:[]};
+  const warnSet=new Set(chk.warn.map(w=>w.i+':'+w.k));
+  const sel=UI.pSel||'';
+  /* controls */
+  const hist=plHist(ym);
+  const bar='<div class="plbar noprint"><button class="btn sm" data-act="pl-m" data-v="-1" aria-label="Previous month">‹</button><b class="plmonth">'+esc(fmtYm(ym))+'</b><button class="btn sm" data-act="pl-m" data-v="1" aria-label="Next month">›</button>'+
+   '<button class="btn sm'+(plHidden()?' on':'')+'" data-act="pl-hide">Names '+(plHidden()?'hidden ✓':'shown')+'</button>'+
+   (base||vers.length?'<button class="btn sm'+(UI.pCmpOn!==false?' on':'')+'" data-act="pl-cmp">Compare'+(bi.label&&UI.pCmpOn!==false?' with '+esc(bi.label):'')+(UI.pCmpOn!==false?' ✓':'')+'</button>':'')+
+   '<button class="btn sm'+(UI.pDots!==false?' on':'')+'" data-act="pl-dots">Free-day dots '+(UI.pDots!==false?'✓':'')+'</button>'+
+   '<button class="btn sm" data-act="pl-targets">Targets</button>'+
+   (edit?'<button class="btn sm" data-act="pl-undo"'+(hist.u.length?'':' disabled')+'>Undo</button><button class="btn sm" data-act="pl-redo"'+(hist.r.length?'':' disabled')+'>Redo</button><button class="btn sm'+(UI.pSwap?' on':'')+'" data-act="pl-swapmode">'+(UI.pSwap?(UI.pSwap.i?'Pick the second call…':'Pick the first call…'):'Swap two calls')+'</button><button class="btn sm" data-act="pl-suggest">Suggest</button>':'')+
+   '<button class="btn sm" data-act="pl-print">Print / PDF</button>'+
+   '<span class="plsp"></span>'+(edit?'<span class="pill">Draft · saved automatically</span><button class="btn sm" data-act="pl-discard">Discard draft</button><button class="btn pri" data-act="pl-publish">Publish…</button>':'<button class="btn pri" data-act="pl-start">Start new version</button>')+'</div>';
+  /* warnings */
+  let wbox='';
+  if(edit){
+    const items=[];
+    chk.warn.forEach(w=>items.push('<li><a href="#" data-act="pl-goto" data-i="'+w.i+'" data-d="'+w.k+'"><b>'+esc(plName(w.i,rows))+'</b> on '+(+w.k.slice(1))+'</a>: '+esc(w.msg)+'</li>'));
+    const short=[];for(let d=1;d<=n;d++){const k=dk2(d),t=plTarget(rp,k),c=(days[k]||[]).length;if(t.adq&&c<t.adq)short.push(d);}
+    if(short.length)items.push('<li>Cover is below the adequate level on '+short.length+' day'+(short.length>1?'s':'')+': '+short.slice(0,12).join(', ')+(short.length>12?'…':'')+'.</li>');
+    const open=rp.notes.filter(x=>!x.done).length;if(open)items.push('<li>'+open+' note'+(open>1?'s':'')+' still open.</li>');
+    if(items.length)wbox='<div class="plwarn noprint"><b>'+items.length+' thing'+(items.length>1?'s':'')+' to look at</b><ul>'+items.slice(0,14).join('')+(items.length>14?'<li>…and '+(items.length-14)+' more.</li>':'')+'</ul></div>';
+  }else if(vers.length&&Object.keys(liveDays(ym)).length){
+    const last=vers[vers.length-1],lv=liveDays(ym);let diff=0;
+    for(let d=1;d<=n;d++){const k=dk2(d),a=(last.days[k]||[]).slice().sort().join(),b=(lv[k]||[]).slice().sort().join();if(a!==b)diff++;}
+    wbox='<div class="plwarn noprint" style="background:#eef2ff;border-color:#b6c3f5;color:#26307a">Showing the live rota. It is '+(diff?'different from '+esc(last.label)+' on '+diff+' day'+(diff>1?'s':'')+' (swaps and changes since it was published).':'the same as '+esc(last.label)+'.')+'</div>';
+  }else if(!Object.keys(liveDays(ym)).length&&!dr){
+    wbox='<div class="plwarn noprint" style="background:#eef2ff;border-color:#b6c3f5;color:#26307a">There is no rota for this month yet. Press “Start new version” to begin.</div>';
+  }
+  /* grid */
+  let th1='<tr><th rowspan="2" class="plh pln">Intern</th><th colspan="2" class="plg">Firm</th><th rowspan="2" class="plh">Last<br>call</th><th colspan="'+hd+'" class="plg thick">First half</th><th colspan="'+(n-hd)+'" class="plg thick">Second half</th><th colspan="5" class="plg">Calls</th></tr>';
+  let th2='<tr><th class="plh">H1</th><th class="plh">H2</th>';
+  const dayCls=d=>{const date=ym+'-'+pad(d);const hol=holidayOf(date);return(hol?'hol':(isWkDay(date)?'wk':''))+(d===hd+1?' thick':'');};
+  for(let d=1;d<=n;d++){const date=ym+'-'+pad(d);th2+='<th class="plh '+dayCls(d)+(UI.pDay===dk2(d)?' dsel':'')+'"><a href="#" data-act="pl-day" data-d="'+dk2(d)+'" class="plda" title="Who can still be added">'+d+'<small>'+'SMTWTFS'[dow(date)]+'</small></a></th>';}
+  th2+='<th class="plh">W</th><th class="plh">T</th><th class="plh">H</th><th class="plh">T+F+S</th><th class="plh">Of max</th></tr>';
+  let body='';
+  rows.forEach((id,ri)=>{
+    const it=S.interns[id],calls=callsOf(days,id),df=plDiffFor(id,days,base),last=plLast(id,ym);
+    const mine=new Set(calls);
+    const near=new Set();
+    if(UI.pDots!==false){
+      const dates=calls.map(d=>ym+'-'+pad(d)).concat(otherDates(id,ym));
+      for(let d=1;d<=n;d++){if(mine.has(d))continue;const dt=ym+'-'+pad(d);if(dates.some(x=>{const g=Math.abs(dayCount(x,dt));return g>=1&&g<=MIN_GAP_PL-1;}))near.add(d);}
+    }
+    const mv=df.rem.length&&df.add.length;
+    const locks=(dr&&dr.locks)||{};
+    let cells='';
+    for(let d=1;d<=n;d++){
+      const k=dk2(d),date=ym+'-'+pad(d);let c=dayCls(d),txt='',aria='';
+      const o=plOut(it,date);
+      if(o==='notin')c+=' out2';else if(o==='annual')c+=' out';else if(o==='sick')c+=' sick';
+      if(mine.has(d)){txt='<span class="tk">✓</span>';if(warnSet.has(id+':'+k))c+=' wn';if(locks[k+':'+id])c+=' lk';}
+      else if(near.has(d)&&o!=='notin'&&o!=='annual')c+=(UI.pSel===id?' rest sel':' rest');
+      if(df.rem.includes(d)){c+=mv?' y1':' red';if(!mv)txt='<span class="rx">✕</span>';}
+      if(df.add.includes(d)&&base)c+=' y2';
+      if(UI.pSwap&&UI.pSwap.i===id&&UI.pSwap.d===d)c+=' pick';
+      const noteHere=rp.notes.some(x=>!x.done&&x.internId===id&&x.date===date);
+      if(noteHere)c+=' hasnote';
+      aria=plName(id,rows)+', day '+d+(mine.has(d)?', on call':'');
+      cells+='<td class="plc '+c+'"'+(edit?' data-act="pl-cell" data-i="'+id+'" data-d="'+d+'" tabindex="0" role="button" aria-label="'+esc(aria)+'"':'')+'>'+txt+'</td>';
+    }
+    /* stats */
+    let W=0,T=0,H=0;calls.forEach(d=>{const date=ym+'-'+pad(d);if(isWkDay(date))H++;else{W++;if(dow(date)===4)T++;}});
+    const caps=plCaps(id,ym,days);
+    const capTxt=caps.map(c=>c.n+'/'+c.max).join(' · ');
+    const over=caps.some(c=>c.n>c.max);
+    const wkMax=caps.length&&caps[0].split?CFG.wkHalfWarn:CFG.wkMonthWarn;
+    const hWarn=H>wkMax*caps.length&&caps.length>=1&&H>(caps.some(c=>c.split)?CFG.wkHalfWarn*caps.length:CFG.wkMonthWarn);
+    const lv=it.plan&&null;
+    let lvTxt='';const lvr=leaveReqs(id).filter(r=>r.status==='approved'&&r.from<=ym+'-'+pad(n)&&r.to>=ym+'-01'&&r.kind);
+    if(lvr.length){const r=lvr[0];lvTxt='<div class="pllv">'+esc((KIND_NAME[r.kind]||'Leave'))+' '+(+(r.from<ym+'-01'?'01':r.from.slice(8,10)))+'–'+(+(r.to>ym+'-'+pad(n)?pad(n):r.to.slice(8,10)))+'</div>';}
+    const nm=plName(id,rows);
+    body+=(ri===rows.findIndex(x=>isVisitor(S.interns[x]))&&isVisitor(it)&&ri>0?'<tr class="plsep"><td colspan="'+(n+11)+'"></td></tr>':'')+
+     '<tr class="'+(sel===id?'plsel':'')+'"><td class="pln"><a href="#" data-act="pl-sel" data-i="'+id+'">'+esc(nm)+'</a>'+lvTxt+'</td><td class="plf">'+esc(plHalf(it,ym,1))+'</td><td class="plf">'+esc(plHalf(it,ym,2))+'</td><td><span class="lc '+(last.near?'lo':'lg')+'">'+esc(last.txt)+'</span></td>'+cells+
+     '<td class="st sg">'+W+'</td><td class="st sb">'+T+'</td><td class="st sg'+(hWarn?' wn':'')+'">'+H+'</td><td class="st sg">'+(T+H)+'</td><td class="cnt'+(over?' over':(caps.length&&caps.every(c=>c.n>=c.max)?' full':''))+'">'+capTxt+'</td></tr>';
+  });
+  /* cover row */
+  let cov='<tr class="plcov"><td class="pln" colspan="4"><b>Interns covering</b></td>';
+  for(let d=1;d<=n;d++){const k=dk2(d),c=(days[k]||[]).length,t=plTarget(rp,k);const cl=!t.full&&!t.adq?'':(c>=t.full&&t.full?'cg':(c>=t.adq?'co':'cr'));cov+='<td class="cv '+cl+(d===hd+1?' thick':'')+'" title="Full '+t.full+', adequate '+t.adq+'">'+c+'</td>';}
+  cov+='<td colspan="5"></td></tr>';
+  const grid=rows.length?'<div class="plcard"><table class="pltbl"><thead>'+th1+th2+'</thead><tbody>'+body+cov+'</tbody></table></div>':emptyBox('No interns are in the Surgical rota in this month.');
+  const legend='<div class="pleg noprint"><span><i class="sw out2"></i>Not in surgical rota</span><span><i class="sw out"></i>Annual leave (blocked)</span><span><i class="sw sick"></i>Other approved leave</span><span><i class="sw wn"></i>Rule warning</span><span><i class="sw rest"></i>Too close to another call</span><span><i class="sw red"></i>Removed</span><span><i class="sw y1"></i>Old date of a moved call</span><span><i class="sw y2"></i>New or moved call</span><span><i class="sw cg"></i>Full</span><span><i class="sw co"></i>Adequate</span><span><i class="sw cr"></i>Short</span></div>';
+  /* why short */
+  let why='';
+  if(UI.pDay&&edit)why=plWhy(ym,rp,days,rows,UI.pDay);
+  /* panels */
+  const panels='<div class="plpanels noprint">'+plNotesPanel(rp,rows,n,ym)+plVersPanel(ym,rp,vers,bi)+plBalance(ym,days,rows)+'</div>';
+  const title='<header class="phead"><div><h1>Rota planner · Surgical</h1><p>'+(edit?'Draft for '+esc(fmtYm(ym))+'. Interns see nothing until you publish.':'Live rota for '+esc(fmtYm(ym))+(vers.length?' · last version '+esc(vers[vers.length-1].label):''))+'</p></div></header>';
+  return title+bar+wbox+why+grid+legend+panels;
+}
+function plCaps(id,ym,days){
+  const it=S.interns[id],calls=callsOf(days,id);if(!calls.length){return[{n:0,max:CFG.shiftMonthMax,split:false}];}
+  const other=shiftsOf(id).filter(s=>!(s.unit===PL_UNIT&&ymOf(s.date)===ym));
+  const m={};
+  const add=date=>{const pk=periodKey(it,date);(m[pk]=m[pk]||{n:0,split:pk.length>7});m[pk].n++;};
+  calls.forEach(d=>add(ym+'-'+pad(d)));other.filter(s=>ymOf(s.date)===ym).forEach(s=>{const pk=periodKey(it,s.date);if(m[pk])m[pk].n++;});
+  return Object.keys(m).sort().map(pk=>({n:m[pk].n,max:m[pk].split?CFG.shiftHalfMax:CFG.shiftMonthMax,split:m[pk].split}));
+}
+function plWhy(ym,rp,days,rows,k){
+  const d=+k.slice(1),date=ym+'-'+pad(d),t=plTarget(rp,k),c=(days[k]||[]).length;
+  const ok=[],warn=[];
+  rows.forEach(id=>{if((days[k]||[]).includes(id))return;const r=plCan(ym,days,id,k);if(!r.ok)return;(r.warn&&r.warn.length?warn:ok).push({id,w:r.warn&&r.warn[0]});});
+  const li=(x,w)=>'<li><a href="#" data-act="pl-add" data-i="'+x.id+'" data-d="'+k+'">'+esc(plName(x.id,rows))+'</a>'+(w?' <span class="muted small">— '+esc(x.w)+'</span>':'')+'</li>';
+  return'<div class="plwhy noprint"><div class="row" style="justify-content:space-between"><b>'+esc(fmtDate(date))+' · '+c+' covering (full '+t.full+', adequate '+t.adq+')</b><a href="#" data-act="pl-day" data-d="">Close</a></div>'+
+   (ok.length?'<p class="small" style="margin:6px 0 2px">Can be added with no warnings:</p><ul class="plul">'+ok.map(x=>li(x,false)).join('')+'</ul>':'<p class="small muted">Nobody can be added without a warning or a block.</p>')+
+   (warn.length?'<p class="small" style="margin:6px 0 2px">Possible with a warning:</p><ul class="plul">'+warn.map(x=>li(x,true)).join('')+'</ul>':'')+'</div>';
+}
+function plNotesPanel(rp,rows,n,ym){
+  const open=rp.notes.filter(x=>!x.done),done=rp.notes.filter(x=>x.done);
+  const li=x=>{const it=x.internId&&S.interns[x.internId];return'<li class="'+(x.done?'done':'')+'"><label><input type="checkbox" data-act="pl-ndone" data-id="'+x.id+'"'+(x.done?' checked':'')+'> <span>'+esc(x.text)+'</span></label>'+(it||x.date?'<div class="small muted">'+(it?esc(plName(x.internId,rows)):'')+(it&&x.date?' · ':'')+(x.date?esc(fmtDate(x.date)):'')+(it?' <a href="#" data-act="pl-goto" data-i="'+x.internId+'" data-d="'+(x.date?dk2(+x.date.slice(8,10)):'')+'">Show</a>':'')+' <a href="#" data-act="pl-ndel" data-id="'+x.id+'">Delete</a></div>':' <a class="small" href="#" data-act="pl-ndel" data-id="'+x.id+'">Delete</a>')+'</li>';};
+  return'<section class="panel"><h2>Notes for the next version'+(open.length?' <span class="tag warn">'+open.length+' open</span>':'')+'</h2>'+
+   '<div class="plnf"><input type="text" id="pl-ntext" placeholder="For example: Ahmed has an exam on the 13th, needs to be changed" aria-label="Note"><select id="pl-nint" aria-label="Intern (optional)"><option value="">No intern</option>'+rows.map(i=>'<option value="'+i+'"'+(UI.pSel===i?' selected':'')+'>'+esc(plName(i,rows))+'</option>').join('')+'</select><select id="pl-nday" aria-label="Day (optional)"><option value="">No day</option>'+Array.from({length:n},(_,i)=>'<option value="'+(i+1)+'">'+(i+1)+'</option>').join('')+'</select><button class="btn sm pri" data-act="pl-nadd">Add</button></div>'+
+   (open.length?'<ul class="plnotes">'+open.map(li).join('')+'</ul>':'<p class="muted small">No open notes.</p>')+
+   (done.length?'<details><summary class="small">Done ('+done.length+')</summary><ul class="plnotes">'+done.map(li).join('')+'</ul></details>':'')+'</section>';
+}
+function plVersPanel(ym,rp,vers,bi){
+  return'<section class="panel"><h2>Versions</h2>'+(vers.length?'<ul class="plver">'+vers.slice().reverse().map(v=>'<li><b>'+esc(v.label)+'</b> · '+fmtTs(v.at)+' · '+esc(v.by||'')+(v.note?'<div class="small muted">'+esc(v.note)+'</div>':'')+'<div><a href="#" data-act="pl-cmpv" data-v="'+esc(v.label)+'" class="small">'+((UI.pCmp===v.label||(!UI.pCmp&&v===vers[vers.length-1]))?'Comparing with this one':'Compare with this one')+'</a></div></li>').join('')+'</ul>':'<p class="muted small">Nothing published for this month yet. When you publish, the version is saved here with the name you give it.</p>')+'</section>';
+}
+function plBalance(ym,days,rows){
+  const prev=ymAdd(ym,-1);
+  const data=rows.map(id=>{const calls=callsOf(days,id);let H=0;calls.forEach(d=>{if(isWkDay(ym+'-'+pad(d)))H++;});const last=shiftsOf(id).filter(s=>ymOf(s.date)===prev).length;return{id,H,all:calls.length,last};});
+  const mx=Math.max(3,...data.map(x=>x.H));
+  return'<section class="panel"><h2>Balance</h2><p class="small muted" style="margin-top:0">Weekend and holiday calls this month, and everyone’s calls last month.</p><div class="plbal">'+data.map(x=>'<div class="plbr"><span class="small">'+esc(plName(x.id,rows))+'</span><span class="plbb"><i style="width:'+Math.round(x.H/mx*100)+'%"></i></span><span class="small">'+x.H+' · last month '+x.last+'</span></div>').join('')+'</div></section>';
+}
+
+/* ----- editing ----- */
+async function plSaveDoc(rp){return put('rotaplan',plKey(rp.ym),rp);}
+function plEdit(fn,keepHist){
+  const ym=UI.pYm,rp=plDoc(ym);if(!rp.draft)return false;
+  const h=plHist(ym);if(!keepHist){h.u.push(JSON.stringify({d:rp.draft.days,l:rp.draft.locks||{}}));if(h.u.length>60)h.u.shift();h.r=[];}
+  const r=fn(rp);if(r===false){if(!keepHist)h.u.pop();return false;}
+  rp.draft.days=cleanDraft(rp.draft.days);return plSaveDoc(rp);
+}
+function cleanDraft(d){const o={};Object.keys(d).forEach(k=>{if((d[k]||[]).length)o[k]=d[k];});return o;}
+function plToastWarn(w){if(w&&w.length)toast('Added with a warning: '+w[0]);}
+Object.assign(ACT,{
+  'pl-m':el=>{UI.pYm=ymAdd(UI.pYm||ymOf(todayStr()),+el.dataset.v);UI.pDay='';UI.pSwap=null;},
+  'pl-hide':()=>{UI.pHide=!plHidden();try{localStorage.setItem('plHide',UI.pHide?'1':'0');}catch(e){}},
+  'pl-cmp':()=>{UI.pCmpOn=UI.pCmpOn===false;},
+  'pl-cmpv':(el,ev)=>{ev&&ev.preventDefault();UI.pCmp=el.dataset.v;UI.pCmpOn=true;},
+  'pl-dots':()=>{UI.pDots=UI.pDots===false;},
+  'pl-sel':(el,ev)=>{ev&&ev.preventDefault();UI.pSel=UI.pSel===el.dataset.i?'':el.dataset.i;},
+  'pl-day':(el,ev)=>{ev&&ev.preventDefault();UI.pDay=UI.pDay===el.dataset.d?'':el.dataset.d;},
+  'pl-goto':(el,ev)=>{ev&&ev.preventDefault();UI.pSel=el.dataset.i;if(el.dataset.d)UI.pDay=el.dataset.d;setTimeout(()=>{const c=document.querySelector('tr.plsel');if(c)c.scrollIntoView({block:'center'});},60);},
+  'pl-start':async()=>{
+    const ym=UI.pYm,rp=plDoc(ym),live=liveDays(ym),vs=plVers(ym);
+    if(rp.draft)return;
+    rp.draft={days:dcopy(live),base:{days:dcopy(live),label:vs.length?vs[vs.length-1].label:'live'},locks:{},started:Date.now(),by:(E().name||'')};
+    UI.pHist=UI.pHist||{};UI.pHist[ym]={u:[],r:[]};UI.pCmp='auto';UI.pCmpOn=true;
+    logEv('Started a new draft of the Surgical rota for '+fmtYm(ym));
+    await plSaveDoc(rp);
+  },
+  'pl-discard':async()=>{
+    if(!(await askConfirm('Discard this draft','All the changes in this draft are lost. The live rota and the published versions are not touched. Your notes stay.','Discard',true)))return;
+    const rp=plDoc(UI.pYm);rp.draft=null;UI.pHist[UI.pYm]={u:[],r:[]};closeModal();logEv('Discarded the Surgical rota draft for '+fmtYm(UI.pYm));await plSaveDoc(rp);
+  },
+  'pl-cell':async(el,ev)=>{
+    const ym=UI.pYm,i=el.dataset.i,d=+el.dataset.d,k=dk2(d);const rp=plDoc(ym);if(!rp.draft)return;
+    const days=rp.draft.days,has=(days[k]||[]).includes(i);
+    UI.pSel=i;
+    if(ev&&(ev.shiftKey||ev.altKey)&&has){return plEdit(r=>{r.draft.locks=r.draft.locks||{};const lk=k+':'+i;if(r.draft.locks[lk])delete r.draft.locks[lk];else r.draft.locks[lk]=1;},false);}
+    if(UI.pSwap){
+      if(!has){toast('Pick a call (a tick) to swap.');return;}
+      if(!UI.pSwap.i){UI.pSwap={i,d};scheduleRender();return;}
+      const a=UI.pSwap;if(a.i===i){toast('Pick a call of a different intern.');return;}
+      if(a.d===d){toast('Pick a call on a different day.');return;}
+      const ka=dk2(a.d),dd=dcopy(days);
+      dd[ka]=(dd[ka]||[]).filter(x=>x!==a.i);dd[k]=(dd[k]||[]).filter(x=>x!==i);
+      const r1=plCan(ym,dd,i,ka),r2=plCan(ym,Object.assign({},dd,{[ka]:(dd[ka]||[]).concat([i])}),a.i,k);
+      if(!r1.ok){toast(plName(i,[])&&((S.interns[i]||{}).name)+': '+r1.msg);return;}
+      if(!r2.ok){toast(((S.interns[a.i]||{}).name)+': '+r2.msg);return;}
+      UI.pSwap=null;
+      return plEdit(r=>{const x=r.draft.days;x[ka]=(x[ka]||[]).filter(z=>z!==a.i).concat([i]);x[k]=(x[k]||[]).filter(z=>z!==i).concat([a.i]);});
+    }
+    if(has){
+      if((rp.draft.locks||{})[k+':'+i]){toast('This call is locked. Shift-click it to unlock.');return;}
+      return plEdit(r=>{r.draft.days[k]=r.draft.days[k].filter(x=>x!==i);if(r.draft.locks)delete r.draft.locks[k+':'+i];});
+    }
+    const res=plCan(ym,days,i,k);
+    if(!res.ok){toast(res.msg);return;}
+    plToastWarn(res.warn);
+    return plEdit(r=>{(r.draft.days[k]=r.draft.days[k]||[]).push(i);});
+  },
+  'pl-add':async(el,ev)=>{ev&&ev.preventDefault();
+    const ym=UI.pYm,i=el.dataset.i,k=el.dataset.d,rp=plDoc(ym);if(!rp.draft)return;
+    const res=plCan(ym,rp.draft.days,i,k);if(!res.ok){toast(res.msg);return;}plToastWarn(res.warn);
+    return plEdit(r=>{(r.draft.days[k]=r.draft.days[k]||[]).push(i);});
+  },
+  'pl-swapmode':()=>{UI.pSwap=UI.pSwap?null:{i:'',d:0};},
+  'pl-undo':async()=>{
+    const ym=UI.pYm,h=plHist(ym),rp=plDoc(ym);if(!rp.draft||!h.u.length)return;
+    h.r.push(JSON.stringify({d:rp.draft.days,l:rp.draft.locks||{}}));const s=JSON.parse(h.u.pop());rp.draft.days=s.d;rp.draft.locks=s.l;await plSaveDoc(rp);
+  },
+  'pl-redo':async()=>{
+    const ym=UI.pYm,h=plHist(ym),rp=plDoc(ym);if(!rp.draft||!h.r.length)return;
+    h.u.push(JSON.stringify({d:rp.draft.days,l:rp.draft.locks||{}}));const s=JSON.parse(h.r.pop());rp.draft.days=s.d;rp.draft.locks=s.l;await plSaveDoc(rp);
+  },
+  'pl-print':()=>{window.print();},
+  /* notes */
+  'pl-nadd':async()=>{
+    const t=($('pl-ntext').value||'').trim();if(!t){toast('Write the note first.');return;}
+    const ym=UI.pYm,rp=plDoc(ym),i=$('pl-nint').value,d=$('pl-nday').value;
+    rp.notes.push({id:uid('pn'),text:t,internId:i,date:d?ym+'-'+pad(+d):'',done:false,at:Date.now()});
+    await plSaveDoc(rp);
+  },
+  'pl-ndone':async el=>{const rp=plDoc(UI.pYm),n=rp.notes.find(x=>x.id===el.dataset.id);if(!n)return;n.done=el.checked;await plSaveDoc(rp);},
+  'pl-ndel':async(el,ev)=>{ev&&ev.preventDefault();const rp=plDoc(UI.pYm);rp.notes=rp.notes.filter(x=>x.id!==el.dataset.id);await plSaveDoc(rp);}
+});
+document.addEventListener('keydown',ev=>{
+  if(UI.route!=='planner')return;
+  if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==='z'&&!/INPUT|TEXTAREA|SELECT/.test((ev.target||{}).tagName||'')){ev.preventDefault();ACT[ev.shiftKey?'pl-redo':'pl-undo']();}
+  if((ev.key==='Enter'||ev.key===' ')&&(ev.target||{}).classList&&ev.target.classList.contains('plc')){ev.preventDefault();ev.target.click();}
+});
+document.addEventListener('contextmenu',ev=>{
+  const c=ev.target.closest&&ev.target.closest('td.plc[data-act=pl-cell]');if(!c||UI.route!=='planner')return;
+  ev.preventDefault();
+  const i=c.dataset.i,d=+c.dataset.d,k=dk2(d),ym=UI.pYm,rp=plDoc(ym),has=rp.draft&&(rp.draft.days[k]||[]).includes(i);
+  openModal('<h2>'+esc(fmtDate(ym+'-'+pad(d)))+'</h2><div class="stack"><button class="btn" data-act="pl-cnote" data-i="'+i+'" data-d="'+d+'">Add a note for this day</button>'+(has?'<button class="btn" data-act="pl-clock" data-i="'+i+'" data-d="'+d+'">'+(((rp.draft.locks||{})[k+':'+i])?'Unlock this call':'Lock this call')+'</button>':'')+'<button class="btn" data-act="close-modal">Close</button></div>');
+});
+Object.assign(ACT,{
+  'pl-cnote':el=>{closeModal();UI.pSel=el.dataset.i;setTimeout(()=>{const t=$('pl-ntext');if(t){$('pl-nint').value=el.dataset.i;$('pl-nday').value=el.dataset.d;t.focus();t.scrollIntoView({block:'center'});}},80);},
+  'pl-clock':async el=>{closeModal();const i=el.dataset.i,k=dk2(+el.dataset.d);return plEdit(r=>{r.draft.locks=r.draft.locks||{};const lk=k+':'+i;if(r.draft.locks[lk])delete r.draft.locks[lk];else r.draft.locks[lk]=1;},false);}
+});
+
+/* ----- targets ----- */
+function plTargetsModal(){
+  const rp=plDoc(UI.pYm),t=rp.targets,n=dim(UI.pYm);
+  const num=(id,v,l)=>'<div><label for="'+id+'">'+l+'</label><input type="number" min="0" max="40" id="'+id+'" value="'+v+'"></div>';
+  const over=Object.keys(t.days).sort().map(k=>'<li>Day '+(+k.slice(1))+': full '+t.days[k].full+', adequate '+t.days[k].adq+' <a href="#" data-act="pl-trm" data-d="'+k+'">Remove</a></li>').join('');
+  openModal('<h2>Cover targets for '+esc(fmtYm(UI.pYm))+'</h2><p class="small muted">“Full” is the number you want. “Adequate” is the least that is still acceptable. The cover row turns green, amber or red.</p><h3>Weekdays</h3><div class="grid2">'+num('pt-wf',t.wd.full,'Full')+num('pt-wa',t.wd.adq,'Adequate')+'</div><h3>Weekends and holidays</h3><div class="grid2">'+num('pt-ef',t.we.full,'Full')+num('pt-ea',t.we.adq,'Adequate')+'</div>'+
+   '<h3>Specific days</h3><p class="small muted">Choose one or more days, then set their targets.</p><div class="plchips">'+Array.from({length:n},(_,i)=>'<label class="plchip"><input type="checkbox" class="pt-day" value="'+(i+1)+'"><span>'+(i+1)+'</span></label>').join('')+'</div><div class="grid2">'+num('pt-df',t.wd.full,'Full for these days')+num('pt-da',t.wd.adq,'Adequate for these days')+'</div><button class="btn sm" data-act="pl-tapply" type="button">Apply to the chosen days</button>'+(over?'<ul class="plul">'+over+'</ul>':'')+
+   '<div class="foot"><button class="btn" data-act="close-modal">Cancel</button><button class="btn pri" data-act="pl-tsave">Save</button></div>',true);
+}
+function plReadT(){
+  const rp=plDoc(UI.pYm),g=id=>Math.max(0,Math.min(40,Math.round(+$(id).value)||0));
+  rp.targets.wd={full:g('pt-wf'),adq:g('pt-wa')};rp.targets.we={full:g('pt-ef'),adq:g('pt-ea')};return rp;
+}
+Object.assign(ACT,{
+  'pl-targets':()=>plTargetsModal(),
+  'pl-tapply':()=>{
+    const rp=plReadT(),ds=[...document.querySelectorAll('.pt-day:checked')].map(x=>+x.value);
+    if(!ds.length){toast('Choose at least one day.');return;}
+    const f=Math.max(0,Math.min(40,Math.round(+$('pt-df').value)||0)),a=Math.max(0,Math.min(40,Math.round(+$('pt-da').value)||0));
+    ds.forEach(d=>{rp.targets.days[dk2(d)]={full:f,adq:a};});
+    PL_TMP=rp;plSaveDoc(rp).then(()=>plTargetsModal());
+  },
+  'pl-trm':(el,ev)=>{ev&&ev.preventDefault();const rp=plReadT();delete rp.targets.days[el.dataset.d];plSaveDoc(rp).then(()=>plTargetsModal());},
+  'pl-tsave':async()=>{const rp=plReadT();closeModal();await plSaveDoc(rp);}
+});
+let PL_TMP=null;
+
+/* ----- suggest ----- */
+Object.assign(ACT,{
+  'pl-suggest':async()=>{
+    const ym=UI.pYm,rp=plDoc(ym);if(!rp.draft)return;
+    if(!(await askConfirm('Suggest a rota','The app fills empty places on days that are below the full target. Your ticks stay as they are, and nothing breaks a rule. You can undo it in one step.','Suggest')))return;
+    closeModal();
+    const days=dcopy(rp.draft.days),rows=plRows(ym,days,null),n=dim(ym);let added=0;
+    const load=id=>{const c=callsOf(days,id).length;return c;};
+    for(let d=1;d<=n;d++){
+      const k=dk2(d),t=plTarget(rp,k),want=t.full||t.adq;
+      while((days[k]||[]).length<want){
+        const cand=rows.filter(id=>!(days[k]||[]).includes(id)).map(id=>({id,r:plCan(ym,days,id,k)})).filter(x=>x.r.ok&&!(x.r.warn&&x.r.warn.length));
+        if(!cand.length)break;
+        const date=ym+'-'+pad(d),wk=isWkDay(date);
+        cand.sort((a,b)=>{const ca=plCaps(a.id,ym,days)[0],cb=plCaps(b.id,ym,days)[0];const ra=ca.n/ca.max,rb=cb.n/cb.max;if(ra!==rb)return ra-rb;if(wk){const wa=callsOf(days,a.id).filter(x=>isWkDay(ym+'-'+pad(x))).length,wb=callsOf(days,b.id).filter(x=>isWkDay(ym+'-'+pad(x))).length;if(wa!==wb)return wa-wb;}return S.interns[a.id].name.localeCompare(S.interns[b.id].name);});
+        (days[k]=days[k]||[]).push(cand[0].id);added++;
+      }
+    }
+    if(!added){toast('Nothing more can be added without breaking a rule.');return;}
+    toast('Added '+added+' call'+(added>1?'s':'')+'.');
+    return plEdit(r=>{r.draft.days=days;});
+  }
+});
+
+/* ----- publish ----- */
+function plNextLabel(vs){
+  const l=vs.length?vs[vs.length-1].label:'';const m=String(l).match(/^(v?)(\d+)\.(\d+)$/i);
+  if(m)return m[1]+m[2]+'.'+(+m[3]+1);
+  return vs.length?l+'-2':'v1.0';
+}
+function plPublishModal(){
+  const ym=UI.pYm,rp=plDoc(ym),dr=rp.draft;if(!dr)return;
+  const live=liveDays(ym),n=dim(ym),chk=plCheckAll(ym,dr.days),vs=plVers(ym);
+  const who={};let chg=0;
+  for(let d=1;d<=n;d++){const k=dk2(d),a=live[k]||[],b=dr.days[k]||[];b.filter(x=>!a.includes(x)).forEach(x=>{(who[x]=who[x]||{a:0,r:0}).a++;chg++;});a.filter(x=>!b.includes(x)).forEach(x=>{(who[x]=who[x]||{a:0,r:0}).r++;chg++;});}
+  const short=[];for(let d=1;d<=n;d++){const k=dk2(d),t=plTarget(rp,k);if(t.adq&&(dr.days[k]||[]).length<t.adq)short.push(d);}
+  const open=rp.notes.filter(x=>!x.done).length;
+  const names=Object.keys(who).map(i=>S.interns[i]&&S.interns[i].name).filter(Boolean);
+  openModal('<h2>Publish the rota for '+esc(fmtYm(ym))+'</h2>'+
+   (chk.block.length?'<div class="note bad small"><b>This draft breaks a rule and can’t be published:</b><ul>'+chk.block.slice(0,5).map(b=>'<li>'+esc((S.interns[b.i]||{}).name)+', day '+(+b.k.slice(1))+': '+esc(b.msg)+'</li>').join('')+'</ul></div>':'')+
+   '<ul class="plul"><li><b>'+chg+'</b> call'+(chg===1?'':'s')+' differ from the live rota (added or removed).</li><li><b>'+names.length+'</b> intern'+(names.length===1?'':'s')+' will get a notice'+(names.length?': '+esc(names.slice(0,8).join(', '))+(names.length>8?'…':''):'')+'.</li><li>'+(short.length?'Cover is below adequate on <b>'+short.length+'</b> day'+(short.length>1?'s':'')+'.':'Cover is adequate on every day.')+'</li><li>'+chk.warn.length+' rule warning'+(chk.warn.length===1?'':'s')+'.</li><li>'+(open?'<b>'+open+'</b> note'+(open>1?'s':'')+' still open.':'No open notes.')+'</li></ul>'+
+   '<p class="small muted">Publishing replaces the whole month on the live rota and saves this as a new version.</p>'+
+   '<label for="pl-vlabel">Version name</label><input type="text" id="pl-vlabel" maxlength="20" value="'+esc(plNextLabel(vs))+'"><label for="pl-vnote">Note (optional)</label><input type="text" id="pl-vnote" maxlength="300" placeholder="For example: after the swaps of the first week">'+
+   '<div class="foot"><button class="btn" data-act="close-modal">Cancel</button><button class="btn pri" data-act="pl-pubgo"'+(chk.block.length?' disabled':'')+'>Publish</button></div>',true);
+}
+Object.assign(ACT,{
+  'pl-publish':()=>plPublishModal(),
+  'pl-pubgo':async el=>{
+    const label=($('pl-vlabel').value||'').trim(),note=($('pl-vnote').value||'').trim();
+    if(!label){toast('Give this version a name.');return;}
+    el.disabled=true;el.textContent='Publishing…';
+    try{await call('planPublish',{ym:UI.pYm,label,note});await loadAll();closeModal();UI.pCmp='auto';UI.pCmpOn=true;toast('Published as '+label+'.');}
+    catch(err){toast(err.message);el.disabled=false;el.textContent='Publish';}
+  }
+});
+
+/* ===================== version 4.9: rota tables, intern views, places, late cover ===================== */
+const RD=id=>S.rotadata[id]||null;
+const omOf=(unit,ym)=>{const d=RD('om_'+ocKey(unit,ym));return{pl:(d&&d.pl)||{},lt:(d&&d.lt)||{}};};
+const MOON='<svg class="moon" viewBox="0 0 16 16" aria-label="Late coverage"><path d="M10.8 1.6A6.6 6.6 0 1 0 14.4 11 5.4 5.4 0 0 1 10.8 1.6z" fill="currentColor"/></svg>';
+const PLACE_DEF={OBG:[{k:'ae',n:'A/E',s:1},{k:'ward',n:'Ward',s:2},{k:'lr',n:'LR 308',s:1}]};
+const WARD_DEF={PED:[{k:'w31',n:'Ward 31',g:''},{k:'w32',n:'Ward 32',g:''},{k:'w34',n:'Ward 34',g:''},{k:'w36',n:'Ward 36',g:''},{k:'er',n:'ER',g:''},{k:'hem',n:'Hematology',g:''},{k:'n307',n:'Ward 307',g:'NICU'},{k:'n309',n:'Ward 309',g:'NICU'},{k:'n35',n:'Ward 35',g:'NICU'},{k:'npost',n:'Postnatal',g:'NICU'}]};
+function placesOf(unit){const d=RD('pl_all'),p=d&&d.places&&d.places[unit];return p&&p.length?p:(PLACE_DEF[unit]||[]);}
+function wardListOf(unit){const d=RD('pl_all'),p=d&&d.wards&&d.wards[unit];return p&&p.length?p:(WARD_DEF[unit]||[]);}
+const lateOn=unit=>unit==='PED';
+const dkOf=d=>'d'+pad(d);
+function liveDaysFull(unit,ym){const d=S.oncall[ocKey(unit,ym)],o={};Object.keys((d&&d.days)||{}).forEach(k=>{o[k]={need:d.days[k].need==null?null:d.days[k].need,ids:(d.days[k].ids||[]).slice()};});return o;}
+/* which interns are in a rota on a date (the people a name on that sheet can mean) */
+function rotaInterns(unit,date){return Object.values(S.interns).filter(it=>rotaOf(placementAt(it,date,S.surgery[it.id]))===unit);}
+
+/* ----- grid layout: columns for places, or numbered columns ----- */
+function ocLayout(unit,ym,days,om){
+  const pls=placesOf(unit),n=dim(ym);let cols=[];
+  if(pls.length){
+    pls.forEach(p=>{for(let i=0;i<p.s;i++)cols.push({k:p.k,n:p.n,i,first:i===0,span:p.s});});
+    let mx=0;for(let d=1;d<=n;d++){const r=ocRow(unit,ym,dkOf(d),days,om,cols,true);mx=Math.max(mx,r.rest.length);}
+    for(let i=0;i<mx;i++)cols.push({k:'',n:'More',i,first:i===0,span:mx});
+  }else{
+    let K=4;for(let d=1;d<=n;d++)K=Math.max(K,(((days[dkOf(d)]||{}).ids)||[]).length);
+    cols=Array.from({length:K},(_,i)=>({k:'',n:'Intern '+(i+1),i,first:i===0,span:K,seq:true}));
+  }
+  return cols;
+}
+function ocRow(unit,ym,k,days,om,cols,probe){
+  const ids=(((days[k]||{}).ids)||[]).slice(),pl=(om.pl||{})[k]||{},lt=(om.lt||{})[k]||[];
+  const cell=i=>i?{id:i,late:lt.includes(i)}:null;
+  if(cols.length&&cols[0].seq||!placesOf(unit).length)return{cells:cols.map((c,i)=>cell(ids[i])),rest:[]};
+  const used=new Set(),byP={};
+  placesOf(unit).forEach(p=>{byP[p.k]=ids.filter(i=>pl[i]===p.k).slice(0,p.s);byP[p.k].forEach(i=>used.add(i));});
+  const rest=ids.filter(i=>!used.has(i)),cells=[];let ri=0;
+  cols.forEach(c=>{if(c.k)cells.push(cell(byP[c.k]?byP[c.k][c.i]:null));else cells.push(probe?null:cell(rest[ri++]));});
+  return{cells,rest};
+}
+function leaveRanges(id,ym){
+  const a=ym+'-01',b=ym+'-'+pad(dim(ym));
+  return leaveReqs(id).filter(r=>r.status==='approved'&&r.from<=b&&r.to>=a).map(r=>({from:r.from<a?a:r.from,to:r.to>b?b:r.to,kind:r.kind}));
+}
+const leaveDay=(rs,date)=>rs.find(r=>r.from<=date&&date<=r.to);
+function leaveText(rs){return rs.map(r=>(KIND_NAME[r.kind]||'Leave')+' '+(+r.from.slice(8))+' – '+(+r.to.slice(8))+' '+MONTHS[+r.to.slice(5,7)-1]).join(' · ');}
+function wardSmall(unit,date,rec,id){
+  if(unit!=='SURGICAL')return'';const w=wardsAt(unit,date,rec,id);return w===null?'<small>Absent</small>':(w?'<small>'+esc(w)+'</small>':'');
+}
+const nmOf=id=>(S.interns[id]||{}).name||'?';
+function nameHtml(c,unit){return esc(nmOf(c.id))+(c.late&&lateOn(unit)?' '+MOON:'');}
+
+/* ----- the intern's table ----- */
+function icTable(unit,ym,me){
+  const n=dim(ym),days=liveDaysFull(unit,ym),om=omOf(unit,ym),cols=ocLayout(unit,ym,days,om),rs=leaveRanges(me,ym);
+  const grp=[];cols.forEach(c=>{if(c.first)grp.push(c);});
+  let h='<div class="scroll gw"><table class="icT"><thead><tr><th colspan="2">Date</th><th class="icst">My day</th>'+(cols[0]&&cols[0].seq?'<th colspan="'+cols.length+'">On call</th>':grp.map(c=>'<th colspan="'+c.span+'">'+esc(c.n)+'</th>').join(''))+'<th class="icsw"></th></tr></thead><tbody>';
+  for(let d=1;d<=n;d++){
+    const date=ym+'-'+pad(d),k=dkOf(d),rec=days[k]||{ids:[]},row=ocRow(unit,ym,k,days,om,cols),mine=rec.ids.includes(me),lv=leaveDay(rs,date),hol=holidayOf(date);
+    const cls=(isWkDay(date)?(hol?'hol':'we'):'')+(mine?' mine':'')+(lv&&!mine?' lvr':'');
+    const myLate=mine&&((om.lt||{})[k]||[]).includes(me);
+    h+='<tr class="'+cls+'"><td class="d">'+d+'</td><td class="dn">'+DAYS[dow(date)].slice(0,3)+'</td><td class="icst">'+(mine?'<b class="on">On call'+(myLate&&lateOn(unit)?' · Late':'')+'</b>':(lv?'<b class="lv">Leave</b>':(hol?'<span class="hl">'+esc(hol.label||'Holiday')+'</span>':'')))+'</td>';
+    row.cells.forEach(c=>{h+='<td class="'+(c&&c.id===me?'me':'')+'">'+(c?nameHtml(c,unit)+wardSmall(unit,date,rec,c.id):'')+'</td>';});
+    h+='<td class="icsw">'+(mine&&date>=todayStr()?'<button class="btn sm" data-act="sw-open" data-r="'+unit+'" data-d="'+date+'">Request a swap</button>':'')+'</td></tr>';
+  }
+  return h+'</tbody></table></div>';
+}
+/* ----- the intern's calendar ----- */
+function icCal(unit,ym,me){
+  const n=dim(ym),lead=dow(ym+'-01'),days=liveDaysFull(unit,ym),om=omOf(unit,ym),rs=leaveRanges(me,ym);
+  const hdr=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(x=>'<div class="icdh">'+x+'</div>').join('');
+  let cells='<div class="ict empty"></div>'.repeat(lead);
+  const sel=UI.icDay&&ymOf(UI.icDay)===ym?UI.icDay:'';
+  for(let d=1;d<=n;d++){
+    const date=ym+'-'+pad(d),k=dkOf(d),ids=(days[k]||{}).ids||[],mine=ids.includes(me),hol=holidayOf(date),lv=leaveDay(rs,date);
+    const lt=(om.lt||{})[k]||[];
+    let cls='ict'+(hol?' hol':(isWkDay(date)?' we':''))+(mine?' on':'')+(lv&&!mine?' lv':'')+(date===sel?' sel':'')+(date===todayStr()?' today':'');
+    const lvFirst=lv&&!mine&&!leaveDay(rs,addDays(date,-1)),lvLast=lv&&!mine&&!leaveDay(rs,addDays(date,1));
+    if(lv&&!mine)cls+=(lvFirst?' lf':'')+(lvLast?' ll':'');
+    cells+='<button class="'+cls+'" data-act="ic-day" data-d="'+date+'"><span class="icn">'+d+'</span>'+(mine?'<span class="ictag">On call</span>':'')+(hol&&!mine?'<span class="icsm">'+esc(hol.label||'Holiday')+'</span>':'')+
+      '<ul>'+ids.map(i=>'<li class="'+(i===me?'me':'')+'">'+esc(nmOf(i))+(lt.includes(i)&&lateOn(unit)?' '+MOON:'')+'</li>').join('')+'</ul>'+(lv&&!mine?'<span class="lvb">'+(lvFirst?esc(KIND_NAME[lv.kind]||'Leave')+' '+(+lv.from.slice(8))+'–'+(+lv.to.slice(8)):'')+'</span>':'')+'</button>';
+  }
+  const panel=sel?icDayPanel(unit,sel,me):'<section class="panel"><h2>Pick a day</h2><p class="muted" style="margin:0">Tap a day to see who is on call and where.</p></section>';
+  return'<div class="cols oc-cols"><div><div class="icgrid">'+hdr+cells+'</div></div><div>'+panel+'</div></div>';
+}
+function addDays(date,n){const d=new Date(date+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}
+function icDayPanel(unit,date,me){
+  const ym=ymOf(date),k=dayKey(date),rec=dayRec(unit,date),om=omOf(unit,ym),pl=(om.pl||{})[k]||{},lt=(om.lt||{})[k]||[],pls=placesOf(unit);
+  const li=rec.ids.map(i=>{
+    const place=pls.length&&pl[i]?(pls.find(p=>p.k===pl[i])||{}).n:'',w=unit==='SURGICAL'?wardsAt(unit,date,rec,i):'';
+    return'<div class="icrow'+(i===me?' me':'')+'"><span>'+esc(nmOf(i))+(lt.includes(i)&&lateOn(unit)?' '+MOON:'')+'<small>'+[place,w?'Wards '+w:'',lt.includes(i)&&lateOn(unit)?'Late coverage':''].filter(Boolean).map(esc).join(' · ')+'</small></span></div>';}).join('');
+  const mine=rec.ids.includes(me);
+  return'<section class="panel icpanel"><h2>'+esc(fmtDate(date))+'</h2><p class="muted small" style="margin:0 0 8px">'+esc(ocName(unit))+(isWkDay(date)?' · weekend or holiday':'')+'</p>'+(li||'<p class="muted">Nobody on the rota this day.</p>')+(mine&&date>=todayStr()?'<button class="btn" style="margin-top:10px;width:100%" data-act="sw-open" data-r="'+unit+'" data-d="'+date+'">Request a swap</button>':'')+'</section>';
+}
+/* ----- Pediatrics-style ward distribution (read-only table; shown to everyone) ----- */
+function wardTable(unit,ym,me,edit){
+  const wp=RD('wp_'+unit+'_'+ym),list=wardListOf(unit);if(!list.length)return'';
+  const per=wp&&wp.periods&&wp.periods.length?wp.periods:[];
+  if(!per.length&&!edit)return'';
+  const cols=[];list.forEach(w=>{const g=w.g||'';if(g){const c=cols.find(x=>x.g===g);if(c){c.items.push(w);return;}cols.push({g,n:g,items:[w]});}else cols.push({g:'',n:w.n,items:[w]});});
+  const lvNote=(id,p)=>{const r=leaveRanges(id,ym).find(x=>+x.from.slice(8)<=p.to&&+x.to.slice(8)>=p.from);return r?'<i class="wl">Leave: '+esc(nmOf(id))+' '+(+r.from.slice(8))+'–'+(+r.to.slice(8))+' '+MONTHS[+r.to.slice(5,7)-1]+'</i>':'';};
+  let h='<section class="panel"><div class="row" style="justify-content:space-between"><h2 style="margin:0">'+esc(fmtYm(ym))+' · Morning ward distribution</h2>'+(edit?'<span class="row"><button class="btn sm" data-act="wp-edit" data-u="'+unit+'">Edit</button><button class="btn sm" data-act="wp-import" data-u="'+unit+'">Import</button><button class="btn sm" data-act="wp-export" data-u="'+unit+'">Download</button></span>':'')+'</div><div class="scroll gw"><table class="wdT"><thead><tr><th>Period</th>'+cols.map(c=>'<th>'+esc(c.n)+'</th>').join('')+'</tr></thead><tbody>';
+  per.forEach(p=>{
+    h+='<tr><td class="per">'+p.from+' – '+p.to+'</td>'+cols.map(c=>{
+      let o='';c.items.forEach(w=>{(p.cells[w.k]||[]).forEach(i=>{o+='<span class="wn'+(i===me?' me':'')+'">'+(c.g?esc(w.n)+': ':'')+esc(nmOf(i))+'</span>'+lvNote(i,p);});});return'<td>'+o+'</td>';}).join('')+'</tr>';
+  });
+  if(!per.length)h+='<tr><td colspan="'+(cols.length+1)+'" class="muted">No ward distribution for this month yet.</td></tr>';
+  return h+'</tbody></table></div></section>';
+}
+/* ----- the intern's page ----- */
+function icMode(){if(UI.icMode)return UI.icMode;try{UI.icMode=localStorage.getItem('icMode')||'';}catch(e){UI.icMode='';}return UI.icMode||(window.innerWidth<720?'cal':'table');}
+function viewInternOncall(){
+  const e=E();
+  if(!UI.ocUnit||!ocUnits().includes(UI.ocUnit))UI.ocUnit=defaultOcUnit();
+  const unit=UI.ocUnit,ym=UI.ocYm||(UI.ocYm=ymOf(todayStr()));
+  if(unit==='EMERGENCY')return viewOncall0();
+  const me=e.internId,mode=icMode(),rs=leaveRanges(me,ym);
+  const sel='<select class="ocsel" data-bind="ocUnit" aria-label="Rota">'+ocUnits().map(u=>'<option value="'+u+'"'+(u===unit?' selected':'')+'>'+esc(ocName(u))+'</option>').join('')+'</select>';
+  const bar='<div class="bar">'+sel+'<span class="mnav"><button class="btn" data-act="ocmonth" data-n="-1" aria-label="Previous month">‹</button><button class="btn mlabel" data-act="ocmonth" data-n="0">'+fmtYm(ym)+'</button><button class="btn" data-act="ocmonth" data-n="1" aria-label="Next month">›</button></span><span class="sp"></span><div class="seg"><button class="'+(mode==='cal'?'on':'')+'" data-act="ic-mode" data-v="cal">Calendar</button><button class="'+(mode==='table'?'on':'')+'" data-act="ic-mode" data-v="table">Table</button></div></div>';
+  const lv=rs.length?'<div class="iclv"><b>Your leave:</b> '+esc(leaveText(rs))+'</div>':'';
+  const body=mode==='cal'?icCal(unit,ym,me):icTable(unit,ym,me);
+  return head('My on-call',esc(ocName(unit))+'. Everyone on the rota is shown, with your days highlighted.','')+bar+lv+body+wardTable(unit,ym,me,false);
+}
+function viewOncall(){return E().role==='intern'?viewInternOncall():viewOncallStaff();}
+Object.assign(ACT,{
+  'ic-mode':el=>{UI.icMode=el.dataset.v;try{localStorage.setItem('icMode',UI.icMode);}catch(e){}},
+  'ic-day':el=>{UI.icDay=UI.icDay===el.dataset.d?'':el.dataset.d;}
+});
+
+/* ===================== 4.9: staff table with draft editing (all rotas except Surgical) ===================== */
+const odKey=(unit,ym)=>'od_'+ocKey(unit,ym);
+function odDoc(unit,ym){const d=RD(odKey(unit,ym));return d&&d.open?clone(d):null;}
+function odHist(key){UI.odH=UI.odH||{};return UI.odH[key]=UI.odH[key]||{u:[],r:[]};}
+const odSnap=d=>JSON.stringify({days:d.days,pl:d.pl||{},lt:d.lt||{},anyway:d.anyway||[]});
+function idsMap(days){const o={};Object.keys(days).forEach(k=>{o[k]=(days[k].ids||[]).slice();});return o;}
+function ocWith(unit,ym,idsM,fn){
+  const key=ocKey(unit,ym),saved=S.oncall[key];
+  try{const tmp={id:key,unit,ym,days:{}};Object.keys(idsM).forEach(k=>{tmp.days[k]={need:null,ids:idsM[k].slice()};});S.oncall[key]=tmp;return fn();}
+  finally{if(saved)S.oncall[key]=saved;else delete S.oncall[key];}
+}
+function ocCheckOne(unit,ym,idsM,i,k){
+  const dd={};Object.keys(idsM).forEach(x=>{dd[x]=idsM[x].slice();});dd[k]=(dd[k]||[]).filter(x=>x!==i);
+  return ocWith(unit,ym,dd,()=>assignCheck(unit,i,ym+'-'+k.slice(1)));
+}
+let OD_CACHE={key:'',val:null};
+function odCheckAll(unit,ym,days){
+  const key=unit+ym+'|'+VER+'|'+JSON.stringify(idsMap(days));if(OD_CACHE.key===key)return OD_CACHE.val;
+  const idsM=idsMap(days),out={block:[],warn:[]};
+  Object.keys(idsM).sort().forEach(k=>idsM[k].forEach(i=>{const ck=ocCheckOne(unit,ym,idsM,i,k);ck.block.forEach(m=>out.block.push({i,k,msg:m}));ck.warn.forEach(m=>out.warn.push({i,k,msg:m}));}));
+  OD_CACHE={key,val:out};return out;
+}
+const needOf=(unit,rec)=>rec&&rec.need!=null?rec.need:(['NEURO','ORT'].includes(unit)?1:CFG.defaultNeed);
+function callCounts(unit,ym,days){
+  const out={};Object.keys(days).forEach(k=>{const date=ym+'-'+k.slice(1);(days[k].ids||[]).forEach(i=>{const o=out[i]=out[i]||{all:0,wk:0};o.all++;if(isWkDay(date))o.wk++;});});return out;
+}
+/* ----- the table ----- */
+function staffTableTab(unit,ym){
+  const dr=odDoc(unit,ym),edit=!!dr,live=liveDaysFull(unit,ym),days=edit?dr.days:live,om=edit?{pl:dr.pl||{},lt:dr.lt||{}}:omOf(unit,ym);
+  const cols=ocLayout(unit,ym,days,om),n=dim(ym),chk=edit?odCheckAll(unit,ym,days):{block:[],warn:[]};
+  const warnSet=new Set(chk.warn.map(w=>w.i+':'+w.k)),blockSet=new Set(chk.block.filter(b=>b.msg!=='Already on this day.').map(b=>b.i+':'+b.k));
+  const hist=odHist(odKey(unit,ym)),liveOm=omOf(unit,ym);
+  const grp=[];cols.forEach(c=>{if(c.first)grp.push(c);});
+  let h='';
+  const other=edit&&dr.by&&dr.by!==E().name&&dr.updated&&Date.now()-dr.updated<600000?'<div class="note warn small">'+esc(dr.by)+' changed this draft a few minutes ago. If you both edit, the last one to save wins.</div>':'';
+  const bar='<div class="plbar noprint">'+(edit?'<span class="pill">Draft · interns see nothing until you press Save</span><button class="btn sm" data-act="od-undo"'+(hist.u.length?'':' disabled')+'>Undo</button><button class="btn sm" data-act="od-redo"'+(hist.r.length?'':' disabled')+'>Redo</button><span class="plsp"></span><button class="btn sm" data-act="od-discard">Discard draft</button><button class="btn pri" data-act="od-save"'+(chk.block.some(b=>b.msg!=='Already on this day.'&&!((dr.anyway||[]).includes(b.k+':'+b.i)))?' disabled title="Fix the blocked cells first"':'')+'>Save to the rota</button>':'<span class="muted small">Click Edit to change names. Nothing shows to interns until you save.</span><span class="plsp"></span><button class="btn sm" data-act="od-places" data-u="'+unit+'">Places</button><button class="btn sm" data-act="rota-import">Import from Excel</button><button class="btn sm" data-act="od-csv" data-u="'+unit+'">Download</button><button class="btn sm" data-act="od-print">Print / PDF</button><button class="btn pri" data-act="od-start" data-u="'+unit+'">Edit</button>')+'</div>';
+  const items=[];chk.warn.forEach(w=>items.push('<li><b>'+esc(nmOf(w.i))+'</b> on '+(+w.k.slice(1))+': '+esc(w.msg)+'</li>'));
+  chk.block.filter(b=>b.msg!=='Already on this day.').forEach(b=>items.push('<li class="bad"><b>'+esc(nmOf(b.i))+'</b> on '+(+b.k.slice(1))+': '+esc(b.msg)+'</li>'));
+  const wbox=edit&&items.length?'<div class="plwarn noprint"><b>'+items.length+' thing'+(items.length>1?'s':'')+' to look at</b><ul>'+items.slice(0,10).join('')+(items.length>10?'<li>…and '+(items.length-10)+' more.</li>':'')+'</ul></div>':'';
+  h+='<div class="scroll gw odcard"><table class="icT odT"><thead><tr><th colspan="2">Date</th>'+(cols[0]&&cols[0].seq?(unit==='PED'?cols.map(c=>'<th>'+esc(c.n)+'</th>').join(''):'<th colspan="'+cols.length+'">On call</th>'):grp.map(c=>'<th colspan="'+c.span+'">'+esc(c.n)+'</th>').join(''))+'<th class="cvh">#</th></tr></thead><tbody>';
+  for(let d=1;d<=n;d++){
+    const date=ym+'-'+pad(d),k=dkOf(d),rec=days[k]||{ids:[]},row=ocRow(unit,ym,k,days,om,cols),hol=holidayOf(date);
+    const need=needOf(unit,rec),c=rec.ids.length,cv=c>=need?'cg':(c>=need-1&&need>1?'co':'cr');
+    h+='<tr class="'+(isWkDay(date)?(hol?'hol':'we'):'')+'"><td class="d">'+d+'</td><td class="dn">'+DAYS[dow(date)].slice(0,3)+'</td>';
+    row.cells.forEach((cell,ci)=>{
+      const liveHas=cell&&(live[k]||{ids:[]}).ids.includes(cell.id),changed=edit&&cell&&(!liveHas||((liveOm.pl[k]||{})[cell.id]||'')!==(((om.pl||{})[k]||{})[cell.id]||''));
+      const cc=(cell?'':'em')+(changed?' chg':'')+(cell&&blockSet.has(cell.id+':'+k)?' blk':(cell&&warnSet.has(cell.id+':'+k)?' wn':''));
+      h+='<td class="oc '+cc+'"'+(edit?' data-act="od-cell" data-d="'+d+'" data-c="'+ci+'" tabindex="0"'+(cell?' draggable="true"':'')+'':'')+'>'+(cell?nameHtml(cell,unit):'')+'</td>';
+    });
+    h+='<td class="cv '+cv+'" title="Needed '+need+'">'+c+'</td></tr>';
+  }
+  h+='</tbody></table></div>';
+  const cc=callCounts(unit,ym,days),ids=Object.keys(cc).sort((a,b)=>nmOf(a).localeCompare(nmOf(b)));
+  const strip='<section class="panel noprint"><h2>Calls this month</h2><p class="small muted" style="margin:0 0 8px">Only coordinators and Training see these numbers. Total calls, then weekend and holiday calls.</p><div class="odstrip">'+(ids.length?ids.map(i=>'<div class="odch"><b>'+esc(nmOf(i))+'</b><span>'+cc[i].all+'</span><small>wknd '+cc[i].wk+'</small></div>').join(''):'<span class="muted">No calls yet.</span>')+'</div></section>';
+  const ward=wardListOf(unit).length?wardTable(unit,ym,'',true):'';
+  return other+bar+wbox+h+(unit==='OBG'||unit==='PED'||true?'':'')+strip+ward;
+}
+/* ----- editing ----- */
+async function odSave(doc){return put('rotadata',odKey(doc.unit,doc.ym),doc);}
+function odEdit(fn,noHist){
+  const unit=UI.ocUnit,ym=UI.ocYm,doc=odDoc(unit,ym);if(!doc)return false;
+  const h=odHist(odKey(unit,ym)),before=odSnap(doc);
+  const r=fn(doc);if(r===false)return false;
+  Object.keys(doc.days).forEach(k=>{if(!(doc.days[k].ids||[]).length&&doc.days[k].need==null)delete doc.days[k];});
+  doc.by=E().name;doc.updated=Date.now();
+  if(!noHist){h.u.push(before);if(h.u.length>60)h.u.shift();h.r=[];}
+  return odSave(doc);
+}
+function odPut(doc,k,id,col,cols){ /* put id into the cell of column col on day k */
+  const dd=doc.days[k]=doc.days[k]||{need:null,ids:[]};dd.ids=dd.ids||[];
+  const c=cols[col];
+  if(c&&!c.seq){
+    dd.ids=dd.ids.filter(x=>x!==id);dd.ids.push(id);
+    doc.pl=doc.pl||{};(doc.pl[k]=doc.pl[k]||{})[id]=c.k||'';if(!c.k)delete doc.pl[k][id];
+  }else{
+    const occ=dd.ids[col];dd.ids=dd.ids.filter(x=>x!==id);
+    if(occ&&occ!==id){const p=dd.ids.indexOf(occ);if(p>=0)dd.ids[p]=id;else dd.ids.push(id);}else dd.ids.push(id);
+  }
+}
+function odDrop(doc,k,id){
+  const dd=doc.days[k];if(!dd)return;dd.ids=(dd.ids||[]).filter(x=>x!==id);
+  if(doc.pl&&doc.pl[k])delete doc.pl[k][id];if(doc.lt&&doc.lt[k])doc.lt[k]=doc.lt[k].filter(x=>x!==id);
+}
+function odCols(doc){return ocLayout(doc.unit,doc.ym,doc.days,{pl:doc.pl||{},lt:doc.lt||{}});}
+function odCanAdd(doc,id,k){
+  const unit=doc.unit,ym=doc.ym,date=ym+'-'+k.slice(1);
+  const ck=ocCheckOne(unit,ym,idsMap(doc.days),id,k);
+  const bl=ck.block.filter(m=>m!=='Already on this day.');
+  return{block:bl,warn:ck.warn};
+}
+function candidates(doc,k){
+  const date=doc.ym+'-'+k.slice(1),inDay=new Set((doc.days[k]||{}).ids||[]),rota=new Set(rotaInterns(doc.unit,date).map(x=>x.id));
+  const all=Object.values(S.interns).filter(it=>!inDay.has(it.id));
+  return all.map(it=>({id:it.id,name:it.name,inRota:rota.has(it.id),r:odCanAdd(doc,it.id,k)})).filter(x=>x.inRota||isTr()).sort((a,b)=>(b.inRota-a.inRota)||a.name.localeCompare(b.name));
+}
+function openPicker(d,col){
+  const unit=UI.ocUnit,ym=UI.ocYm,doc=odDoc(unit,ym);if(!doc)return;
+  const k=dkOf(d),date=ym+'-'+pad(d),cols=odCols(doc),row=ocRow(unit,ym,k,doc.days,{pl:doc.pl||{},lt:doc.lt||{}},cols),occ=row.cells[col];
+  UI.pk={d,col,q:''};
+  const list=candidates(doc,k);
+  const item=x=>{
+    const bl=x.r.block,notIn=!x.inRota;
+    const can=!bl.length||(notIn&&isTr()&&bl.every(m=>/^Not placed in the/.test(m)));
+    const anyway=bl.length&&!notIn&&bl.every(m=>!/^Not placed in the/.test(m));
+    const st=bl.length?'<span class="tag bad">'+esc(bl[0])+'</span>':(x.r.warn.length?'<span class="tag warn">'+esc(x.r.warn[0])+'</span>':'<span class="tag ok">Can be added</span>');
+    return'<li class="pkr" data-name="'+esc(x.name.toLowerCase())+'"><div><b>'+esc(x.name)+'</b>'+(notIn?' <span class="muted small">other rota</span>':'')+'<div class="small">'+st+'</div></div>'+(can?'<button class="btn sm" data-act="od-pick" data-i="'+x.id+'">Add</button>':(anyway?'<button class="btn sm" data-act="od-pick" data-i="'+x.id+'" data-ovr="1">Add anyway</button>':''))+'</li>';
+  };
+  openModal('<h2>'+esc(fmtDate(date))+(cols[col]&&cols[col].k?' · '+esc(cols[col].n):'')+'</h2>'+(occ?'<div class="note info small row"><span>'+esc(nmOf(occ.id))+' is here.</span><span class="sp"></span>'+(lateOn(unit)?'<button class="btn sm" data-act="od-late" data-i="'+occ.id+'">'+(occ.late?'Remove late coverage':'Mark late coverage')+'</button>':'')+'<button class="btn sm" data-act="od-remove" data-i="'+occ.id+'">Remove</button></div>':'')+
+   '<input type="text" id="pk-q" placeholder="Type a name" aria-label="Search" autocomplete="off"><ul class="pklist">'+list.map(item).join('')+'</ul><div class="foot"><button class="btn" data-act="close-modal">Close</button></div>',true);
+  setTimeout(()=>{const q=$('pk-q');if(q)q.focus();},50);
+}
+document.addEventListener('input',ev=>{
+  if(ev.target&&ev.target.id==='pk-q'){const q=ev.target.value.toLowerCase().trim();document.querySelectorAll('.pkr').forEach(li=>{li.style.display=!q||li.dataset.name.includes(q)?'':'none';});}
+});
+Object.assign(ACT,{
+  octab:el=>{UI.ocTab=el.dataset.v;},
+  'od-start':async()=>{
+    const unit=UI.ocUnit,ym=UI.ocYm,live=liveDaysFull(unit,ym),om=omOf(unit,ym);
+    const base={};Object.keys(live).forEach(k=>{base[k]=live[k].ids.slice();});
+    const doc={unit,ym,open:true,days:live,pl:clone(om.pl),lt:clone(om.lt),base,by:E().name,started:Date.now(),anyway:[]};
+    UI.odH=UI.odH||{};UI.odH[odKey(unit,ym)]={u:[],r:[]};
+    logEv('Started editing the '+ocName(unit)+' rota for '+fmtYm(ym));
+    await odSave(doc);
+  },
+  'od-discard':async()=>{
+    if(!(await askConfirm('Discard this draft','All the changes in this draft are lost. The live rota is not touched.','Discard',true)))return;
+    const unit=UI.ocUnit,ym=UI.ocYm,doc=odDoc(unit,ym);if(!doc)return;closeModal();
+    await odSave(Object.assign(doc,{open:false,days:{},pl:{},lt:{},anyway:[]}));
+  },
+  'od-cell':el=>{openPicker(+el.dataset.d,+el.dataset.c);},
+  'od-pick':async el=>{
+    const unit=UI.ocUnit,ym=UI.ocYm,{d,col}=UI.pk,k=dkOf(d),id=el.dataset.i;closeModal();
+    const doc=odDoc(unit,ym);if(!doc)return;
+    const ck=odCanAdd(doc,id,k);
+    if(ck.block.length&&!el.dataset.ovr&&!(isTr()&&ck.block.every(m=>/^Not placed in the/.test(m)))){toast(ck.block[0]);return;}
+    if(el.dataset.ovr){if(!(await askConfirm('Add anyway',esc(nmOf(id))+': '+esc(ck.block[0])+' Add them anyway? It stays as a warning on this rota.','Add anyway')))return;}
+    if(ck.warn.length)toast('Added with a warning: '+ck.warn[0]);
+    return odEdit(x=>{const cols=odCols(x);odPut(x,k,id,col,cols);if(el.dataset.ovr||ck.block.length){x.anyway=x.anyway||[];x.anyway.push(k+':'+id);}});
+  },
+  'od-remove':el=>{const {d}=UI.pk,k=dkOf(d),id=el.dataset.i;closeModal();return odEdit(x=>odDrop(x,k,id));},
+  'od-late':el=>{const {d}=UI.pk,k=dkOf(d),id=el.dataset.i;closeModal();return odEdit(x=>{x.lt=x.lt||{};const a=x.lt[k]=x.lt[k]||[];const p=a.indexOf(id);if(p>=0)a.splice(p,1);else a.push(id);});},
+  'od-undo':async()=>{const unit=UI.ocUnit,ym=UI.ocYm,doc=odDoc(unit,ym),h=odHist(odKey(unit,ym));if(!doc||!h.u.length)return;h.r.push(odSnap(doc));const s=JSON.parse(h.u.pop());Object.assign(doc,s);await odSave(doc);},
+  'od-redo':async()=>{const unit=UI.ocUnit,ym=UI.ocYm,doc=odDoc(unit,ym),h=odHist(odKey(unit,ym));if(!doc||!h.r.length)return;h.u.push(odSnap(doc));const s=JSON.parse(h.r.pop());Object.assign(doc,s);await odSave(doc);},
+  'od-save':async el=>{
+    const unit=UI.ocUnit,ym=UI.ocYm;el.disabled=true;el.textContent='Saving…';
+    try{const r=await call('ocDraftSave',{unit,ym});await loadAll();toast('Saved. Interns whose calls changed have been told.'+(r.warnings?' '+r.warnings+' warning'+(r.warnings>1?'s':'')+' remain on the rota.':''));}
+    catch(err){toast(err.message);el.disabled=false;el.textContent='Save to the rota';}
+  },
+  'od-print':()=>window.print(),
+  'od-csv':el=>odCsv(el.dataset.u)
+});
+document.addEventListener('keydown',ev=>{
+  if(UI.route!=='oncall'||UI.ocTab==='rota')return;
+  if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==='z'&&!/INPUT|TEXTAREA|SELECT/.test((ev.target||{}).tagName||'')&&odDoc(UI.ocUnit,UI.ocYm)){ev.preventDefault();ACT[ev.shiftKey?'od-redo':'od-undo']();}
+  if((ev.key==='Enter'||ev.key===' ')&&ev.target&&ev.target.classList&&ev.target.classList.contains('oc')&&ev.target.dataset.act==='od-cell'){ev.preventDefault();ev.target.click();}
+});
+/* drag and drop between cells */
+let ODRAG=null;
+document.addEventListener('dragstart',ev=>{const c=ev.target.closest&&ev.target.closest('td.oc[data-act=od-cell]');if(!c||!c.draggable)return;ODRAG={d:+c.dataset.d,c:+c.dataset.c};try{ev.dataTransfer.setData('text/plain','x');ev.dataTransfer.effectAllowed='move';}catch(e){}});
+document.addEventListener('dragover',ev=>{if(ODRAG&&ev.target.closest&&ev.target.closest('td.oc[data-act=od-cell]'))ev.preventDefault();});
+document.addEventListener('drop',ev=>{
+  const t=ev.target.closest&&ev.target.closest('td.oc[data-act=od-cell]');if(!ODRAG||!t)return;ev.preventDefault();
+  const from=ODRAG;ODRAG=null;const to={d:+t.dataset.d,c:+t.dataset.c};if(from.d===to.d&&from.c===to.c)return;
+  const unit=UI.ocUnit,ym=UI.ocYm,doc=odDoc(unit,ym);if(!doc)return;
+  const cols=odCols(doc),kA=dkOf(from.d),kB=dkOf(to.d),empty={pl:{},lt:{}};
+  const rA=ocRow(unit,ym,kA,doc.days,{pl:doc.pl||{},lt:doc.lt||{}},cols),rB=ocRow(unit,ym,kB,doc.days,{pl:doc.pl||{},lt:doc.lt||{}},cols);
+  const a=rA.cells[from.c],b=rB.cells[to.c];if(!a)return;
+  const test=clone(doc);
+  odDrop(test,kA,a.id);if(b)odDrop(test,kB,b.id);
+  if(b){odPut(test,kA,b.id,from.c,cols);}
+  odPut(test,kB,a.id,to.c,cols);
+  const chk=[[a.id,kB]].concat(b?[[b.id,kA]]:[]);
+  for(const [id,k] of chk){const r=odCanAdd(test,id,k);if(r.block.length&&!(isTr()&&r.block.every(m=>/^Not placed in the/.test(m)))){toast(nmOf(id)+': '+r.block[0]);return;}}
+  odEdit(x=>{odDrop(x,kA,a.id);if(b)odDrop(x,kB,b.id);if(b)odPut(x,kA,b.id,from.c,cols);odPut(x,kB,a.id,to.c,cols);});
+  const w=chk.map(([id,k])=>odCanAdd(test,id,k).warn[0]).filter(Boolean)[0];if(w)toast('Moved with a warning: '+w);
+});
+/* ----- CSV in the rota's own layout ----- */
+function odCsv(unit){
+  const ym=UI.ocYm,days=liveDaysFull(unit,ym),om=omOf(unit,ym),cols=ocLayout(unit,ym,days,om),n=dim(ym);
+  const rows=[[ocName(unit)+' intern on-call rota · '+fmtYm(ym)],['Date','Day'].concat(cols.map(c=>c.seq?c.n:(c.span>1?c.n+' '+(c.i+1):c.n)))];
+  for(let d=1;d<=n;d++){const date=ym+'-'+pad(d),r=ocRow(unit,ym,dkOf(d),days,om,cols);rows.push([date,DAYS[dow(date)]].concat(r.cells.map(c=>c?nmOf(c.id)+(c.late&&lateOn(unit)?' ☾':''):'')));}
+  return saveCsv('rota-'+unit+'-'+ym+'.csv',rows);
+}
+
+/* ===================== 4.9: on-call import (rotation matching, fixes, import anyway, new layouts) ===================== */
+const RIYEAR=()=>(RI&&RI.year)||+String(UI.ocYm||todayStr()).slice(0,4);
+function parseAnyDate(v){
+  if(v instanceof Date)return ymd(v.getFullYear(),v.getMonth()+1,v.getDate());
+  if(typeof v==='number')return v>20000&&v<80000?xlsxSerialToIso(v):'';
+  const s=String(v==null?'':v).trim();if(!s)return'';
+  let m=s.match(/^(\d{1,2})\s*[\\\/]\s*(\d{1,2})$/);if(m&&+m[1]>=1&&+m[1]<=31&&+m[2]>=1&&+m[2]<=12)return ymd(RIYEAR(),+m[2],+m[1]);
+  m=s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/);if(m)return ymd(m[1],m[2],m[3]);
+  m=s.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/);
+  if(m){let a=+m[1],b=+m[2];return +b>12&&a<=12?ymd(m[3],a,b):ymd(m[3],b,a);}
+  m=s.match(/^(?:[A-Za-z]+,?\s+)?(\d{1,2})(?:st|nd|rd|th)?[\s\-]+([A-Za-z]{3})[A-Za-z]*\.?,?[\s\-]+(\d{2,4})$/);
+  if(m&&MON3[m[2].toLowerCase()])return ymd(m[3],MON3[m[2].toLowerCase()],m[1]);
+  m=s.match(/^(?:[A-Za-z]+,?\s+)?([A-Za-z]{3})[A-Za-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})$/);
+  if(m&&MON3[m[1].toLowerCase()])return ymd(m[3],MON3[m[1].toLowerCase()],m[2]);
+  return'';
+}
+function splitNames(cell){
+  if(cell==null||typeof cell==='number'||typeof cell==='boolean')return[];
+  return String(cell).split(/[;\n\r/\\&+،,]|\s+and\s+/i).map(s=>s.trim()).filter(s=>s&&!/^[-–—.]+$/.test(s));
+}
+function classifyHeader(h){
+  const cols={date:-1,need:-1,rota:-1,skip:[],names:[],late:[]};
+  h.forEach((c,i)=>{
+    const s=String(c==null?'':c).trim();
+    if(cols.date<0&&/^(date|التاريخ)\b/i.test(s)){cols.date=i;return;}
+    if(/^late/i.test(s)){cols.late.push(i);return;}
+    if(/^(week\s*)?day$|^dow$|^weekday$|^note|^comment|^remark|^shift$|^time$/i.test(s)){cols.skip.push(i);return;}
+    if(cols.need<0&&/^(needed|need|required|no\.?|count|interns? needed|number)$/i.test(s)){cols.need=i;return;}
+    if(cols.rota<0&&/^(rota|department|dept|unit|rotation|service)$/i.test(s)){cols.rota=i;return;}
+    if(/^#$/.test(s)){cols.skip.push(i);return;}
+    cols.names.push(i);
+  });
+  return cols;
+}
+/* a name cell may carry a late-coverage mark: a moon, a star or (Late) */
+function cleanTok(t){
+  let s=String(t||''),late=false;
+  if(/[☾☽🌙*]|\(\s*late[^)]*\)/i.test(s)){late=true;s=s.replace(/[☾☽🌙*]|\(\s*late[^)]*\)/ig,'');}
+  return{name:s.replace(/\s+/g,' ').trim(),late};
+}
+function placeKeyFor(unit,h){
+  const t=String(h||'').toLowerCase().trim();if(!t)return'';
+  const short=t.replace(/^intern\s*/,'').trim();
+  for(const p of placesOf(unit)){const pn=p.n.toLowerCase();if(t===pn||short===pn||t.includes(pn)||(short.length>1&&pn.includes(short)))return p.k;}
+  return'';
+}
+/* ----- reading the file ----- */
+function monthFromText(t){
+  const m=String(t||'').match(/(January|February|March|April|May|June|July|August|September|October|November|December)(?:\s+(\d{4}))?/i);
+  if(!m)return'';const i=FULL_MONTHS_C.findIndex(x=>x.toLowerCase()===m[1].toLowerCase());
+  return(m[2]||String(UI.ocYm||todayStr()).slice(0,4))+'-'+pad(i+1);
+}
+function simpleDayCol(rows){
+  const width=Math.max(0,...rows.map(r=>r.length));
+  for(let c=0;c<Math.min(width,4);c++){
+    const vals=rows.map(r=>String(r[c]==null?'':r[c]).trim());
+    const nums=vals.filter(v=>/^\d{1,2}$/.test(v)&&+v>=1&&+v<=31).map(Number);
+    if(nums.length>=5&&nums.filter((v,i)=>i>0&&v===nums[i-1]+1).length>=nums.length*.7)return c;
+  }
+  return-1;
+}
+function extractRota2(sheets){
+  const entries=[],notes=[];
+  let ctx='';sheets.forEach(sh=>{for(let i=0;i<Math.min((sh.rows||[]).length,8)&&!ctx;i++)ctx=monthFromText((sh.rows[i]||[]).map(c=>String(c==null?'':c)).join(' '));});
+  RI.year=ctx?+ctx.slice(0,4):+String(UI.ocYm||todayStr()).slice(0,4);
+  sheets.forEach(sh=>{
+    const rows=sh.rows||[];if(!rows.some(r=>r.some(c=>String(c).trim())))return;
+    const title=rows.slice(0,4).map(r=>r.join(' ')).join(' ');
+    const hr=rows.slice(0,15).findIndex(r=>r.some(c=>/^(date|التاريخ)\b/i.test(String(c==null?'':c).trim())));
+    const dc=hr<0?simpleDayCol(rows):-1;
+    if(dc>=0){
+      const sm=monthFromText(title)||ctx||UI.ocYm||ymOf(todayStr());
+      const first=rows.findIndex(r=>/^\d{1,2}$/.test(String(r[dc]==null?'':r[dc]).trim()));
+      const hdr=first>0?rows[first-1]:[];
+      const width=Math.max(...rows.map(r=>r.length));
+      const names=[];for(let c=0;c<width;c++){
+        if(c===dc)continue;const vals=rows.slice(first).map(r=>String(r[c]==null?'':r[c]).trim()).filter(Boolean);
+        if(!vals.length)continue;if(vals.filter(v=>/^(sun|mon|tue|wed|thu|fri|sat)/i.test(v)).length>=vals.length*.6)continue;
+        if(/^(note|comment|remark)/i.test(String(hdr[c]||'')))continue;names.push(c);
+      }
+      rows.forEach((r,i)=>{
+        if(i<first)return;const a=String(r[dc]==null?'':r[dc]).trim();if(!/^\d{1,2}$/.test(a))return;
+        const day=+a;if(day<1||day>dim(sm))return;
+        const cols=names.map(c=>({h:String(hdr[c]||''),names:splitNames(r[c])}));
+        const all=[];cols.forEach(c=>c.names.forEach(n=>all.push(n)));
+        if(all.length)entries.push({sheet:sh.name,row:i+1,date:sm+'-'+pad(day),need:null,names:all,cols,hint:rotaFromText(sh.name)||'',hintText:sh.name});
+      });
+      notes.push('Sheet “'+sh.name+'”: no Date column, so the day numbers in the first column were used with '+fmtYm(sm)+'.');
+      return;
+    }
+    const x=extractRota([sh]);
+    notes.push.apply(notes,x.notes.filter(n=>!/^(NOTE|Weekdays|Weekends)/i.test((n.match(/“([^”]*)”\s*was not/)||[])[1]||'')));
+    if(hr>=0){
+      const h=classifyHeader(rows[hr]);
+      x.entries.forEach(e=>{
+        const r=rows[e.row-1]||[];
+        e.cols=h.names.map(c=>({h:String(rows[hr][c]||''),names:splitNames(r[c])}));
+        e.lateNames=[];h.late.forEach(c=>splitNames(r[c]).forEach(n=>e.lateNames.push(n)));
+        e.names=[];e.cols.forEach(c=>c.names.forEach(n=>e.names.push(n)));
+      });
+    }
+    entries.push.apply(entries,x.entries);
+  });
+  return{entries,notes};
+}
+async function handleRotaFile(file){
+  try{
+    RI.fix={};RI.anyway=new Set();
+    const sheets=await readSheetFile(file),x=extractRota2(sheets);
+    RI.raw=x.entries;RI.notes=x.notes;RI.file=file.name;
+    const hint=x.entries.find(e=>e.hint);if(hint&&hint.hint&&ONCALL_UNITS.includes(hint.hint)&&canRota(hint.hint)&&hint.hint!==RI.rota){RI.rota=hint.hint;const s=$('ri-rota');if(s)s.value=hint.hint;}
+  }catch(e){RI.raw=null;RI.notes=[e&&e.message?e.message:'That file could not be read. Try saving it as a CSV file.'];}
+  paintRI();
+}
+/* ----- matching: first among the people on that rota that day ----- */
+function tokMatch(t,ct){return ct.some(c=>c===t||(t.length===1&&c[0]===t));}
+function matchInRota(text,rota,date){
+  const k=normName(text);if(!k)return{id:null,reason:''};
+  const cs=rotaInterns(rota,date).map(it=>({id:it.id,key:normName(it.name),tokens:normName(it.name).split(' ')}));
+  const tk=k.split(' ');
+  let hit=cs.filter(c=>c.key===k);
+  if(hit.length===1)return{id:hit[0].id,by:'exact',cands:[hit[0].id]};
+  hit=cs.filter(c=>tk.every(t=>tokMatch(t,c.tokens)));
+  if(hit.length===1)return{id:hit[0].id,by:'rota',cands:[hit[0].id]};
+  if(hit.length>1){
+    const first=hit.filter(c=>c.tokens[0]===tk[0]);
+    return{id:null,reason:'More than one intern on this rota matches this name.',cands:hit.map(c=>c.id),suggest:first.length===1?first[0].id:''};
+  }
+  const fz=cs.map(c=>({c,d:Math.min(lev(k,c.key),lev(k,c.tokens[0]||''))})).sort((a,b)=>a.d-b.d);
+  const lim=Math.max(1,Math.floor(k.length*.22));
+  if(fz.length&&fz[0].d<=1&&(fz.length===1||fz[1].d>fz[0].d))return{id:fz[0].c.id,by:'close',cands:[fz[0].c.id]};
+  const near=fz.filter(x=>x.d<=lim+1).map(x=>x.c.id);
+  const g=matchIntern(text,buildNameIndex());
+  if(g.id)return{id:g.id,by:'other',cands:[g.id]};
+  return{id:null,reason:g.reason&&/Two interns|More than one/.test(g.reason)?'More than one intern has this name, and none of them is on this rota that day.':'No intern on this rota that day has this name.',cands:near.length?near:cs.map(c=>c.id),suggest:near.length===1?near[0]:'',other:true};
+}
+function canAnywayMsg(rota,msg){
+  if(!canRota(rota))return false;
+  if(/^Not placed in the/.test(msg))return isTr();
+  return msg!=='Already on this day.';
+}
+function planRotaImport(entries,mode,defaultRota){
+  const saved=S.oncall,sim=clone(S.oncall);S.oncall=sim;
+  const issues=[],stat={ready:0,skipped:0,warned:0,already:0,fixed:0};const touched=new Set(),omd={},ovr={};
+  const alias=(RD('al_all')||{}).map||{},fixes=RI.fix||{},any=RI.anyway||new Set();
+  const doc=(rota,ym)=>{const key=ocKey(rota,ym);return sim[key]=sim[key]||{id:key,unit:rota,ym,days:{}};};
+  const om=(rota,ym)=>{const key=ocKey(rota,ym);if(!omd[key]){const o=omOf(rota,ym);omd[key]={unit:rota,ym,pl:clone(o.pl),lt:clone(o.lt),_t:new Set()};}return omd[key];};
+  try{
+    const ents=entries.map(e=>Object.assign({},e,{rota:e.hint||defaultRota}));
+    if(mode==='replace'){
+      const seen=new Set();
+      ents.forEach(e=>{if(!ONCALL_UNITS.includes(e.rota)||!canRota(e.rota))return;const k=e.rota+e.date;if(seen.has(k))return;seen.add(k);const d=doc(e.rota,ymOf(e.date)),dk=dayKey(e.date);if(d.days[dk])d.days[dk].ids=[];});
+    }
+    ents.forEach(e=>{
+      const where='Row '+e.row+(e.sheet?' of “'+e.sheet+'”':''),label=fmtDate(e.date),dk=dayKey(e.date);
+      const nm0=e.names.join(', ');
+      if(e.rota==='EM'||e.rota==='EMERGENCY'){issues.push({lvl:'skip',where,date:label,name:nm0,msg:'Emergency is a shift schedule, not an on-call rota. Fill it in on the On-call page or the Rota Emergency tab.'});stat.skipped+=e.names.length||1;return;}
+      if(!ONCALL_UNITS.includes(e.rota)){issues.push({lvl:'skip',where,date:label,name:nm0,msg:'The rota “'+(e.hintText||'')+'” is not recognised.'});stat.skipped+=e.names.length||1;return;}
+      if(!canRota(e.rota)){issues.push({lvl:'skip',where,date:label,name:nm0,msg:'You can’t change the '+UNIT_NAME[e.rota]+' rota.'});stat.skipped+=e.names.length||1;return;}
+      const d=doc(e.rota,ymOf(e.date)),day=d.days[dk]=d.days[dk]||{need:null,ids:[]},o=om(e.rota,ymOf(e.date));
+      day.ids=day.ids||[];touched.add(d.id);
+      if(mode==='replace'&&!o._t.has(dk)){delete o.pl[dk];delete o.lt[dk];}o._t.add(dk);
+      if(e.need!=null)day.need=e.need;
+      const pairs=(e.cols&&e.cols.length)?[].concat(...e.cols.map(c=>c.names.map(n=>({tok:n,h:c.h})))):e.names.map(n=>({tok:n,h:''}));
+      const resolve=(tok,asLate)=>{
+        const p=cleanTok(tok);if(!p.name)return null;
+        const key=e.rota+'|'+normName(p.name);
+        let f=Object.prototype.hasOwnProperty.call(fixes,key)?fixes[key]:alias[key];
+        if(f==='')return{skip:true};
+        if(f){stat.fixed++;return{id:f,late:p.late,p};}
+        const m=matchInRota(p.name,e.rota,e.date);
+        if(m.id)return{id:m.id,late:p.late,p,by:m.by};
+        if(!asLate){issues.push({lvl:'skip',kind:'name',key,where,date:label,name:p.name,msg:m.reason,cands:m.cands,suggest:m.suggest});stat.skipped++;}
+        return null;
+      };
+      pairs.forEach(pr=>{
+        const r=resolve(pr.tok);if(!r||r.skip){if(r&&r.skip)stat.skipped++;return;}
+        const id=r.id;if(!S.interns[id])return;
+        const ck=assignCheck(e.rota,id,e.date),hard=ck.block.filter(x=>x!=='Already on this day.');
+        if(!hard.length&&ck.block.includes('Already on this day.')){stat.already++;}
+        else{
+          const ak=dk+':'+id,allow=hard.every(m=>canAnywayMsg(e.rota,m));
+          if(hard.length){
+            if(any.has(ak)&&allow){
+              issues.push({lvl:'warn',kind:'forced',where,date:label,name:S.interns[id].name,msg:'Imported anyway: '+hard[0]});stat.warned++;
+              const ov=ovr[d.id]=ovr[d.id]||[];hard.forEach(m=>{const t=ak+(/^Not placed in the/.test(m)?':x':':any');if(!ov.includes(t))ov.push(t);});
+            }else{issues.push({lvl:'skip',kind:'rule',ak,allow,where,date:label,name:S.interns[id].name,msg:hard[0]});stat.skipped++;return;}
+          }
+          day.ids.push(id);stat.ready++;
+          if(!hard.length)ck.warn.forEach(w=>{issues.push({lvl:'warn',where,date:label,name:S.interns[id].name,msg:w});stat.warned++;});
+        }
+        const pk=pr.h?placeKeyFor(e.rota,pr.h):'';
+        if(pk){(o.pl[dk]=o.pl[dk]||{})[id]=pk;}
+        if(r.late&&lateOn(e.rota)){const a=o.lt[dk]=o.lt[dk]||[];if(!a.includes(id))a.push(id);}
+      });
+      (e.lateNames||[]).forEach(t=>{const r=resolve(t,true);if(r&&r.id&&lateOn(e.rota)){if(day.ids.includes(r.id)){const a=o.lt[dk]=o.lt[dk]||[];if(!a.includes(r.id))a.push(r.id);}else{issues.push({lvl:'warn',where,date:label,name:cleanTok(t).name,msg:'Named for late coverage but not on the rota that day.'});stat.warned++;}}});
+      if(e.rota==='SURGICAL')day.need=null;
+      else if(day.need==null||day.need<day.ids.length)day.need=Math.max(day.need==null?CFG.defaultNeed:day.need,day.ids.length);
+    });
+  }finally{S.oncall=saved;}
+  const docs=[...touched].map(k=>sim[k]);
+  Object.values(omd).forEach(x=>{delete x._t;});
+  return{docs,issues,stat,days:new Set(entries.map(e=>e.date)).size,om:omd,ovr};
+}
+/* ----- the window ----- */
+function paintRI(){
+  const box=$('ri-result'),go=$('ri-go');if(!box)return;
+  if(!RI.raw){box.innerHTML=RI.notes.map(n=>'<div class="note bad">'+esc(n)+'</div>').join('');if(go)go.disabled=true;return;}
+  RI.plan=planRotaImport(RI.raw,RI.mode,RI.rota);
+  const p=RI.plan,st=p.stat;let h='';
+  if(!RI.raw.length)h+='<div class="note bad">No rota rows were found in this file. Check it has a Date column or day numbers, or download the template.</div>';
+  h+=RI.notes.slice(0,6).map(n=>'<div class="note warn small">'+esc(n)+'</div>').join('');
+  if(RI.raw.length){
+    h+='<div class="note '+(st.skipped?'warn':'ok')+'"><b>'+st.ready+'</b> assignments ready across <b>'+p.days+'</b> days'+(st.skipped?', <b>'+st.skipped+'</b> need a fix or were skipped':'')+(st.warned?', <b>'+st.warned+'</b> with a warning':'')+(st.already?'; '+st.already+' already on the rota':'')+'.</div>';
+    const probs=p.issues.filter(i=>i.lvl==='skip'),canAny=probs.filter(i=>i.kind==='rule'&&i.allow);
+    if(p.issues.length){
+      const show=RI.only===false?p.issues:p.issues.filter(i=>i.lvl==='skip'||RI.only===undefined&&false||i.kind==='forced');
+      const list=(RI.only===false)?p.issues:(probs.length?p.issues.filter(i=>i.lvl==='skip'||i.kind==='forced'):p.issues);
+      h+='<div class="row small" style="margin:6px 0;gap:12px;flex-wrap:wrap"><label class="inline"><input type="checkbox" data-act="ri-only"'+(RI.only===false?'':' checked')+'> Show only what needs attention</label>'+(canAny.length?'<button class="btn sm" data-act="ri-allany">Import all '+canAny.length+' anyway</button>':'')+(probs.length?'<button class="btn sm" data-act="ri-skipcsv">Download skipped rows</button>':'')+'<label class="inline"><input type="checkbox" data-act="ri-rem"'+(RI.remember===false?'':' checked')+'> Remember my name choices</label></div>';
+      h+='<div class="scroll" style="max-height:38vh"><table class="tbl"><thead><tr><th></th><th>Where</th><th>Date</th><th>Name</th><th>What</th><th>Fix</th></tr></thead><tbody>'+list.slice(0,300).map(i=>{
+        let fix='';
+        if(i.kind==='name'){
+          const cs=(i.cands||[]).filter(x=>S.interns[x]),others=Object.values(S.interns).filter(x=>!cs.includes(x.id)).sort((a,b)=>a.name.localeCompare(b.name));
+          fix='<select class="ri-fix" data-key="'+esc(i.key)+'" aria-label="Who is '+esc(i.name)+'?"><option value="">Choose…</option>'+cs.map(x=>'<option value="'+x+'"'+(x===i.suggest?' selected':'')+'>'+esc(nmOf(x))+(x===i.suggest?' (suggested)':'')+'</option>').join('')+'<option value="__skip">Skip these rows</option>'+(others.length?'<optgroup label="Other interns">'+others.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('')+'</optgroup>':'')+'</select>';
+        }else if(i.kind==='rule'){
+          fix=i.allow?'<label class="inline"><input type="checkbox" data-act="ri-any" data-ak="'+esc(i.ak)+'"> Import anyway</label>':'<span class="muted small">'+(isTr()?'':'Only Training can add someone from another rota.')+'</span>';
+        }
+        return'<tr><td><span class="tag '+(i.lvl==='skip'?'bad':'warn')+'">'+(i.lvl==='skip'?'Skipped':(i.kind==='forced'?'Forced':'Warning'))+'</span></td><td class="small">'+esc(i.where)+'</td><td class="small">'+esc(i.date)+'</td><td>'+esc(i.name)+'</td><td class="small">'+esc(i.msg)+(i.suggest&&i.kind==='name'?' Did you mean “'+esc(nmOf(i.suggest))+'”?':'')+'</td><td>'+fix+'</td></tr>';}).join('')+'</tbody></table></div>';
+      if(p.issues.length>300)h+='<p class="hint">Showing the first 300.</p>';
+    }
+  }
+  box.innerHTML=h;
+  if(go){go.disabled=!(st.ready||p.docs.length&&RI.mode==='replace');go.textContent='Import '+st.ready+' assignments';}
+}
+document.addEventListener('change',ev=>{
+  const t=ev.target;if(!t||!RI)return;
+  if(t.classList&&t.classList.contains('ri-fix')){RI.fix=RI.fix||{};if(t.value==='')delete RI.fix[t.dataset.key];else RI.fix[t.dataset.key]=t.value==='__skip'?'':t.value;paintRI();return;}
+  if(t.dataset&&t.dataset.act==='ri-any'){RI.anyway=RI.anyway||new Set();if(t.checked)RI.anyway.add(t.dataset.ak);else RI.anyway.delete(t.dataset.ak);paintRI();return;}
+  if(t.dataset&&t.dataset.act==='ri-only'){RI.only=t.checked?undefined:false;paintRI();return;}
+  if(t.dataset&&t.dataset.act==='ri-rem'){RI.remember=t.checked;return;}
+});
+Object.assign(ACT,{
+  'ri-allany':()=>{RI.anyway=RI.anyway||new Set();RI.plan.issues.filter(i=>i.kind==='rule'&&i.allow).forEach(i=>RI.anyway.add(i.ak));paintRI();},
+  'ri-skipcsv':()=>saveCsv('skipped-rows.csv',[['Where','Date','Name','Reason']].concat(RI.plan.issues.filter(i=>i.lvl==='skip').map(i=>[i.where,i.date,i.name,i.msg])))
+});
+async function runRotaImport(){
+  if(!RI||!RI.plan)return;
+  const p=RI.plan,rem=RI.remember!==false;closeModal();
+  await putMany('oncall',p.docs.map(d=>[d.id,Object.assign(strip(d),p.ovr[d.id]?{ovr:p.ovr[d.id]}:{})]));
+  p.docs.forEach(d=>{if(S.oncall[d.id])delete S.oncall[d.id].ovr;});
+  const oms=Object.values(p.om).filter(x=>Object.keys(x.pl).length||Object.keys(x.lt).length||RD('om_'+ocKey(x.unit,x.ym)));
+  if(oms.length)await putMany('rotadata',oms.map(x=>['om_'+ocKey(x.unit,x.ym),x]));
+  const fixes=Object.keys(RI.fix||{}).filter(k=>RI.fix[k]);
+  if(rem&&fixes.length&&(isTr()||myUnits().length)){const cur=clone((RD('al_all')||{}).map||{});fixes.forEach(k=>{cur[k]=RI.fix[k];});await putMany('rotadata',[['al_all',{map:cur}]]);}
+  logEv('Imported a rota from '+(RI.file||'a file')+': '+plural(p.stat.ready,'assignment'));
+  toast(plural(p.stat.ready,'assignment')+' imported'+(p.stat.skipped?'; '+p.stat.skipped+' skipped.':'.'));
+  UI.ocDay=null;
+}
+
+/* ===================== 4.9: Surgical allocation sheet (import / export) ===================== */
+const SA_ROM={I:'1',II:'2',III:'3',IV:'4'};
+const saHalves=ym=>{const h=halfDay(ym);return[{n:1,a:1,b:h},{n:2,a:h+1,b:dim(ym)}];};
+const saD2=n=>String(n).padStart(2,'0');
+const saTitle=(ym,h)=>'Surgical Department Interns | '+saD2(h.a)+'-'+saD2(h.b)+' / '+MONTHS[+ym.slice(5)-1]+' / '+ym.slice(0,4);
+function saSpecName(label){
+  const t=String(label||'').toLowerCase().replace(/[^a-z]/g,'');if(!t)return'';
+  const hit=CFG.surgSpecs.find(x=>{const y=x.toLowerCase().replace(/[^a-z]/g,'');return y.startsWith(t.slice(0,4))||t.startsWith(y.slice(0,4));});
+  return hit||'';
+}
+/* where is this intern in the surgical allocation in this half? */
+function saPlace(it,ym,h){
+  const e=entryAt(it,ym);if(!e)return null;
+  const p=partAt(e,h.a)||partAt(e,h.b);if(!p)return null;
+  if(p.dept==='GS'){const f=h.n===1?(p.fa||p.fb):(p.fb||p.fa);return{k:'GS',firm:f?String(SA_ROM[String(f).toUpperCase()]||f):'',e,p};}
+  if(p.dept==='SSS'){
+    if(p.vsub)return{k:'SUB',unit:p.vsub,e,p};
+    const pl=placementAt(it,ym+'-'+saD2(h.n===1?h.a:h.b),S.surgery[it.id]);
+    if(pl==='ORT')return{k:'ORT',e,p};
+    const sp=(S.surgery[it.id]||{}).spec;
+    return{k:'SUB',unit:sp||'',neuro:pl==='NEURO',e,p};
+  }
+  return null;
+}
+const saUnitShort=u=>{const t=String(u||'').toLowerCase();return t.indexOf('vas')===0?'Vascular':t.indexOf('pla')===0?'Plastic':t.indexOf('uro')===0?'Urology':t.indexOf('ped')===0?'Pediatric':t.indexOf('neu')===0?'Neurosurgery':String(u||'');};
+const saIsNeuro=u=>CFG.neuroSpec&&String(u||'').trim().toLowerCase()===String(CFG.neuroSpec).trim().toLowerCase();
+function saLeaveRanges(it,ym,h){
+  const out=[];
+  leaveReqs(it.id).filter(r=>r.status==='approved'&&r.to>=ym+'-'+saD2(h.a)&&r.from<=ym+'-'+saD2(h.b)).forEach(r=>{
+    const a=Math.max(h.a,r.from.slice(0,7)<ym?1:+r.from.slice(8,10)),b=Math.min(h.b,r.to.slice(0,7)>ym?h.b:+r.to.slice(8,10));
+    if(a<=b)out.push(a===b?'L'+a:'L'+a+'-'+b);
+  });
+  return out;
+}
+function saNote(it,ym,h){
+  const n=saLeaveRanges(it,ym,h),e=entryAt(it,ym);
+  if(e){const p0=partAt(e,h.a),p1=partAt(e,h.b);if(p0&&p1&&p0!==p1&&p0.to&&p0.to<h.b)n.push('*until '+p0.to);}
+  return n.join(', ');
+}
+function saRows(ym,h){
+  const gs={1:[],2:[],3:[],4:[]},sub=[];
+  Object.values(S.interns).forEach(it=>{
+    const pl=saPlace(it,ym,h);if(!pl||pl.k==='ORT')return;
+    const row={it,note:saNote(it,ym,h)};
+    if(pl.k==='GS'){const f=+pl.firm||0;(gs[f]||(gs[f]=[])).push(row);}
+    else{row.unit=saUnitShort(pl.unit);row.neuro=pl.neuro||saIsNeuro(pl.unit);sub.push(row);}
+  });
+  const nm=(a,b)=>a.it.name.localeCompare(b.it.name);
+  Object.values(gs).forEach(a=>a.sort(nm));
+  const order=['Vascular','Plastic','Urology','Pediatric','Neurosurgery'];
+  sub.sort((a,b)=>(order.indexOf(a.unit)<0?9:order.indexOf(a.unit))-(order.indexOf(b.unit)<0?9:order.indexOf(b.unit))||nm(a,b));
+  return{gs,sub};
+}
+function saHtml(ym,h){
+  const r=saRows(ym,h),H='style="background:#1f3a8a;color:#fff;font-weight:bold;text-align:center"',B='border="1" style="border-collapse:collapse;font-family:Calibri,Arial;font-size:11pt"';
+  const hdr=cols=>'<tr>'+cols.map(c=>'<td '+H+'>'+c+'</td>').join('')+'</tr>';
+  let g='',n=0;
+  [1,2,3,4].forEach(f=>{const a=r.gs[f]||[];g+='<tr><td colspan="5" style="background:#dbe4ff;font-weight:bold">Firm '+f+'</td></tr>';a.forEach((x,i)=>{g+='<tr><td>'+(++n)+'</td><td>'+esc(x.it.name)+'</td><td>'+esc(x.note)+'</td><td>'+esc(x.it.phone||'')+'</td><td style="text-align:center">'+f+'</td></tr>';});});
+  let s='';r.sub.forEach((x,i)=>{s+='<tr><td>'+(i+1)+'</td><td>'+esc(x.it.name)+(x.neuro?' #':'')+'</td><td>'+esc(x.note)+'</td><td>'+esc(x.it.phone||'')+'</td><td style="text-align:center">'+esc(x.unit)+'</td></tr>';});
+  return'<html><head><meta charset="utf-8"></head><body><table '+B+'><tr><td colspan="5" style="font-size:14pt;font-weight:bold;text-align:center;background:#eef2ff">'+esc(saTitle(ym,h))+'</td></tr><tr><td colspan="5" style="font-weight:bold">General Surgery</td></tr>'+hdr(['No.','NAME','Notes','TEL','Firm'])+g+'<tr><td colspan="5" style="font-weight:bold;background:#eef2ff">SUB-SPECIALTIES</td></tr>'+hdr(['No.','NAME','Notes','TEL','Unit'])+s+'<tr><td colspan="5" style="font-size:9pt">#  Neurosurgery: not counted for surgical on-call.</td></tr></table></body></html>';
+}
+function saveXls(name,html){const b=new Blob(['﻿'+html],{type:'application/vnd.ms-excel'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);}
+function saExport(){
+  const ym=UI.sgYm||ymOf(todayStr());
+  openModal('<h2>Export allocation sheet</h2><p class="hint" style="margin-top:0">Which half of '+esc(fmtYm(ym))+'? Notes are filled in from approved leave and placement changes.</p><div class="foot">'+saHalves(ym).map(h=>'<button class="btn pri" data-act="sa-exp-go" data-h="'+h.n+'">'+saD2(h.a)+'–'+saD2(h.b)+' '+MONTHS[+ym.slice(5)-1]+'</button>').join('')+'<button class="btn" data-act="close">Cancel</button></div>');
+}
+/* ----- import ----- */
+let SA=null;
+function saParse(sheets){
+  const out={rows:[],notes:[],ym:'',half:0};
+  sheets.forEach(sh=>{
+    const rows=sh.rows||[];
+    for(let i=0;i<Math.min(rows.length,6)&&!out.ym;i++){
+      const t=rows[i].map(c=>String(c==null?'':c)).join(' ');
+      const m=t.match(/(\d{1,2})\s*[-–]\s*(\d{1,2})\s*[\/\\]\s*([A-Za-z]{3})[A-Za-z]*\s*[\/\\]\s*(\d{4})/);
+      if(m&&MON3[m[3].toLowerCase()]){out.ym=m[4]+'-'+pad(MON3[m[3].toLowerCase()]);out.half=+m[1]===1||+m[1]<=halfDay(out.ym)?1:2;}
+    }
+    let mode='gs',cur='',col={no:0,name:1,notes:2,tel:3,x:4};
+    rows.forEach((r,i)=>{
+      const cells=r.map(c=>String(c==null?'':c).trim()),txt=cells.join(' ').trim();if(!txt)return;
+      if(/sub-?\s*specialt/i.test(txt)&&cells.filter(Boolean).length<=2){mode='sub';return;}
+      const fm=txt.match(/^firm\s*([1-4]|i{1,3}|iv)$/i);if(cells.filter(Boolean).length<=2&&fm){cur=SA_ROM[fm[1].toUpperCase()]||fm[1];return;}
+      if(cells.some(c=>/^name$/i.test(c))){cells.forEach((c,j)=>{const k=c.toLowerCase();if(k==='no.'||k==='no')col.no=j;else if(k==='name')col.name=j;else if(/^notes?$/.test(k))col.notes=j;else if(/^tel/.test(k))col.tel=j;else if(k==='firm'||k==='unit')col.x=j;});return;}
+      const name=cells[col.name]||'';if(!name||/^general surgery$/i.test(name)||/^#\s/.test(name))return;
+      if(!/\d/.test(cells[col.no]||'')&&!(cells[col.tel]||'').replace(/\D/g,''))return;
+      const neuro=/#/.test(name),clean=name.replace(/#/g,'').replace(/\s+/g,' ').trim();
+      let x=cells[col.x]||'';
+      out.rows.push({row:i+1,name:clean,neuro,notes:cells[col.notes]||'',tel:cells[col.tel]||'',kind:mode,firm:mode==='gs'?String(SA_ROM[x.toUpperCase()]||x||cur).replace(/\D/g,''):'',unit:mode==='sub'?x:''});
+    });
+  });
+  if(!out.ym)out.notes.push('Could not read the month from the title (expected “01-14 / Nov / 2026”). Using '+fmtYm(UI.sgYm||ymOf(todayStr()))+', first half.');
+  return out;
+}
+function saMatch(r,ym,cands){
+  const tk=phoneKey(r.tel);
+  if(tk){const hit=Object.values(S.interns).filter(it=>phoneKey(it.phone)===tk);if(hit.length===1)return{id:hit[0].id,by:'tel'};}
+  const k=normName(r.name),tks=k.split(' ');
+  const cs=cands.map(it=>({id:it.id,key:normName(it.name),t:normName(it.name).split(' ')}));
+  let hit=cs.filter(c=>c.key===k);if(hit.length===1)return{id:hit[0].id,by:'name'};
+  hit=cs.filter(c=>tks.every(t=>tokMatch(t,c.t)));if(hit.length===1)return{id:hit[0].id,by:'name'};
+  if(hit.length>1)return{id:null,reason:'More than one intern in the surgical allocation matches this name.',cands:hit.map(c=>c.id)};
+  const fz=cs.map(c=>({c,d:lev(k,c.key)})).sort((a,b)=>a.d-b.d);
+  if(fz.length&&fz[0].d<=2&&(fz.length===1||fz[1].d>fz[0].d))return{id:fz[0].c.id,by:'close'};
+  const g=matchIntern(r.name,buildNameIndex());
+  if(g.id)return{id:g.id,by:'outside',outside:true};
+  return{id:null,reason:'No intern in the surgical allocation has this name.',cands:fz.slice(0,6).map(x=>x.c.id)};
+}
+function saPlan(){
+  const ym=SA.ym,h=saHalves(ym)[SA.half-1],cands=Object.values(S.interns).filter(it=>{const e=entryAt(it,ym);return e&&entryParts(e).some(p=>p.dept==='GS'||p.dept==='SSS');});
+  const issues=[],changes=[],seen=new Set(),fixes=SA.fix||{};
+  SA.rows.forEach(r=>{
+    const where='Row '+r.row,key='SA|'+normName(r.name);
+    let id=null,m=null;
+    if(Object.prototype.hasOwnProperty.call(fixes,key)){id=fixes[key];if(id==='')return issues.push({lvl:'skip',where,name:r.name,msg:'Skipped by you.'});}
+    else{m=saMatch(r,ym,cands);id=m.id;}
+    if(!id){issues.push({lvl:'skip',kind:'name',key,where,name:r.name,msg:m.reason,cands:m.cands});return;}
+    const it=S.interns[id];
+    if(!cands.includes(it)){issues.push({lvl:'skip',where,name:it.name,msg:'Not in the surgical allocation for '+fmtYm(ym)+', so it was not imported.'});return;}
+    if(seen.has(id)){issues.push({lvl:'warn',where,name:it.name,msg:'Listed twice in the sheet; the first row is used.'});return;}
+    seen.add(id);
+    const before=saPlace(it,ym,h),e=entryAt(it,ym),p=before&&before.p;
+    const ch={id,it,r,before:before?(before.k==='GS'?'Firm '+(before.firm||'?'):before.k==='ORT'?'Orthopedics':saUnitShort(before.unit)||'Subspecialty'):'—',after:'',set:null,leaves:[]};
+    if(r.kind==='gs'){
+      if(!p||p.dept!=='GS'||p!==e)issues.push({lvl:'skip',where,name:it.name,msg:'This intern is not in General surgery in '+fmtYm(ym)+'.'});
+      else if(!+r.firm)issues.push({lvl:'skip',where,name:it.name,msg:'No firm given.'});
+      else{ch.after='Firm '+r.firm;ch.set={gs:r.firm};}
+    }else{
+      const spec=/neuro/i.test(r.unit)||r.neuro?CFG.neuroSpec:saSpecName(r.unit);
+      if(!p||p.dept!=='SSS'||p!==e||e.vsub)issues.push({lvl:'skip',where,name:it.name,msg:'This intern does not have the split surgical month in '+fmtYm(ym)+'.'});
+      else if(!spec)issues.push({lvl:'skip',where,name:it.name,msg:'Unit “'+r.unit+'” is not one of the surgical subspecialties.'});
+      else{ch.after=saUnitShort(spec);ch.set={spec,orthFirst:SA.half===2};}
+    }
+    if(!ch.set)return;
+    if(m&&m.by==='close')issues.push({lvl:'warn',where,name:it.name,msg:'Matched “'+r.name+'” by close spelling.'});
+    if(m&&m.by==='tel'&&!normName(r.name).split(' ').some(u=>normName(it.name).split(' ').includes(u)))issues.push({lvl:'warn',where,name:it.name,msg:'Matched by phone number; the sheet says “'+r.name+'”.'});
+    /* notes */
+    String(r.notes||'').replace(/\bL\s*(\d{1,2})(?:\s*[-–]\s*(\d{1,2}))?/g,(x,a,b)=>{
+      const A=+a,B=+(b||a);if(A<1||B>dim(ym)||B<A){issues.push({lvl:'warn',where,name:it.name,msg:'Leave “'+x+'” is not a valid range.'});return x;}
+      const f=ym+'-'+saD2(A),t=ym+'-'+saD2(B);
+      const have=leaveReqs(it.id).some(q=>q.status==='approved'&&q.kind==='annual'&&q.from<=f&&q.to>=t);
+      if(!have)ch.leaves.push({from:f,to:t});
+      return x;});
+    const un=String(r.notes||'').match(/until\s*(\d{1,2})/i);
+    if(un)issues.push({lvl:'warn',where,name:it.name,msg:'Moves on day '+un[1]+': set the next placement in Rotations (the sheet note is not applied automatically).'});
+    changes.push(ch);
+  });
+  const missing=cands.filter(it=>{const pl=saPlace(it,ym,h);return pl&&pl.k!=='ORT'&&!seen.has(it.id)&&!issues.some(i=>i.name===it.name);});
+  return{ym,h,issues,changes,missing};
+}
+function saPaint(){
+  const box=$('sa-result'),go=$('sa-go');if(!box)return;
+  if(!SA||!SA.rows){return;}
+  const p=SA.plan=saPlan(),skip=p.issues.filter(i=>i.lvl==='skip').length;
+  let h='<div class="note '+(skip?'warn':'ok')+'"><b>'+p.changes.length+'</b> interns ready for '+esc(fmtYm(p.ym))+', '+saD2(p.h.a)+'–'+saD2(p.h.b)+(skip?', <b>'+skip+'</b> need a fix':'')+'; <b>'+p.changes.reduce((s,c)=>s+c.leaves.length,0)+'</b> leave periods will be created as approved annual leave.</div>';
+  SA.notes.forEach(n=>{h+='<div class="note warn small">'+esc(n)+'</div>';});
+  if(p.issues.length)h+='<div class="scroll" style="max-height:26vh"><table class="tbl"><thead><tr><th></th><th>Where</th><th>Name</th><th>What</th><th>Fix</th></tr></thead><tbody>'+p.issues.map(i=>{
+    let fix='';if(i.kind==='name'){const cs=(i.cands||[]).filter(x=>S.interns[x]);fix='<select class="sa-fix" data-key="'+esc(i.key)+'" aria-label="Who is '+esc(i.name)+'?"><option value="">Choose…</option>'+cs.map(x=>'<option value="'+x+'">'+esc(nmOf(x))+'</option>').join('')+'<option value="__skip">Skip this row</option></select>';}
+    return'<tr><td><span class="tag '+(i.lvl==='skip'?'bad':'warn')+'">'+(i.lvl==='skip'?'Skipped':'Warning')+'</span></td><td class="small">'+esc(i.where)+'</td><td>'+esc(i.name)+'</td><td class="small">'+esc(i.msg)+'</td><td>'+fix+'</td></tr>';}).join('')+'</tbody></table></div>';
+  const ch=p.changes.filter(c=>c.before!==c.after||c.leaves.length);
+  h+='<h3 style="margin:10px 0 4px">Before and after</h3><div class="scroll" style="max-height:30vh"><table class="tbl"><thead><tr><th>Intern</th><th>Now</th><th>After import</th><th>Leave to create</th></tr></thead><tbody>'+(ch.length?ch.map(c=>'<tr><td>'+esc(c.it.name)+'</td><td>'+esc(c.before)+'</td><td><b>'+esc(c.after)+'</b></td><td class="small">'+(c.leaves.map(l=>fmtDate(l.from)+(l.to!==l.from?' – '+fmtDate(l.to):'')).join('<br>')||'—')+'</td></tr>').join(''):'<tr><td colspan="4" class="muted">Nothing would change.</td></tr>')+'</tbody></table></div>';
+  if(p.missing.length)h+='<p class="hint">In the allocation but not on the sheet (unchanged): '+esc(p.missing.map(x=>x.name).join(', '))+'.</p>';
+  box.innerHTML=h;if(go){go.disabled=!ch.length;go.textContent='Apply '+ch.length+' changes';}
+}
+function openSaImport(){
+  SA={rows:null,notes:[],fix:{}};
+  openModal('<h2>Import allocation sheet</h2><p class="hint" style="margin-top:0">Upload the Surgical Department Interns sheet (.xlsx or CSV). Nothing changes until you press Apply. Interns outside the surgical allocation are skipped; leave notes like <b>L1-4</b> become approved annual leave.</p><input type="file" id="sa-file" accept=".xlsx,.xls,.csv,.tsv,.txt"><div id="sa-result"></div><div class="foot"><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="sa-go" id="sa-go" disabled>Apply</button></div>',true);
+}
+async function saFile(file){
+  try{const x=saParse(await readSheetFile(file));if(!x.ym){x.ym=UI.sgYm||ymOf(todayStr());x.half=1;}SA=Object.assign(SA,x);}
+  catch(e){SA.rows=null;$('sa-result').innerHTML='<div class="note bad">That file could not be read. Try saving it as CSV.</div>';return;}
+  if(!SA.rows.length){$('sa-result').innerHTML='<div class="note bad">No intern rows found. Check the NAME / TEL header row.</div>';return;}
+  saPaint();
+}
+async function saApply(){
+  const p=SA.plan;closeModal();let n=0,lv=0;
+  for(const c of p.changes){
+    if(c.set&&c.set.gs){const fld=SA.half===1?'fa':'fb';await mut('interns',c.id,b=>Object.assign({},b,{plan:b.plan.map(x=>{if(x.ym!==p.ym)return x;const y=Object.assign({},x);y[fld]=c.set.gs;return y;})}));n++;}
+    else if(c.set){await mut('surgery',c.id,b=>Object.assign({},b||{},{spec:c.set.spec,orthFirst:c.set.orthFirst}));n++;}
+    for(const l of c.leaves){await put('requests',uid('r'),{type:'leave',kind:'annual',internId:c.id,from:l.from,to:l.to,reason:'From the surgical allocation sheet',unit:'SURGICAL',status:'approved',steps:[{role:'coordinator',by:actor(),action:'approve',at:Date.now(),note:'Created from the allocation sheet'}],createdAt:Date.now(),by:actor()});lv++;}
+  }
+  logEv('Imported the surgical allocation sheet for '+fmtYm(p.ym)+': '+plural(n,'intern')+(lv?', '+plural(lv,'leave period'):''));
+  toast(plural(n,'intern')+' updated'+(lv?', '+plural(lv,'leave period')+' created.':'.'));
+}
+document.addEventListener('change',ev=>{
+  const t=ev.target;if(!t)return;
+  if(t.id==='sa-file'){if(t.files[0])saFile(t.files[0]);return;}
+  if(t.classList&&t.classList.contains('sa-fix')&&SA){SA.fix[t.dataset.key]=t.value==='__skip'?'':t.value;if(t.value==='')delete SA.fix[t.dataset.key];saPaint();}
+});
+Object.assign(ACT,{
+  'sa-import':()=>openSaImport(),'sa-export':()=>saExport(),'sa-go':()=>saApply(),
+  'sa-exp-go':el=>{const ym=UI.sgYm||ymOf(todayStr()),h=saHalves(ym)[+el.dataset.h-1];closeModal();saveXls('Surgical-allocation-'+ym+'-'+saD2(h.a)+'-'+saD2(h.b)+'.xls',saHtml(ym,h));}
+});
+
+/* ===================== 4.9: places editor, ward plan (Pediatrics), Excel exports ===================== */
+const XH='style="background:#1f3a8a;color:#fff;font-weight:bold;text-align:center"',XB='border="1" style="border-collapse:collapse;font-family:Calibri,Arial;font-size:11pt"';
+const XWE='background:#e6e0ff',XHOL='background:#cbbdf5';
+function odXls(unit){
+  const ym=UI.ocYm,days=liveDaysFull(unit,ym),om=omOf(unit,ym),cols=ocLayout(unit,ym,days,om),n=dim(ym),coord=E().role!=='intern';
+  const grp=[];cols.forEach(c=>{if(c.first)grp.push(c);});
+  const seq=cols[0]&&cols[0].seq,W=cols.length+3;
+  let h='<table '+XB+'><tr><td colspan="'+W+'" style="font-size:14pt;font-weight:bold;text-align:center;background:#eef2ff">'+esc(unit==='OBG'?'INTERN GYN DUTY ROTA '+fmtYm(ym).toUpperCase():ocName(unit)+' intern on-call rota · '+fmtYm(ym))+'</td></tr>';
+  if(unit==='OBG')h+='<tr><td colspan="'+W+'" style="text-align:center">Weekdays 2 pm – 10 pm · Weekends and holidays 7 am – 10 pm</td></tr>';
+  h+='<tr><td '+XH+'>Date</td><td '+XH+'>Day</td>'+(seq?'<td '+XH+' colspan="'+cols.length+'">'+(unit==='PED'?'On call':'On call')+'</td>':grp.map(c=>'<td '+XH+' colspan="'+c.span+'">'+esc(c.n)+'</td>').join(''))+'<td '+XH+'>#</td></tr>';
+  for(let d=1;d<=n;d++){
+    const date=ym+'-'+pad(d),r=ocRow(unit,ym,dkOf(d),days,om,cols),hol=holidayOf(date),bg=isWkDay(date)?' style="'+(hol?XHOL:XWE)+'"':'';
+    h+='<tr><td'+bg+'>'+(unit==='PED'?fmtDate(date).replace(/^\w+ /,'')+' '+ym.slice(0,4):d)+'</td><td'+bg+'>'+DAYS[dow(date)].slice(0,3)+'</td>'+r.cells.map(c=>'<td'+bg+'>'+(c?esc(nmOf(c.id))+(c.late&&lateOn(unit)?' ☾':''):'')+'</td>').join('')+'<td'+bg+'>'+(coord?((days[dkOf(d)]||{ids:[]}).ids.length):'')+'</td></tr>';
+  }
+  h+='</table>';
+  if(coord){
+    const cc=callCounts(unit,ym,days),ids=Object.keys(cc).sort((a,b)=>nmOf(a).localeCompare(nmOf(b)));
+    h+='<br><table '+XB+'><tr><td '+XH+'>Intern (coordinator copy)</td><td '+XH+'>Calls</td><td '+XH+'>Weekend / holiday</td></tr>'+ids.map(i=>'<tr><td>'+esc(nmOf(i))+'</td><td>'+cc[i].all+'</td><td>'+cc[i].wk+'</td></tr>').join('')+'</table>';
+  }
+  if(wardListOf(unit).length&&RD('wp_'+unit+'_'+ym))h+='<br>'+wpXls(unit,ym);
+  saveXls('rota-'+unit+'-'+ym+'.xls','<html><head><meta charset="utf-8"></head><body>'+h+'</body></html>');
+}
+/* ----- places ----- */
+function openPlaces(unit){
+  const pls=placesOf(unit).map(x=>Object.assign({},x)),wl=unit==='PED'?wardListOf(unit).map(x=>Object.assign({},x)):[];
+  UI.plEd={unit,pls,wl};paintPlaces();
+}
+function paintPlaces(){
+  const {unit,pls,wl}=UI.plEd;
+  let h='<h2>Places · '+esc(ocName(unit))+'</h2><p class="hint" style="margin-top:0">Each place has a number of name slots. Interns without a place go under “More”. Removing every place restores the defaults.</p>';
+  h+='<table class="tbl"><thead><tr><th>Place</th><th>Slots</th><th></th></tr></thead><tbody>'+pls.map((p,i)=>'<tr><td><input data-pl-n="'+i+'" value="'+esc(p.n)+'" aria-label="Place name"></td><td><input type="number" min="1" max="6" style="width:70px" data-pl-s="'+i+'" value="'+p.s+'" aria-label="Slots"></td><td><button class="btn sm" data-act="pl-del" data-i="'+i+'">Remove</button></td></tr>').join('')+'</tbody></table><button class="btn sm" data-act="pl-add">Add a place</button>';
+  if(unit==='PED')h+='<h3 style="margin:16px 0 4px">Morning ward distribution columns</h3><p class="hint" style="margin:0 0 6px">Give several wards the same group name to put them under one column (for example NICU).</p><table class="tbl"><thead><tr><th>Ward</th><th>Group (optional)</th><th></th></tr></thead><tbody>'+wl.map((w,i)=>'<tr><td><input data-wl-n="'+i+'" value="'+esc(w.n)+'" aria-label="Ward name"></td><td><input data-wl-g="'+i+'" value="'+esc(w.g||'')+'" aria-label="Group"></td><td><button class="btn sm" data-act="wl-del" data-i="'+i+'">Remove</button></td></tr>').join('')+'</tbody></table><button class="btn sm" data-act="wl-add">Add a ward</button>';
+  h+='<div class="foot"><button class="btn" data-act="close">Cancel</button><button class="btn" data-act="pl-reset">Back to defaults</button><button class="btn pri" data-act="pl-save">Save</button></div>';
+  openModal(h,true);
+}
+function plRead(){
+  const m=$('modal');if(!m||!UI.plEd)return;
+  m.querySelectorAll('[data-pl-n]').forEach(x=>{UI.plEd.pls[+x.dataset.plN].n=x.value;});
+  m.querySelectorAll('[data-pl-s]').forEach(x=>{UI.plEd.pls[+x.dataset.plS].s=Math.max(1,Math.min(6,+x.value||1));});
+  m.querySelectorAll('[data-wl-n]').forEach(x=>{UI.plEd.wl[+x.dataset.wlN].n=x.value;});
+  m.querySelectorAll('[data-wl-g]').forEach(x=>{UI.plEd.wl[+x.dataset.wlG].g=x.value;});
+}
+const plSlug=(n,used)=>{let b=String(n||'p').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,12)||'p',k=b,i=2;while(used.has(k))k=b+i++;used.add(k);return k;};
+async function plSave(){
+  plRead();const {unit,pls,wl}=UI.plEd,cur=clone(RD('pl_all')||{}),places=cur.places||{},wards=cur.wards||{};
+  const used=new Set(),clean=pls.filter(p=>String(p.n).trim()).map(p=>({k:p.k&&!used.has(p.k)?(used.add(p.k),p.k):plSlug(p.n,used),n:String(p.n).trim(),s:p.s}));
+  places[unit]=clean.length?clean:[{k:'_none',n:'_none',s:1}].slice(0,0);
+  if(unit==='PED'){const u2=new Set(),w=wl.filter(x=>String(x.n).trim()).map(x=>({k:x.k&&!u2.has(x.k)?(u2.add(x.k),x.k):plSlug(x.n,u2),n:String(x.n).trim(),g:String(x.g||'').trim()}));wards[unit]=w;}
+  await put('rotadata','pl_all',{places,wards});closeModal();toast('Places saved.');
+}
+/* ----- Pediatrics morning ward distribution ----- */
+function wpCols(unit){
+  const cols=[];wardListOf(unit).forEach(w=>{const g=w.g||'';if(g){const c=cols.find(x=>x.g===g);if(c){c.items.push(w);return;}cols.push({g,n:g,items:[w]});}else cols.push({g:'',n:w.n,items:[w]});});return cols;
+}
+function wpXls(unit,ym){
+  const wp=RD('wp_'+unit+'_'+ym),cols=wpCols(unit);if(!wp)return'';
+  let h='<table '+XB+'><tr><td colspan="'+(cols.length+1)+'" style="font-weight:bold;text-align:center;background:#eef2ff">Morning ward distribution · '+esc(fmtYm(ym))+'</td></tr><tr><td '+XH+'>Period</td>'+cols.map(c=>'<td '+XH+'>'+esc(c.n)+'</td>').join('')+'</tr>';
+  wp.periods.forEach(p=>{h+='<tr><td>'+p.from+' – '+p.to+'</td>'+cols.map(c=>{const o=[];c.items.forEach(w=>(p.cells[w.k]||[]).forEach(i=>{const lv=leaveRanges(i,ym).find(x=>+x.from.slice(8)<=p.to&&+x.to.slice(8)>=p.from);o.push((c.g?w.n+': ':'')+nmOf(i)+(lv?' (Leave '+(+lv.from.slice(8))+'–'+(+lv.to.slice(8))+')':''));}));return'<td>'+esc(o.join('\n')).replace(/\n/g,'<br>')+'</td>';}).join('')+'</tr>';});
+  return h+'</table>';
+}
+function wpResolve(text,unit,ym,day){
+  const nm=cleanTok(text).name;if(!nm)return null;
+  const date=ym+'-'+pad(Math.min(day||1,dim(ym)));
+  const m=matchInRota(nm,unit,date);return m.id||null;
+}
+function wpEdit(unit){
+  const ym=UI.ocYm,cur=RD('wp_'+unit+'_'+ym),h=halfDay(ym);
+  const periods=cur&&cur.periods&&cur.periods.length?clone(cur.periods):[{from:1,to:15,cells:{}},{from:16,to:dim(ym),cells:{}}];
+  UI.wpEd={unit,ym,periods};paintWpEdit();
+}
+function paintWpEdit(){
+  const {unit,ym,periods}=UI.wpEd,cols=wpCols(unit),names=rotaInterns(unit,ym+'-15').map(i=>i.name);
+  let h='<h2>Morning ward distribution · '+esc(fmtYm(ym))+'</h2><p class="hint" style="margin-top:0">Type names separated by commas. Short names work for interns on this rota. Leave is added to the table automatically.</p><datalist id="wp-names">'+names.map(n=>'<option value="'+esc(n)+'">').join('')+'</datalist><div class="scroll"><table class="tbl"><thead><tr><th>From</th><th>To</th>'+cols.map(c=>'<th>'+esc(c.n)+'</th>').join('')+'<th></th></tr></thead><tbody>';
+  periods.forEach((p,pi)=>{
+    h+='<tr><td><input type="number" min="1" max="31" style="width:60px" data-wp-f="'+pi+'" value="'+p.from+'"></td><td><input type="number" min="1" max="31" style="width:60px" data-wp-t="'+pi+'" value="'+p.to+'"></td>'+cols.map(c=>{
+      return'<td>'+c.items.map(w=>'<input list="wp-names" style="width:150px" placeholder="'+(c.g?esc(w.n):'Names')+'" data-wp-c="'+pi+'" data-w="'+w.k+'" value="'+esc((p.cells[w.k]||[]).map(nmOf).join(', '))+'" aria-label="'+esc(w.n)+'">').join('<br>')+'</td>';}).join('')+'<td><button class="btn sm" data-act="wp-delp" data-i="'+pi+'">Remove</button></td></tr>';
+  });
+  h+='</tbody></table></div><button class="btn sm" data-act="wp-addp">Add a period</button><div id="wp-err"></div><div class="foot"><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="wp-save">Save</button></div>';
+  openModal(h,true);
+}
+function wpRead(){
+  const m=$('modal'),E_=UI.wpEd;if(!m||!E_)return[];const bad=[];
+  m.querySelectorAll('[data-wp-f]').forEach(x=>{E_.periods[+x.dataset.wpF].from=Math.max(1,+x.value||1);});
+  m.querySelectorAll('[data-wp-t]').forEach(x=>{E_.periods[+x.dataset.wpT].to=Math.min(dim(E_.ym),+x.value||dim(E_.ym));});
+  m.querySelectorAll('[data-wp-c]').forEach(x=>{
+    const p=E_.periods[+x.dataset.wpC],ids=[];
+    splitNames(x.value).forEach(t=>{const id=wpResolve(t,E_.unit,E_.ym,p.from);if(id){if(!ids.includes(id))ids.push(id);}else bad.push(t);});
+    p.cells[x.dataset.w]=ids;
+  });
+  return bad;
+}
+async function wpSaveDoc(unit,ym,periods){await put('rotadata','wp_'+unit+'_'+ym,{unit,ym,periods});}
+function wpImportOpen(unit){
+  UI.wpImp={unit,ym:UI.ocYm};
+  openModal('<h2>Import ward distribution</h2><p class="hint" style="margin-top:0">Upload the sheet (.xlsx or CSV). The header row has the ward names; each row starts with a period like 1–15. Names are matched with the interns on this rota.</p><input type="file" id="wp-file" accept=".xlsx,.xls,.csv,.tsv,.txt"><div id="wp-res"></div><div class="foot"><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="wp-imp-go" id="wp-imp-go" disabled>Import</button></div>',true);
+}
+async function wpFile(file){
+  const W=UI.wpImp,box=$('wp-res'),cols=wpCols(W.unit),notes=[];let periods=[];
+  try{
+    const sheets=await readSheetFile(file);
+    sheets.forEach(sh=>{
+      const rows=sh.rows||[];const hr=rows.findIndex(r=>r.filter(c=>cols.some(k=>String(c).trim().toLowerCase()===k.n.toLowerCase()||k.items.some(w=>String(c).trim().toLowerCase()===w.n.toLowerCase()))).length>=2);
+      if(hr<0)return;const hdr=rows[hr].map(c=>String(c==null?'':c).trim().toLowerCase());
+      const colIdx=hdr.map(t=>cols.findIndex(k=>k.n.toLowerCase()===t||k.items.some(w=>w.n.toLowerCase()===t)));
+      rows.slice(hr+1).forEach(r=>{
+        const m=String(r[0]==null?'':r[0]).match(/(\d{1,2})\D+(\d{1,2})/);if(!m)return;
+        const p={from:+m[1],to:Math.min(+m[2],dim(W.ym)),cells:{}};
+        colIdx.forEach((ci,j)=>{if(ci<0)return;const c=cols[ci];
+          String(r[j]==null?'':r[j]).split(/\n|;/).forEach(line=>{
+            if(/^\s*leave/i.test(line))return;
+            let target=c.items[0].k,txt=line;const pm=line.match(/^\s*([^:]+):\s*(.+)$/);
+            if(pm&&c.g){const w=c.items.find(x=>x.n.toLowerCase()===pm[1].trim().toLowerCase()||x.n.toLowerCase().endsWith(pm[1].trim().toLowerCase()));if(w){target=w.k;txt=pm[2];}}
+            splitNames(txt).forEach(t=>{const nm=cleanTok(t.replace(/\(.*?\)/g,'')).name;if(!nm)return;const id=wpResolve(nm,W.unit,W.ym,p.from);if(id){(p.cells[target]=p.cells[target]||[]);if(!p.cells[target].includes(id))p.cells[target].push(id);}else notes.push('“'+nm+'” ('+p.from+'–'+p.to+') is not an intern on this rota.');});
+          });});
+        periods.push(p);
+      });
+    });
+  }catch(e){box.innerHTML='<div class="note bad">That file could not be read.</div>';return;}
+  W.periods=periods;
+  box.innerHTML=periods.length?'<div class="note '+(notes.length?'warn':'ok')+'"><b>'+periods.length+'</b> periods ready for '+esc(fmtYm(W.ym))+(notes.length?'; '+notes.length+' names were left out.':'.')+'</div>'+(notes.length?'<ul class="small">'+notes.slice(0,12).map(n=>'<li>'+esc(n)+'</li>').join('')+'</ul>':''):'<div class="note bad">No ward rows found. The first column should hold periods like “1–15”.</div>';
+  const g=$('wp-imp-go');if(g)g.disabled=!periods.length;
+}
+document.addEventListener('change',ev=>{const t=ev.target;if(t&&t.id==='wp-file'&&t.files[0])wpFile(t.files[0]);});
+document.addEventListener('input',ev=>{const t=ev.target;if(t&&t.dataset&&(t.dataset.plN!==undefined||t.dataset.plS!==undefined||t.dataset.wlN!==undefined||t.dataset.wlG!==undefined))plRead();});
+Object.assign(ACT,{
+  'od-csv':el=>odXls(el.dataset.u),
+  'od-places':el=>openPlaces(el.dataset.u),
+  'pl-add':()=>{plRead();UI.plEd.pls.push({k:'',n:'',s:1});paintPlaces();},
+  'pl-del':el=>{plRead();UI.plEd.pls.splice(+el.dataset.i,1);paintPlaces();},
+  'wl-add':()=>{plRead();UI.plEd.wl.push({k:'',n:'',g:''});paintPlaces();},
+  'wl-del':el=>{plRead();UI.plEd.wl.splice(+el.dataset.i,1);paintPlaces();},
+  'pl-reset':async()=>{const u=UI.plEd.unit,cur=clone(RD('pl_all')||{}),pl=cur.places||{},wd=cur.wards||{};delete pl[u];delete wd[u];await put('rotadata','pl_all',{places:pl,wards:wd});closeModal();toast('Back to the default places.');},
+  'pl-save':()=>plSave(),
+  'wp-edit':el=>wpEdit(el.dataset.u),
+  'wp-addp':()=>{wpRead();const p=UI.wpEd.periods,l=p[p.length-1];p.push({from:l?Math.min(l.to+1,dim(UI.wpEd.ym)):1,to:dim(UI.wpEd.ym),cells:{}});paintWpEdit();},
+  'wp-delp':el=>{wpRead();UI.wpEd.periods.splice(+el.dataset.i,1);paintWpEdit();},
+  'wp-save':async()=>{
+    const bad=wpRead();if(bad.length){$('wp-err').innerHTML='<div class="note bad small">Not recognised on this rota: '+esc(bad.slice(0,8).join(', '))+'. Fix the spelling or clear the box.</div>';return;}
+    const E_=UI.wpEd;await wpSaveDoc(E_.unit,E_.ym,E_.periods.filter(p=>p.from<=p.to));closeModal();toast('Ward distribution saved.');
+  },
+  'wp-import':el=>wpImportOpen(el.dataset.u),
+  'wp-imp-go':async()=>{const W=UI.wpImp;closeModal();await wpSaveDoc(W.unit,W.ym,W.periods);toast('Ward distribution imported.');},
+  'wp-export':el=>{const u=el.dataset.u,ym=UI.ocYm;saveXls('ward-distribution-'+ym+'.xls','<html><head><meta charset="utf-8"></head><body>'+wpXls(u,ym)+'</body></html>');}
 });
 
 /*V45-JS-END*/
