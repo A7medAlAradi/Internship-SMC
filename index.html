@@ -437,6 +437,35 @@ table.odT td.cv{text-align:center;font-weight:700;width:40px;color:var(--ink)}ta
 :root[data-theme="dark"] table.odT td.cv.cr{background:#5a2a22!important}
 :root[data-theme="dark"] .plwarn li.bad{color:#ff9e92}
 .ict .ictag{position:static;display:inline-block;margin:1px 0 2px}
+#wcbar{position:fixed;top:10px;left:50%;transform:translateX(-50%);z-index:70;display:none;align-items:center;gap:10px;padding:8px 14px;border-radius:12px;background:var(--surface);border:1px solid var(--accent);box-shadow:0 6px 22px rgba(0,0,0,.25);font-size:.88rem}
+#wcbar.on{display:flex}#wcbar .off{color:var(--warn);font-size:.8rem}
+@media print{#wcbar{display:none}}
+.vsw{display:inline-flex;align-items:center;gap:8px;margin-left:auto;padding:4px 6px 4px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:.82rem}
+.vsw.hid{background:var(--warn-bg);border-color:var(--warn);color:var(--warn)}.vsw.vis{color:var(--ok)}.vsw .vsl{font-weight:700}
+/* ---- 4.11 allocation page ---- */
+.alwarn{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:8px 12px;margin:0 0 12px;font-size:.88rem}
+.altitle{background:#1f3a8a;color:#fff;padding:10px 14px;border-radius:10px 10px 0 0;font-weight:700;text-align:center}
+.alsheet{background:var(--surface);border:1px solid var(--line);border-radius:0 0 10px 10px;padding:14px}
+.alh{margin:14px 0 8px;font-size:1rem;color:var(--accent)}.alh:first-child{margin-top:0}.alh .cnt,.alort .cnt{color:var(--ink2);font-weight:400;font-size:.82rem}
+.algrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(430px,1fr));gap:12px}
+.alb{border:1px solid var(--line);border-radius:10px;overflow:hidden}.alb.aldrop{outline:3px solid var(--accent);outline-offset:-2px;background:var(--accent-soft)}
+.alb .bh{background:var(--accent-soft);padding:8px 12px;display:flex;justify-content:space-between;align-items:center}.alb .cnt{color:var(--ink2);font-size:.82rem}
+.alb table{border-collapse:collapse;width:100%}.alb th{text-align:left;font-size:.7rem;text-transform:uppercase;color:var(--ink3);padding:5px 10px;border-bottom:1px solid var(--line)}
+.alb td{padding:5px 10px;border-bottom:1px solid var(--line2);vertical-align:middle}.alb td.no{width:30px;color:var(--ink3)}.alb td.tel{white-space:nowrap;color:var(--ink2)}
+.alb tr[draggable=true]{cursor:grab}.alb tr.aldragging{opacity:.4}
+.aldz{padding:14px;text-align:center;color:var(--ink3);font-size:.85rem;border:1px dashed var(--line);margin:8px;border-radius:8px}
+.alvis{font-size:.68rem;background:#e8d6ee;color:#5b2b6e;border-radius:999px;padding:1px 7px;font-weight:700}.alday{font-size:.72rem;color:var(--ink2)}
+.alnote{background:var(--warn-bg);color:var(--warn);border-radius:5px;padding:1px 7px;font-size:.8rem;font-weight:600}
+.spl{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:3px 9px;font-size:.78rem;color:var(--ink2);cursor:pointer}
+.alort{margin-top:14px}.alort summary{cursor:pointer;font-weight:700;color:var(--accent)}
+.alpr{display:grid;grid-template-columns:24px 1fr 80px 80px 34px;gap:8px;align-items:center;margin-bottom:8px}.alpr input,.alpr select{padding:7px 8px;border:1px solid var(--line);border-radius:8px;font:inherit;width:100%;box-sizing:border-box;background:var(--surface);color:var(--ink)}
+.alpl{font-size:.72rem;text-transform:uppercase;color:var(--ink3)}
+.altl{position:relative;height:30px;border-radius:7px;background:var(--line2);margin:6px 0 4px;touch-action:none}
+.alseg{position:absolute;top:0;bottom:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.74rem;font-weight:700;overflow:hidden;white-space:nowrap}
+.alhd{position:absolute;top:-4px;bottom:-4px;width:14px;margin-left:-7px;cursor:ew-resize;z-index:2;display:flex;align-items:center;justify-content:center}.alhd::after{content:"";width:4px;height:100%;background:var(--ink);border-radius:3px;box-shadow:0 0 0 2px var(--surface)}
+.alscale{display:flex;justify-content:space-between;font-size:.72rem;color:var(--ink3)}
+.alinfo{background:var(--accent-soft);border-radius:8px;padding:8px 12px;margin-top:10px;font-size:.86rem}
+.alvadd{display:inline-flex;gap:6px;align-items:center;margin-right:14px}.alvadd select{padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
 
 /*V45-CSS-END*/
 </style>
@@ -893,7 +922,7 @@ function cleanMobile(raw){
   return{phone:pick,flag:pick?'Not an 8-digit number, please check':'No number'};
 }
 
-const APP_VERSION='4.10';
+const APP_VERSION='4.11';
 
 /* the groups a part-time intern rotates with (one row per group in the sheet) */
 function groupsOf(it){
@@ -913,6 +942,8 @@ const UI={route:'',gridYm:null,q:'',fBlock:'',fCohort:'',fGroup:'',fAffil:'',tab
 /* ============ Talking to the Google script ============ */
 async function call(action,body){
   if(LAZY.size&&action!=='save'&&action!=='ping'&&action!=='load'&&action!=='logout')await flushLazy();
+  if(action==='planPublish'&&typeof plFlush==='function')await plFlush();
+  if((action==='ocDraftSave'||action==='planPublish')&&typeof wcCount==='function'&&wcCount())await wcSaveAll({force:true,silent:true});
   let res;
   try{
     res=await fetch(API.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action,token:API.token},body||{}))});
@@ -932,7 +963,8 @@ async function loadAll(){
   const d=j.data;
   S.interns=d.interns||{};S.people=d.people||{};S.requests=d.requests||{};S.checklists=d.checklists||{};S.surgery=d.surgery||{};S.oncall=d.oncall||{};
   S.eshift=d.eshift||{};S.firmstaff=d.firmstaff||{};S.notices=d.notices||{};S.absences=d.absences||{};S.profreq=d.profreq||{};S.logbooks=d.logbooks||{};S.rotaplan=d.rotaplan||{};S.rotaver=d.rotaver||{};S.rotadata=d.rotadata||{};S.sessions=d.sessions||{};S.inotices=d.inotices||{};S.presentN=d.presentN||{};S.board=d.board||{GS:{},SSS:{}};S.peerLeave=d.peerLeave||[];S.leaveFlags=d.leaveFlags||{};S.sheetIssues=d.sheetIssues||[];S.config=d.config||null;CFG=mergeCfg(S.config);S.holidays=d.holidays||[];S.log=d.log||[];
-  ME=Object.assign({},j.me);VER=j.v;SERVER_VER=j.ver||'';LOADED=true;LOADERR='';
+  Object.keys(PLDIRTY).forEach(k=>{S.rotaplan[k]=PLDIRTY[k];});
+  ME=Object.assign({},j.me);VER=j.v;SERVER_VER=j.ver||'';LOADED=true;LOADERR='';if(typeof wcOverlay==='function')wcOverlay();
   if(PREVIEW){const ok=PREVIEW.role==='intern'?S.interns[PREVIEW.internId]:S.people[PREVIEW.personId];if(!ok)PREVIEW=null;}
   scheduleRender();
 }
@@ -941,18 +973,19 @@ let pollT=null,lastFull=0;
 function startPolling(){
   stopPolling();lastFull=Date.now();
   pollT=setInterval(async()=>{
-    if(document.hidden||SAVING||PENDW||LAZY.size||!API.token)return;
-    try{const j=await call('ping');if(PENDW||LAZY.size||SAVING)return;if(j.v!==VER||Date.now()-lastFull>180000){lastFull=Date.now();await loadAll();}}catch(e){}
+    if(document.hidden||SAVING||PENDW||LAZY.size||Object.keys(PLDIRTY).length||!API.token)return;
+    try{const j=await call('ping');if(PENDW||LAZY.size||SAVING||Object.keys(PLDIRTY).length)return;if(j.v!==VER||Date.now()-lastFull>180000){lastFull=Date.now();await loadAll();}}catch(e){}
   },30000);
 }
 function stopPolling(){if(pollT)clearInterval(pollT);pollT=null;}
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&API.token&&LOADED&&!SAVING&&!PENDW&&!LAZY.size)call('ping').then(j=>{if(j.v!==VER&&!PENDW&&!LAZY.size&&!SAVING)loadAll();}).catch(()=>{});});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&API.token&&LOADED&&!SAVING&&!PENDW&&!LAZY.size)call('ping').then(j=>{if(j.v!==VER&&!PENDW&&!LAZY.size&&!SAVING&&!Object.keys(PLDIRTY).length)loadAll();}).catch(()=>{});});
 
 /* ============ Saving ============ */
 const WQ={};
 let PENDW=0;
 function qwrite(path,fn){PENDW++;const p=(WQ[path]||Promise.resolve()).catch(()=>{}).then(fn).finally(()=>{PENDW--;});WQ[path]=p;return p;}
 /* edits to a draft are kept on the screen at once and sent to the service together a moment later, so rapid editing is not slowed by one save per click */
+let PLDIRTY={};
 const LAZY=new Map();
 function putLazy(col,id,data,ms){
   S[col][id]={...data,id};scheduleRender();
@@ -969,7 +1002,7 @@ function flushOne(k){
 async function flushLazy(){await Promise.all([...LAZY.keys()].map(flushOne));}
 window.addEventListener('pagehide',()=>{flushLazy();});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)flushLazy();});
-window.addEventListener('beforeunload',ev=>{if(LAZY.size){flushLazy();ev.preventDefault();ev.returnValue='';}});
+window.addEventListener('beforeunload',ev=>{if(LAZY.size){flushLazy();}if(LAZY.size||Object.keys(PLDIRTY).length){ev.preventDefault();ev.returnValue='';}});
 let LOGQ=[],logT=null;
 function logEv(text){LOGQ.push(text);clearTimeout(logT);logT=setTimeout(flushLog,1500);}
 async function flushLog(){
@@ -986,6 +1019,7 @@ async function send(ops){
   finally{SAVING--;}
 }
 async function mut(col,id,fn){
+  if(wcWants(col,id))return wcMut(col,id,fn);
   return qwrite(col+'/'+id,async()=>{
     try{
       const base=S[col][id]?strip(S[col][id]):null;
@@ -997,20 +1031,24 @@ async function mut(col,id,fn){
 }
 const put=(col,id,data)=>mut(col,id,()=>data);
 async function mutMany(col,ids,fn){
+  if(wcWants(col,ids[0])){for(const id of ids)await wcMut(col,id,b=>fn(b,id));return;}
   const ops=[];
   ids.forEach(id=>{const base=S[col][id]?strip(S[col][id]):null;const next=fn(base,id);if(next===undefined||next===false)return;S[col][id]={...next,id};ops.push({op:'set',col,id,data:next});});
   scheduleRender();
   for(let i=0;i<ops.length;i+=40){try{await send(ops.slice(i,i+40));}catch(e){return;}}
 }
 async function putMany(col,items){
+  if(items.length&&wcWants(col,items[0][0])){for(const [id,data] of items)await wcMut(col,id,()=>data);return;}
   const ops=items.map(([id,data])=>{S[col][id]={...data,id};return{op:'set',col,id,data};});
   scheduleRender();
   for(let i=0;i<ops.length;i+=40){try{await send(ops.slice(i,i+40));}catch(e){return;}}
 }
 async function del(col,id){
+  if(wcWants(col,id,true))return wcDel(col,id);
   return qwrite(col+'/'+id,async()=>{try{delete S[col][id];scheduleRender();await send([{op:'del',col,id}]);}catch(e){}});
 }
 async function delMany(list){
+  if(list.length&&list.every(([c,i])=>wcWants(c,i,true))){for(const [c,i] of list)await wcDel(c,i);return;}
   list.forEach(([c,i])=>{delete S[c][i];});scheduleRender();
   for(let i=0;i<list.length;i+=40){try{await send(list.slice(i,i+40).map(([col,id])=>({op:'del',col,id})));}catch(e){return;}}
 }
@@ -3106,7 +3144,7 @@ function navItems(){
   const e=E(),dec=myDecisions().length;
   const myRot=(isDualMe()&&(ME.units||[]).length&&!PREVIEW)?[{r:'myrot',t:'My rotation',g:'Home'}]:[];
   if(e.role==='training')return[
-    {r:'overview',t:'Overview',g:'Home'}].concat(myRot,[{r:'rotations',t:'Rotations',g:'Plan'},{r:'oncall',t:'On-call',g:'Plan'},{r:'surgery',t:'Surgical allocation',g:'Plan'},
+    {r:'overview',t:'Overview',g:'Home'}].concat(myRot,[{r:'rotations',t:'Rotations',g:'Plan'},{r:'oncall',t:'On-call',g:'Plan'},{r:'surgery',t:'Surgical allocation',g:'Plan'},{r:'planner',t:'Rota planner',g:'Plan'},
     {r:'interns',t:'Interns',g:'People',alt:x=>x.startsWith('intern-')},{r:'coordinators',t:'Coordinators',g:'People',alt:x=>x.startsWith('person-')},
     {r:'requests',t:'Requests',g:'Requests',badge:dec||''},{r:'checklists',t:'Checklists',g:'Tracking'},{r:'education',t:'Education',g:'Tracking'},{r:'activity',t:'Activity',g:'Admin'},{r:'setup',t:'Setup',g:'Admin'}]);
   if(e.role==='coordinator'){
@@ -3666,7 +3704,7 @@ function viewOncallStaff(){
   const unit=UI.ocUnit,ym=UI.ocYm||ymOf(todayStr());
   if(e.role==='intern'||!unit||unit==='EMERGENCY')return h;
   const cnt=ocWarnings(unit,ym).length,hasT=unit!=='SURGICAL'&&canOc(unit),tab=UI.ocTab||(hasT?'table':'rota');
-  const seg='<div class="bar"><div class="seg">'+(hasT?'<button class="'+(tab==='table'?'on':'')+'" data-act="octab" data-v="table">Table</button>':'')+'<button class="'+(tab==='rota'?'on':'')+'" data-act="octab" data-v="rota">Calendar</button><button class="'+(tab==='warn'?'on':'')+'" data-act="octab" data-v="warn">Warnings'+(cnt?' ('+cnt+')':'')+'</button></div></div>';
+  const seg='<div class="bar"><div class="seg">'+(hasT?'<button class="'+(tab==='table'?'on':'')+'" data-act="octab" data-v="table">Table</button>':'')+'<button class="'+(tab==='rota'?'on':'')+'" data-act="octab" data-v="rota">Calendar</button><button class="'+(tab==='warn'?'on':'')+'" data-act="octab" data-v="warn">Warnings'+(cnt?' ('+cnt+')':'')+'</button></div>'+visSwitch('r',unit,ym)+'</div>';
   const i=h.indexOf('<div class="cols oc-cols">');if(i<0)return h;
   if(tab==='table'&&hasT)return h.slice(0,i).replace(/<div class="seg"><button[^>]*data-act="ocview"[\s\S]*?<\/div>/,'').replace(/<button class="btn" data-act="export-oc">Download CSV<\/button>/,'')+seg+staffTableTab(unit,ym);
   if(tab==='warn')return h.slice(0,i)+seg+warnPanel(unit,ym);
@@ -3764,7 +3802,8 @@ document.addEventListener('change',ev=>{const t=ev.target;if(!t||!t.dataset||t.d
 /* ===================== version 4.7 additions ===================== */
 /* ---------- change log (Training, Setup page) ---------- */
 const CHANGELOG=[
- {v:'4.10',t:'Faster saving, and a light, dark or auto theme',items:['The service now keeps a ready copy of the Sheet data (refreshed whenever anything is saved or the Sheet is edited), so loading and saving no longer read every tab each time.','A small “Saving… / Saved” note appears in the corner.','Choose Auto, Light or Dark under your name in the side menu; the choice is remembered on each device.','Draft edits stay on screen while they are sent together, and the page no longer jumps back to “Start new version”.']},
+ {v:'4.11',t:'Work offline, save all at once, hide drafts, one Allocation page',items:['Edits on management pages now stay on your device until you press Save all (top of the page). Nothing lags, it survives a refresh, and you can review or discard single changes. If someone else changed the same item you choose Keep mine or Take theirs.','Hide a month’s allocation and each on-call rota from interns with the Visible/Hidden switch; interns are notified when you publish.','One Allocation page replaces the three surgery tabs: firm blocks, sub-specialties, collapsible Orthopedics, visiting interns counted everywhere, 1st/2nd half.','Split button: up to 3 placements in a month with exact days (for example Firm 1 until 22 then Urology), with a draggable month bar.','Drag an intern onto another block to move them.']},
+ {v:'4.10',t:'Faster saving, and a light, dark or auto theme',items:['The service now keeps a ready copy of the Sheet data (refreshed whenever anything is saved or the Sheet is edited), so loading and saving no longer read every tab each time.','A small “Saving… / Saved” note appears in the corner.','Choose Auto, Light or Dark under your name in the side menu; the choice is remembered on each device.','The Surgical rota planner now has a Save draft button instead of saving by itself, so the draft can no longer be reset by a refresh; unsaved changes are flagged.','The Training department can use the Rota planner, edit drafts and publish, in addition to the Surgical coordinator and deputy.']},
  {v:'4.9',t:'Smarter rota import, easy rota editing, and new intern views',items:['On-call import now recognises names by who is rotating in that rota that day (short names, initials, duplicates), with a dropdown to fix unknown names, an option to remember spellings, and “Import anyway” for rule-blocked rows (coordinators, deputies and Training; only Training can add someone not placed in the rota).','Import reads dates like 1\\10, day-number-only sheets, place columns and late-coverage marks; skipped rows can be downloaded.','Coordinators, deputies and Training can edit Gynae, Medicine, Orthopedics, Neurosurgery and Pediatrics rotas directly as a draft and save once; interns are notified only about their own changes.','Surgical allocation: import and export the Surgical Department Interns sheet (firms, sub-specialties, # for Neurosurgery), with preview, fix dropdowns, and leave notes like L1-4 creating approved annual leave.','Places and Pediatrics morning ward distribution can be edited, imported and exported; rota downloads are Excel files in the department layouts.','Interns see every rota as a Calendar or Table with their own days highlighted, weekends and holidays shaded and approved leave shown; no counts or comparisons are shown to interns.']},
  {v:'4.8',t:'Rota planner for the Surgical coordinators',items:[
   'New page “Rota planner”, visible only to the Surgical coordinator and deputy. Training sees the live Surgical rota only, never drafts, versions or notes.',
@@ -4073,7 +4112,7 @@ Object.assign(ACT,{
 
 /* ===================== version 4.8: Surgical rota planner ===================== */
 const PL_UNIT='SURGICAL';
-const canPlan=()=>E().role==='coordinator'&&myUnits().some(u=>['GS','SSS'].includes(u));
+const canPlan=()=>E().role==='training'||E().role==='coordinator'&&myUnits().some(u=>['GS','SSS'].includes(u));
 const plKey=ym=>'rp_'+ym;
 const plDefTargets=()=>({wd:{full:4,adq:3},we:{full:3,adq:2},days:{}});
 function plDoc(ym){
@@ -4172,7 +4211,7 @@ function plDiffFor(id,days,base){
 
 /* ----- the view ----- */
 function viewPlanner(){
-  if(!canPlan())return head('Rota planner','')+emptyBox('The rota planner is for the Surgical coordinator and deputy.');
+  if(!canPlan())return head('Rota planner','')+emptyBox('The rota planner is for the Surgical coordinator, the deputy and the Training department.');
   const ym=UI.pYm||ymOf(todayStr());UI.pYm=ym;
   const rp=plDoc(ym),dr=rp.draft,edit=!!dr,days=dr?dr.days:liveDays(ym),vers=plVers(ym);
   const bi=plBaseInfo(ym,rp),base=UI.pCmpOn===false?null:bi.days;
@@ -4189,7 +4228,7 @@ function viewPlanner(){
    '<button class="btn sm" data-act="pl-targets">Targets</button>'+
    (edit?'<button class="btn sm" data-act="pl-undo"'+(hist.u.length?'':' disabled')+'>Undo</button><button class="btn sm" data-act="pl-redo"'+(hist.r.length?'':' disabled')+'>Redo</button><button class="btn sm'+(UI.pSwap?' on':'')+'" data-act="pl-swapmode">'+(UI.pSwap?(UI.pSwap.i?'Pick the second call…':'Pick the first call…'):'Swap two calls')+'</button><button class="btn sm" data-act="pl-suggest">Suggest</button>':'')+
    '<button class="btn sm" data-act="pl-print">Print / PDF</button>'+
-   '<span class="plsp"></span>'+(edit?'<span class="pill">Draft · saved automatically</span><button class="btn sm" data-act="pl-discard">Discard draft</button><button class="btn pri" data-act="pl-publish">Publish…</button>':'<button class="btn pri" data-act="pl-start">Start new version</button>')+'</div>';
+   '<span class="plsp"></span>'+(edit?(PLDIRTY[plKey(ym)]?'<span class="pill" style="background:var(--warn-bg);color:var(--warn)">Unsaved changes</span><button class="btn pri" data-act="pl-savedraft">Save draft</button>':'<span class="pill">Draft saved</span><button class="btn" data-act="pl-savedraft" disabled>Save draft</button>')+'<button class="btn sm" data-act="pl-discard">Discard draft</button><button class="btn pri" data-act="pl-publish">Publish…</button>':'<button class="btn pri" data-act="pl-start">Start new version</button>')+'</div>';
   /* warnings */
   let wbox='';
   if(edit){
@@ -4303,16 +4342,20 @@ function plBalance(ym,days,rows){
 }
 
 /* ----- editing ----- */
-async function plSaveDoc(rp){return putLazy('rotaplan',plKey(rp.ym),rp);}
+/* the draft is kept on the screen and sent only when “Save draft” is pressed (or when publishing), so a refresh can never throw it away */
+function plLocal(rp){const k=plKey(rp.ym);S.rotaplan[k]=Object.assign({},rp,{id:k});PLDIRTY[k]=S.rotaplan[k];scheduleRender();return Promise.resolve();}
+async function plSaveDoc(rp){const k=plKey(rp.ym);delete PLDIRTY[k];return put('rotaplan',k,rp);}
+async function plFlush(){for(const k of Object.keys(PLDIRTY)){const d=PLDIRTY[k];delete PLDIRTY[k];await put('rotaplan',k,strip(d));}}
 function plEdit(fn,keepHist){
   const ym=UI.pYm,rp=plDoc(ym);if(!rp.draft)return false;
   const h=plHist(ym);if(!keepHist){h.u.push(JSON.stringify({d:rp.draft.days,l:rp.draft.locks||{}}));if(h.u.length>60)h.u.shift();h.r=[];}
   const r=fn(rp);if(r===false){if(!keepHist)h.u.pop();return false;}
-  rp.draft.days=cleanDraft(rp.draft.days);return plSaveDoc(rp);
+  rp.draft.days=cleanDraft(rp.draft.days);return plLocal(rp);
 }
 function cleanDraft(d){const o={};Object.keys(d).forEach(k=>{if((d[k]||[]).length)o[k]=d[k];});return o;}
 function plToastWarn(w){if(w&&w.length)toast('Added with a warning: '+w[0]);}
 Object.assign(ACT,{
+  'pl-savedraft':async()=>{const k=plKey(UI.pYm),d=PLDIRTY[k];if(!d)return;delete PLDIRTY[k];await put('rotaplan',k,strip(d));toast('Draft saved.');},
   'pl-m':el=>{UI.pYm=ymAdd(UI.pYm||ymOf(todayStr()),+el.dataset.v);UI.pDay='';UI.pSwap=null;},
   'pl-hide':()=>{UI.pHide=!plHidden();try{localStorage.setItem('plHide',UI.pHide?'1':'0');}catch(e){}},
   'pl-cmp':()=>{UI.pCmpOn=UI.pCmpOn===false;},
@@ -4368,11 +4411,11 @@ Object.assign(ACT,{
   'pl-swapmode':()=>{UI.pSwap=UI.pSwap?null:{i:'',d:0};},
   'pl-undo':async()=>{
     const ym=UI.pYm,h=plHist(ym),rp=plDoc(ym);if(!rp.draft||!h.u.length)return;
-    h.r.push(JSON.stringify({d:rp.draft.days,l:rp.draft.locks||{}}));const s=JSON.parse(h.u.pop());rp.draft.days=s.d;rp.draft.locks=s.l;await plSaveDoc(rp);
+    h.r.push(JSON.stringify({d:rp.draft.days,l:rp.draft.locks||{}}));const s=JSON.parse(h.u.pop());rp.draft.days=s.d;rp.draft.locks=s.l;await plLocal(rp);
   },
   'pl-redo':async()=>{
     const ym=UI.pYm,h=plHist(ym),rp=plDoc(ym);if(!rp.draft||!h.r.length)return;
-    h.u.push(JSON.stringify({d:rp.draft.days,l:rp.draft.locks||{}}));const s=JSON.parse(h.r.pop());rp.draft.days=s.d;rp.draft.locks=s.l;await plSaveDoc(rp);
+    h.u.push(JSON.stringify({d:rp.draft.days,l:rp.draft.locks||{}}));const s=JSON.parse(h.r.pop());rp.draft.days=s.d;rp.draft.locks=s.l;await plLocal(rp);
   },
   'pl-print':()=>{window.print();},
   /* notes */
@@ -4601,6 +4644,7 @@ function viewInternOncall(){
   const sel='<select class="ocsel" data-bind="ocUnit" aria-label="Rota">'+ocUnits().map(u=>'<option value="'+u+'"'+(u===unit?' selected':'')+'>'+esc(ocName(u))+'</option>').join('')+'</select>';
   const bar='<div class="bar">'+sel+'<span class="mnav"><button class="btn" data-act="ocmonth" data-n="-1" aria-label="Previous month">‹</button><button class="btn mlabel" data-act="ocmonth" data-n="0">'+fmtYm(ym)+'</button><button class="btn" data-act="ocmonth" data-n="1" aria-label="Next month">›</button></span><span class="sp"></span><div class="seg"><button class="'+(mode==='cal'?'on':'')+'" data-act="ic-mode" data-v="cal">Calendar</button><button class="'+(mode==='table'?'on':'')+'" data-act="ic-mode" data-v="table">Table</button></div></div>';
   const lv=rs.length?'<div class="iclv"><b>Your leave:</b> '+esc(leaveText(rs))+'</div>':'';
+  if(visR(unit,ym))return head('My on-call',esc(ocName(unit)),'')+bar+'<div class="note" style="margin-top:14px"><b>Not published yet.</b> The '+esc(ocName(unit))+' rota for '+esc(fmtYm(ym))+' is still being prepared. You will get a notice when it is ready.</div>';
   const body=mode==='cal'?icCal(unit,ym,me):icTable(unit,ym,me);
   return head('My on-call',esc(ocName(unit))+'. Everyone on the rota is shown, with your days highlighted.','')+bar+lv+body+wardTable(unit,ym,me,false);
 }
@@ -4668,7 +4712,7 @@ function staffTableTab(unit,ym){
   return other+bar+wbox+h+(unit==='OBG'||unit==='PED'||true?'':'')+strip+ward;
 }
 /* ----- editing ----- */
-async function odSave(doc){return putLazy('rotadata',odKey(doc.unit,doc.ym),doc);}
+async function odSave(doc){return put('rotadata',odKey(doc.unit,doc.ym),doc);}
 function odEdit(fn,noHist){
   const unit=UI.ocUnit,ym=UI.ocYm,doc=odDoc(unit,ym);if(!doc)return false;
   const h=odHist(odKey(unit,ym)),before=odSnap(doc);
@@ -5411,6 +5455,440 @@ Object.assign(ACT,{'theme':el=>{const v=el.dataset.v;try{localStorage.setItem('i
     else if(was){was=false;b.textContent='Saved';b.className='on ok';clearTimeout(hideT);hideT=setTimeout(()=>{b.className='';},1600);}
   },300);
 })();
+
+/* ===================== 4.11-A: working copy with "Save all" ===================== */
+const WC_COLS=['interns','surgery','oncall','eshift','rotadata','firmstaff'];
+const WC={docs:{},user:'',saving:false};
+const wcKey=(col,id)=>col+'/'+id;
+const wcCount=()=>Object.keys(WC.docs).length;
+const wcStab=o=>{if(Array.isArray(o))return o.map(wcStab);if(o&&typeof o==='object'){const r={};Object.keys(o).sort().forEach(k=>{if(o[k]!==undefined&&k!=='id')r[k]=wcStab(o[k]);});return r;}return o;};
+const wcSame=(a,b)=>JSON.stringify(wcStab(a))===JSON.stringify(wcStab(b));
+function wcUser(){return ME&&(ME.staffId||ME.personId||ME.role)||'';}
+function wcWants(col,id,isDel){
+  if(!ME||ME.role==='loading'||ME.role==='intern'||PREVIEW||!LOADED)return false;
+  if(col==='notices')return !isDel&&!!id&&!S.notices[id]&&wcCount()>0;
+  return WC_COLS.includes(col);
+}
+let wcT=null;
+function wcPersist(){
+  clearTimeout(wcT);
+  wcT=setTimeout(()=>{try{const u=wcUser();if(!u)return;if(wcCount())localStorage.setItem('ib_wc_'+u,JSON.stringify({docs:WC.docs}));else localStorage.removeItem('ib_wc_'+u);}catch(e){}},250);
+}
+async function wcMut(col,id,fn){
+  const k=wcKey(col,id),cur=S[col]&&S[col][id]?strip(S[col][id]):null;
+  const next=fn(cur===null?null:clone(cur));if(next===undefined||next===false)return;
+  const data=JSON.parse(JSON.stringify(next));
+  const d=WC.docs[k]||(WC.docs[k]={col,id,base:cur?JSON.stringify(cur):null,at:Date.now()});
+  d.op='set';d.data=data;d.t=Date.now();
+  S[col][id]=Object.assign({},data,{id});
+  wcPersist();scheduleRender();
+}
+async function wcDel(col,id){
+  const k=wcKey(col,id),cur=S[col]&&S[col][id]?strip(S[col][id]):null,d=WC.docs[k];
+  if(d&&d.base===null){delete WC.docs[k];}
+  else{WC.docs[k]={col,id,base:d?d.base:(cur?JSON.stringify(cur):null),at:Date.now(),op:'del',t:Date.now()};}
+  delete S[col][id];wcPersist();scheduleRender();
+}
+function wcOverlay(){
+  const u=wcUser();
+  if(u&&WC.user!==u){WC.user=u;try{const r=JSON.parse(localStorage.getItem('ib_wc_'+u)||'null');WC.docs=r&&r.docs?r.docs:{};}catch(e){WC.docs={};}}
+  Object.values(WC.docs).forEach(d=>{
+    if(!S[d.col])return;
+    if(d.op==='del')delete S[d.col][d.id];else S[d.col][d.id]=Object.assign({},d.data,{id:d.id});
+  });
+}
+/* ----- describing a change in plain words ----- */
+function wcLabel(d){
+  const nm=id=>(S.interns[id]||{}).name||id;
+  if(d.col==='interns'){
+    const o=d.base?JSON.parse(d.base):null,n=d.data;
+    if(d.op==='del')return'Remove intern '+(o?o.name:d.id);
+    if(!o)return'Add intern '+(n&&n.name);
+    const bits=[];
+    if(n.name!==o.name)bits.push('name');if(n.phone!==o.phone||n.email!==o.email)bits.push('contact');
+    const yms=new Set([].concat((o.plan||[]).map(x=>x.ym),(n.plan||[]).map(x=>x.ym)));
+    const ch=[...yms].sort().filter(y=>!wcSame((o.plan||[]).find(x=>x.ym===y)||null,(n.plan||[]).find(x=>x.ym===y)||null));
+    if(ch.length)bits.push('placements '+ch.slice(0,3).map(fmtYm).join(', ')+(ch.length>3?' …':''));
+    return nm(d.id)+(bits.length?' — '+bits.join(', '):'');
+  }
+  if(d.col==='surgery')return nm(d.id)+' — subspecialty / orthopedics halves';
+  if(d.col==='oncall'){
+    const u=(d.data&&d.data.unit)||d.id.split('_')[0],ym=(d.data&&d.data.ym)||d.id.split('_')[1];
+    const o=d.base?JSON.parse(d.base):{days:{}},n=(d.data||{days:{}}),ks=new Set(Object.keys(o.days||{}).concat(Object.keys(n.days||{})));
+    let c=0;ks.forEach(k=>{if(!wcSame((o.days||{})[k]||null,(n.days||{})[k]||null))c++;});
+    return'On-call · '+(UNIT_NAME[u]||u)+' · '+fmtYm(ym)+' — '+plural(c,'day')+' changed';
+  }
+  if(d.col==='rotadata'){
+    const p=d.id.slice(0,3);
+    if(d.id.indexOf('od_')===0)return'Rota draft · '+d.id.slice(3).replace('_',' · ');
+    if(d.id.indexOf('om_')===0)return'Places and late cover · '+d.id.slice(3).replace('_',' · ');
+    if(d.id.indexOf('wp_')===0)return'Ward distribution · '+d.id.slice(3).replace(/_/g,' · ');
+    if(d.id==='pl_all')return'Places setup';if(d.id==='al_all')return'Remembered spellings';if(d.id==='vs_all')return'Visibility to interns';
+    return'Rota extras · '+d.id;
+  }
+  if(d.col==='firmstaff')return'Firm staff · '+((d.data&&d.data.name)||d.id);
+  if(d.col==='notices')return'Notice to staff';
+  return d.col+' · '+d.id;
+}
+/* ----- bar, review, save ----- */
+(function(){
+  let box=null,last='';
+  function ensure(){if(box||!document.body)return box;box=document.createElement('div');box.id='wcbar';box.setAttribute('role','region');box.setAttribute('aria-label','Unsaved changes');document.body.appendChild(box);return box;}
+  setInterval(()=>{
+    const b=ensure();if(!b)return;
+    const n=wcCount()+Object.keys(PLDIRTY).length,off=typeof navigator!=='undefined'&&navigator.onLine===false,st=WC.saving?'S':'';
+    const sig=n+'|'+off+'|'+st;if(sig===last)return;last=sig;
+    if(!n&&!WC.saving){b.className='';b.innerHTML='';return;}
+    b.className='on';
+    b.innerHTML=WC.saving?'<b>Saving…</b>':'<b>'+plural(n,'unsaved change')+'</b>'+(off?'<span class="off">Offline — kept on this device</span>':'')+'<button class="btn sm" data-act="wc-review">Review</button><button class="btn sm pri" data-act="wc-save"'+(off?' disabled':'')+'>Save all</button><button class="btn sm" data-act="wc-discard">Discard all</button>';
+  },250);
+  window.addEventListener('online',()=>{last='';});window.addEventListener('offline',()=>{last='';});
+})();
+function wcReview(){
+  const rows=Object.values(WC.docs).sort((a,b)=>a.t-b.t);
+  let h='<h2>Unsaved changes</h2><p class="hint" style="margin-top:0">These are kept on this device. Nothing reaches the Sheet or the interns until you press Save all.</p>';
+  if(Object.keys(PLDIRTY).length)h+='<div class="note warn small">The Surgical rota draft also has unsaved changes; Save all saves it too.</div>';
+  h+='<div class="scroll" style="max-height:50vh"><table class="tbl"><tbody>'+(rows.length?rows.map(d=>'<tr><td>'+esc(wcLabel(d))+'</td><td class="small muted">'+(d.op==='del'?'Remove':d.base===null?'New':'Changed')+'</td><td><button class="btn sm" data-act="wc-undo1" data-k="'+esc(wcKey(d.col,d.id))+'">Discard this</button></td></tr>').join(''):'<tr><td class="muted">Nothing else.</td></tr>')+'</tbody></table></div><div class="foot"><button class="btn" data-act="close">Close</button><button class="btn pri" data-act="wc-save">Save all</button></div>';
+  openModal(h,true);
+}
+async function wcDiscard(keys){
+  keys.forEach(k=>{const d=WC.docs[k];if(!d)return;delete WC.docs[k];if(d.base===null)delete S[d.col][d.id];else S[d.col][d.id]=Object.assign({},JSON.parse(d.base),{id:d.id});});
+  wcPersist();scheduleRender();
+}
+async function wcSaveAll(opts){
+  opts=opts||{};if(WC.saving)return false;
+  if(typeof navigator!=='undefined'&&navigator.onLine===false){toast('You are offline. Your changes are kept here; save when you are back online.');return false;}
+  if(Object.keys(PLDIRTY).length&&typeof plFlush==='function'){try{await plFlush();}catch(e){}}
+  if(!wcCount())return true;
+  WC.saving=true;
+  try{
+    if(!opts.force){
+      let fresh;try{fresh=(await call('load')).data;}catch(e){toast(e.message||'Could not check for other changes.');return false;}
+      const conf=[];
+      Object.values(WC.docs).forEach(d=>{
+        if(d.col==='notices')return;
+        const sv=fresh[d.col]&&fresh[d.col][d.id]?fresh[d.col][d.id]:null;
+        const was=d.base===null?null:JSON.parse(d.base);
+        if(!wcSame(was,sv))conf.push(d);
+      });
+      if(conf.length){
+        WC.saving=false;
+        const ans=await wcConflicts(conf);if(!ans)return false;
+        conf.forEach(d=>{if(ans[wcKey(d.col,d.id)]==='theirs')delete WC.docs[wcKey(d.col,d.id)];});
+        wcPersist();WC.saving=true;
+      }
+    }
+    const docs=Object.values(WC.docs).sort((a,b)=>(a.col==='notices')-(b.col==='notices')||a.t-b.t);
+    const opOf=d=>d.op==='del'?{op:'del',col:d.col,id:d.id}:{op:'set',col:d.col,id:d.id,data:d.data};
+    const fails=[];let ok=0;
+    const done=d=>{delete WC.docs[wcKey(d.col,d.id)];ok++;};
+    for(let i=0;i<docs.length;i+=25){
+      const part=docs.slice(i,i+25),logs=LOGQ.splice(0).map(text=>({op:'log',text}));
+      try{const j=await call('save',{ops:part.map(opOf).concat(logs)});VER=j.v;part.forEach(done);}
+      catch(e){
+        if(logs.length)LOGQ.unshift(...logs.map(l=>l.text));
+        if(e.code==='network'){fails.push({d:part[0],msg:e.message,net:true});break;}
+        for(const d of part){
+          try{const j=await call('save',{ops:[opOf(d)]});VER=j.v;done(d);}catch(e2){fails.push({d,msg:e2.message||'Could not save.'});}
+        }
+      }
+    }
+    wcPersist();
+    WC.saving=false;
+    try{await loadAll();}catch(e){}
+    if(fails.length){
+      openModal('<h2>Some changes could not be saved</h2><p class="hint" style="margin-top:0">The rest were saved. These are still on this device.</p><table class="tbl"><tbody>'+fails.map(f=>'<tr><td>'+esc(wcLabel(f.d))+'</td><td class="small" style="color:var(--bad)">'+esc(f.msg)+'</td><td><button class="btn sm" data-act="wc-undo1" data-k="'+esc(wcKey(f.d.col,f.d.id))+'">Discard this</button></td></tr>').join('')+'</tbody></table><div class="foot"><button class="btn" data-act="close">Close</button></div>',true);
+      return false;
+    }
+    if(!opts.silent)toast(plural(ok,'change')+' saved.');
+    return true;
+  }finally{WC.saving=false;}
+}
+function wcConflicts(list){
+  return new Promise(res=>{
+    UI.wcConf={list,res};
+    openModal('<h2>Someone else changed these</h2><p class="hint" style="margin-top:0">While you were working, these were changed by someone else. Choose whose version to keep for each.</p><table class="tbl"><tbody>'+list.map((d,i)=>'<tr><td>'+esc(wcLabel(d))+'</td><td><label class="inline"><input type="radio" name="wcc'+i+'" value="mine" checked> Keep mine</label> <label class="inline"><input type="radio" name="wcc'+i+'" value="theirs"> Take theirs</label></td></tr>').join('')+'</tbody></table><div class="foot"><button class="btn" data-act="wc-conf-cancel">Cancel</button><button class="btn pri" data-act="wc-conf-go">Continue saving</button></div>',true);
+  });
+}
+Object.assign(ACT,{
+  'wc-save':()=>{closeModal();wcSaveAll();},
+  'wc-review':()=>wcReview(),
+  'wc-undo1':async el=>{await wcDiscard([el.dataset.k]);if(wcCount())wcReview();else closeModal();},
+  'wc-discard':async()=>{if(!(await askConfirm('Discard all unsaved changes','Everything you changed since the last save is lost. The Sheet is not touched.','Discard all',true)))return;WC.docs={};wcPersist();try{PLDIRTY={};}catch(e){}try{await loadAll();}catch(e){}scheduleRender();},
+  'wc-conf-go':()=>{const c=UI.wcConf;if(!c)return;const out={};c.list.forEach((d,i)=>{const r=document.querySelector('input[name=wcc'+i+']:checked');out[wcKey(d.col,d.id)]=r?r.value:'mine';});closeModal();UI.wcConf=null;c.res(out);setTimeout(()=>wcSaveAll({force:true}),0);},
+  'wc-conf-cancel':()=>{const c=UI.wcConf;closeModal();UI.wcConf=null;if(c)c.res(null);}
+});
+
+/* ===================== 4.11-B: hide a month's allocation or rota from interns ===================== */
+const VSD=()=>RD('vs_all')||null;
+function visHiddenC(key,ym){const v=VSD()||(E().role==='intern'?null:{from:visFrom(),hide:{},shown:{}});if(!v)return false;if((v.hide||{})[key])return true;if((v.shown||{})[key])return false;return !!v.from&&ym>v.from;}
+const visR=(u,ym)=>visHiddenC('r_'+u+'_'+ym,ym);
+const visA=ym=>visHiddenC('a_'+ym,ym);
+function visCan(kind,unit){return isTr()||(kind==='r'?canRota(unit):canSurg());}
+function visSwitch(kind,unit,ym){
+  if(E().role==='intern'||!visCan(kind,unit))return'';
+  const key=kind==='r'?'r_'+unit+'_'+ym:'a_'+ym,hid=visHiddenC(key,ym);
+  return'<div class="vsw '+(hid?'hid':'vis')+'"><span class="vsl">'+(hid?'Hidden from interns':'Visible to interns')+'</span><button class="btn sm'+(hid?' pri':'')+'" data-act="vis-tog" data-k="'+esc(key)+'" data-ym="'+ym+'" aria-pressed="'+(!hid)+'">'+(hid?'Show to interns':'Hide from interns')+'</button></div>';
+}
+function visFrom(){
+  const yms=Object.values(S.oncall).filter(d=>Object.keys(d.days||{}).some(k=>((d.days[k]||{}).ids||[]).length)).map(d=>d.ym).sort();
+  return yms.length?yms[yms.length-1]:ymOf(todayStr());
+}
+Object.assign(ACT,{
+  'vis-tog':async el=>{
+    const key=el.dataset.k,ym=el.dataset.ym,hid=visHiddenC(key,ym);
+    await put('rotadata','vs_all',(()=>{
+      const v=clone(VSD()||{from:visFrom(),hide:{},shown:{}});delete v.id;v.hide=v.hide||{};v.shown=v.shown||{};
+      if(hid){delete v.hide[key];v.shown[key]=1;}else{delete v.shown[key];v.hide[key]=1;}
+      return v;
+    })());
+    toast(hid?'Marked visible. Interns see it, and are told, when you press Save all.':'Hidden from interns. This applies when you press Save all.');
+  }
+});
+
+/* ===================== 4.11-C: one Allocation page (firm blocks, subspecialties, split editor, drag) ===================== */
+const AL_ROM={I:'1',II:'2',III:'3',IV:'4'};
+const alFirmLabel=f=>'Firm '+(AL_ROM[f]||f||'?');
+const alHalves=ym=>{const h=halfDay(ym);return[{n:1,a:1,b:h},{n:2,a:h+1,b:dim(ym)}];};
+function alHalf(){
+  const ym=UI.sgYm,cur=ymOf(todayStr());
+  if(UI.sgHalf===1||UI.sgHalf===2)return UI.sgHalf;
+  return ym===cur&&+todayStr().slice(8,10)>halfDay(ym)?2:1;
+}
+const alSpecs=()=>(CFG.surgSpecs||[]).filter(x=>!/ortho/i.test(x));
+/* ----- what an intern's month looks like, as a list of placements ----- */
+function alDerive(it,ym){
+  const e=entryAt(it,ym),dm=dim(ym),h=halfDay(ym),out=[];
+  if(!e)return out;
+  const parts=entryParts(e);
+  if(parts.length===1){
+    const p=parts[0];
+    if(p.dept==='GS'&&!p.from&&!p.to){
+      if(p.fa&&p.fb&&p.fa!==p.fb)return[{val:'F:'+p.fa,from:1,to:h},{val:'F:'+p.fb,from:h+1,to:dm}];
+      return[{val:'F:'+(p.fa||p.fb||''),from:1,to:dm}];
+    }
+    if(p.dept==='SSS'&&!p.vsub&&!p.from&&!p.to){
+      const sg=S.surgery[it.id]||{},sp=Math.max(1,Math.min(dm-1,e.split||h)),spec='S:'+(sg.spec||'');
+      return sg.orthFirst?[{val:'O',from:1,to:sp},{val:spec,from:sp+1,to:dm}]:[{val:spec,from:1,to:sp},{val:'O',from:sp+1,to:dm}];
+    }
+  }
+  parts.forEach(p=>{
+    const from=p.from||1,to=p.to||dm;
+    if(p.dept==='GS')out.push({val:'F:'+(p.fa||''),from,to});
+    else if(p.dept==='SSS')out.push({val:/^ortho/i.test(p.vsub||'')?'O':'S:'+(p.vsub||(S.surgery[it.id]||{}).spec||''),from,to});
+    else out.push({val:'X:'+p.dept,from,to,fixed:true});
+  });
+  return out;
+}
+const alValLabel=v=>v==='O'?'Orthopedics':v&&v.indexOf('F:')===0?alFirmLabel(v.slice(2)):v&&v.indexOf('S:')===0?(v.slice(2)||'Subspecialty not chosen'):v&&v.indexOf('X:')===0?(BLOCK_NAME[v.slice(2)]||v.slice(2)):'—';
+const alValShort=v=>v==='O'?'Orthopedics':v&&v.indexOf('S:')===0?saUnitShort(v.slice(2))||'Subspecialty':alValLabel(v);
+/* the new entry (and surgical split) that a list of placements stands for */
+function alBuild(it,ym,list){
+  const dm=dim(ym),h=halfDay(ym),old=entryAt(it,ym)||{ym};
+  const L=list.filter(x=>x.val).map(x=>({val:x.val,from:Math.max(1,+x.from||1),to:Math.min(dm,+x.to||dm)})).sort((a,b)=>a.from-b.from);
+  const keep={};['note','repeat','g'].forEach(k=>{if(old[k])keep[k]=old[k];});
+  let sur=null,ne;
+  const gs=L.length>0&&L.every(x=>x.val.indexOf('F:')===0);
+  if(gs&&L.length===1&&L[0].from===1&&L[0].to===dm){ne=Object.assign({ym,dept:'GS'},keep);if(L[0].val.slice(2))ne.fa=L[0].val.slice(2);}
+  else if(gs&&L.length===2&&L[0].from===1&&L[0].to===h&&L[1].from===h+1&&L[1].to===dm){ne=Object.assign({ym,dept:'GS'},keep);if(L[0].val.slice(2))ne.fa=L[0].val.slice(2);if(L[1].val.slice(2))ne.fb=L[1].val.slice(2);}
+  else if(L.length===2&&L[0].from===1&&L[1].to===dm&&L[1].from===L[0].to+1&&((L[0].val==='O'&&L[1].val.indexOf('S:')===0)||(L[1].val==='O'&&L[0].val.indexOf('S:')===0))&&L[0].to>=5&&L[0].to<=27){
+    const first=L[0].val,spec=(first==='O'?L[1].val:first).slice(2);
+    ne=Object.assign({ym,dept:'SSS'},keep);if(L[0].to!==h)ne.split=L[0].to;
+    sur={spec:spec||null,orthFirst:first==='O'};
+  }else{
+    const parts=L.map(x=>{
+      const p=x.val.indexOf('F:')===0?{dept:'GS'}:{dept:'SSS'};
+      if(p.dept==='GS'&&x.val.slice(2))p.fa=x.val.slice(2);
+      if(p.dept==='SSS')p.vsub=x.val==='O'?'Orthopedics':x.val.slice(2);
+      if(x.from>1)p.from=x.from;if(x.to<dm)p.to=x.to;return p;
+    });
+    ne=Object.assign({ym},keep,parts[0]);if(parts.length>1)ne.more=parts.slice(1);
+  }
+  return{entry:ne,sur};
+}
+function alCheck(list,ym){
+  const dm=dim(ym),L=list.filter(x=>x.val).slice().sort((a,b)=>a.from-b.from),errs=[],warn=[];
+  if(!L.length)errs.push('Give at least one placement.');
+  L.forEach(x=>{if(!(x.from>=1&&x.to<=dm&&x.from<=x.to))errs.push('Days must be between 1 and '+dm+', first day before the last.');});
+  for(let i=1;i<L.length;i++)if(L[i].from<=L[i-1].to)errs.push('Two placements share some days.');
+  if(!errs.length){let d=1;L.forEach(x=>{if(x.from>d)warn.push('Days '+d+'–'+(x.from-1)+' have no placement.');d=x.to+1;});if(d<=dm)warn.push('Days '+d+'–'+dm+' have no placement.');}
+  return{errs:[...new Set(errs)],warn};
+}
+/* ----- rows for one half ----- */
+function alRows(ym,h){
+  const rows=[];
+  Object.values(S.interns).forEach(it=>{
+    const e=entryAt(it,ym);if(!e)return;
+    const parts=entryParts(e);
+    if(!parts.some(p=>p.dept==='GS'||p.dept==='SSS'))return;
+    const single=parts.length===1&&!parts[0].from&&!parts[0].to&&!e.more;
+    alDerive(it,ym).forEach(pl=>{
+      if(pl.fixed||pl.to<h.a||pl.from>h.b)return;
+      const partial=pl.from>h.a||pl.to<h.b;
+      rows.push({it,val:pl.val,from:pl.from,to:pl.to,partial,single,vis:isVisitor(it)});
+    });
+  });
+  return rows;
+}
+function alBlockCount(rs){const v=rs.filter(r=>r.vis).length;return rs.length+(rs.length===1?' intern':' interns')+(v?' · '+v+' visiting':'');}
+function alRow(r,ym,h,edit,n){
+  const it=r.it,opts=alOptions(r),tag=r.vis?'<span class="alvis">'+esc(affilOf(it))+'</span>':'',dr=r.partial?'<span class="alday">days '+Math.max(r.from,h.a)+'–'+Math.min(r.to,h.b)+'</span>':'';
+  const note=saNote(it,ym,h),sel=edit&&r.single?'<select data-alsel="'+it.id+'" aria-label="Placement for '+esc(it.name)+'">'+opts+'</select>':'<span class="small">'+esc(alValLabel(r.val))+'</span>';
+  const w=r.val.indexOf('F:')===0&&r.single?firmWarnings(it,ym,(entryAt(it,ym)||{}).fa||'',(entryAt(it,ym)||{}).fb||''):[];
+  return'<tr'+(edit&&r.single?' draggable="true"':'')+' data-alrow="'+it.id+'"><td class="no">'+n+'</td><td><b>'+internLink(it.id)+'</b> '+tag+' '+dr+(w.length?'<div class="small" style="color:var(--warn)" title="'+esc(w.join(' '))+'">⚠ '+esc(w[0])+'</div>':'')+'</td><td>'+(note?'<span class="alnote">'+esc(note)+'</span>':'<span class="muted">—</span>')+'</td><td class="tel">'+esc(it.phone||'')+'</td><td>'+sel+'</td><td>'+(edit?'<button class="spl" data-act="al-split" data-id="'+it.id+'">Split</button>':'')+'</td></tr>';
+}
+function alOptions(r){
+  const e=entryAt(r.it,UI.sgYm)||{};
+  if(r.val.indexOf('F:')===0)return FIRMS.map(f=>'<option value="F:'+f+'"'+(r.val==='F:'+f?' selected':'')+'>'+alFirmLabel(f)+'</option>').join('')+'<option value="F:"'+(r.val==='F:'?' selected':'')+'>Firm not set</option>';
+  const specs=alSpecs().concat(CFG.neuroSpec&&!alSpecs().includes(CFG.neuroSpec)?[CFG.neuroSpec]:[]);
+  return'<option value="O"'+(r.val==='O'?' selected':'')+'>Orthopedics</option>'+specs.map(x=>'<option value="S:'+esc(x)+'"'+(r.val==='S:'+x?' selected':'')+'>'+esc(saUnitShort(x)||x)+'</option>').join('')+(r.val==='S:'?'<option value="S:" selected>Not chosen yet</option>':'');
+}
+function alBlock(title,rows,drop,ym,h,edit,startN,note){
+  let n=startN;
+  return'<section class="alb" data-aldrop="'+esc(drop)+'"><div class="bh"><b>'+esc(title)+'</b><span class="cnt">'+alBlockCount(rows)+'</span></div>'+(rows.length?'<table><thead><tr><th>No.</th><th>Name</th><th>Notes</th><th>Tel</th><th>'+(drop.charAt(0)==='F'?'Firm':'Unit')+'</th><th></th></tr></thead><tbody>'+rows.sort((a,b)=>a.it.name.localeCompare(b.it.name)).map(r=>alRow(r,ym,h,edit,n++)).join('')+'</tbody></table>':'<div class="aldz">'+(edit?'Drop an intern here':'Nobody')+'</div>')+(note||'')+'</section>';
+}
+function viewAllocation(){
+  const ym=UI.sgYm||(UI.sgYm=ymOf(todayStr())),edit=canSurg(),hn=alHalf(),h=alHalves(ym)[hn-1],rows=alRows(ym,h);
+  const gs={};FIRMS.concat(['']).forEach(f=>{gs[f]=rows.filter(r=>r.val==='F:'+f);});
+  const sub={},specs=alSpecs().concat(CFG.neuroSpec&&!alSpecs().includes(CFG.neuroSpec)?[CFG.neuroSpec]:[]);
+  specs.concat(['']).forEach(sp=>{sub[sp]=rows.filter(r=>r.val==='S:'+sp);});
+  const ort=rows.filter(r=>r.val==='O');
+  const cnts=FIRMS.map(f=>gs[f].length),uneven=Math.max(...cnts)-Math.min(...cnts)>1;
+  const warn=[];
+  if(uneven)warn.push('Firm sizes are uneven ('+FIRMS.map((f,i)=>AL_ROM[f]+': '+cnts[i]).join(', ')+').');
+  if(gs[''].length)warn.push(plural(gs[''].length,'intern')+' in General surgery without a firm.');
+  if(sub[''].length)warn.push(plural(sub[''].length,'intern')+' in a subspecialty month without a subspecialty chosen.');
+  const vc=rows.filter(r=>r.vis).length;
+  let n=1;const seq=()=>n;
+  let g='';FIRMS.forEach(f=>{g+=alBlock(alFirmLabel(f),gs[f],'F:'+f,ym,h,edit,n,'');n+=gs[f].length;});
+  if(gs[''].length){g+=alBlock('Firm not set',gs[''],'F:',ym,h,edit,n,'');n+=gs[''].length;}
+  let sb='';specs.forEach(sp=>{sb+=alBlock(saUnitShort(sp)||sp,sub[sp],'S:'+sp,ym,h,edit,n,sp===CFG.neuroSpec?'<div class="hint" style="margin:4px 10px">Not counted for surgical on-call: on the Neurosurgery rota.</div>':'');n+=sub[sp].length;});
+  if(sub[''].length){sb+=alBlock('Not chosen yet',sub[''],'S:',ym,h,edit,n,'');n+=sub[''].length;}
+  const nav='<span class="mnav"><button class="btn" data-act="sgmonth" data-n="-1" aria-label="Previous month">‹</button><button class="btn mlabel" data-act="sgmonth" data-n="0" title="Back to this month">'+fmtYm(ym)+'</button><button class="btn" data-act="sgmonth" data-n="1" aria-label="Next month">›</button></span>';
+  const halfSeg='<div class="seg">'+alHalves(ym).map(x=>'<button class="'+(hn===x.n?'on':'')+'" data-act="al-half" data-v="'+x.n+'">'+(x.n===1?'1st':'2nd')+' half · '+pad(x.a)+'–'+pad(x.b)+'</button>').join('')+'</div>';
+  const tabs='<div class="seg"><button class="on" data-act="sgtab" data-v="alloc">Allocation</button><button data-act="sgtab" data-v="staff">Firm and subspecialty staff</button></div>';
+  const btns=(edit?'<button class="btn" data-act="gs-suggest">Suggest firms</button><button class="btn" data-act="sa-import">Import allocation sheet</button>':'')+'<button class="btn" data-act="sa-export">Export allocation sheet</button>';
+  const unp=Object.values(S.interns).filter(x=>isVisitor(x)&&!entryAt(x,ym)&&(!x.startYm||x.startYm<=ym));
+  const addBar=edit&&unp.length?'<div class="bar"><span class="small"><b>Visiting interns not placed in '+esc(fmtYm(ym))+':</b></span>'+unp.map(x=>'<span class="alvadd">'+internLink(x.id)+' <select data-aladd="'+x.id+'" aria-label="Place '+esc(x.name)+'"><option value="">Place in…</option>'+alUnitOpts('')+'</select></span>').join('')+'</div>':'';
+  return head('Surgical allocation','One page, laid out like the allocation sheet. Visiting interns are counted in the firms and subspecialties.','')+
+   '<div class="bar">'+tabs+nav+halfSeg+'<span class="grow"></span>'+(edit?visSwitch('a','',ym):'')+btns+'</div>'+
+   addBar+(warn.length?'<div class="alwarn">⚠ '+warn.map(esc).join(' · ')+'</div>':'')+
+   '<div class="altitle">'+esc(saTitle(ym,h))+'</div><div class="alsheet"><h2 class="alh">General Surgery <span class="cnt">'+plural(rows.filter(r=>r.val.indexOf('F:')===0).length,'intern')+'</span></h2><div class="algrid">'+g+'</div><h2 class="alh">Sub-specialties <span class="cnt">'+plural(rows.filter(r=>r.val.indexOf('S:')===0).length,'intern')+'</span></h2><div class="algrid">'+sb+'</div>'+
+   '<details class="alort"'+(UI.alOrt?' open':'')+'><summary data-act="al-ort">Orthopedics this half <span class="cnt">· '+plural(ort.length,'intern')+' · not on the exported sheet</span></summary>'+alBlock('Orthopedics',ort,'O',ym,h,edit,n,'<div class="hint" style="margin:4px 10px">Their other half is in the sub-specialties above. Choosing a subspecialty here moves the intern up there and puts Orthopedics in the other half.</div>')+'</details>'+
+   '<p class="hint"># Neurosurgery is not counted for surgical on-call. Ortho interns are on the Orthopedics rota. '+(isTr()?'The first half ends on day '+alHalves(ym)[0].b+' this month (change it in Setup).':'')+'</p></div>';
+}
+function viewSurgery(){
+  const tab=UI.sgTab;
+  if(tab==='staff'){
+    const edit=canSurg();
+    return head('Surgical allocation','Who the interns work with.','')+'<div class="bar"><div class="seg"><button data-act="sgtab" data-v="alloc">Allocation</button><button class="on" data-act="sgtab" data-v="staff">Firm and subspecialty staff</button></div></div>'+sgStaff(edit);
+  }
+  return viewAllocation();
+}
+/* ----- changing a placement for the half on screen ----- */
+async function alMove(id,hn,target){
+  const ym=UI.sgYm,it=S.interns[id],e=entryAt(it,ym);if(!it||!e||!canSurg())return;
+  const pls=alDerive(it,ym);
+  if(entryParts(e).length!==1||e.from||e.to){toast('This intern’s month is split into parts. Use the Split button.');return;}
+  if(target.indexOf('F:')===0){
+    if(e.dept!=='GS'){toast(it.name+' is in a subspecialty and orthopedics month. Use Split to give part of the month to a firm.');return;}
+    await setFirm(id,hn===1?'a':'b',target.slice(2));return;
+  }
+  if(e.dept!=='SSS'){toast(it.name+' is in General surgery this month. Use Split to give part of the month to a subspecialty or orthopedics.');return;}
+  const s=S.surgery[id]||{spec:null,orthFirst:false};
+  if(target==='O')return sgApply(id,{spec:s.spec,orthFirst:hn===1});
+  return sgApply(id,{spec:target.slice(2)||null,orthFirst:hn===2});
+}
+/* ----- the Split editor ----- */
+const alUnitOpts=sel=>'<optgroup label="General surgery">'+FIRMS.map(f=>'<option value="F:'+f+'"'+(sel==='F:'+f?' selected':'')+'>'+alFirmLabel(f)+'</option>').join('')+'</optgroup><optgroup label="Subspecialty and orthopedics"><option value="O"'+(sel==='O'?' selected':'')+'>Orthopedics</option>'+alSpecs().concat(CFG.neuroSpec&&!alSpecs().includes(CFG.neuroSpec)?[CFG.neuroSpec]:[]).map(x=>'<option value="S:'+esc(x)+'"'+(sel==='S:'+x?' selected':'')+'>'+esc(saUnitShort(x)||x)+'</option>').join('')+'</optgroup>';
+const AL_COL=['#2B3A9B','#7a3b8f','#0A6A44'];
+function alSplitOpen(id){
+  const ym=UI.sgYm,it=S.interns[id];if(!it||!entryAt(it,ym))return;
+  const list=alDerive(it,ym).filter(x=>!x.fixed).map(x=>({val:x.val,from:x.from,to:x.to}));
+  UI.alSp={id,ym,list:list.length?list:[{val:'F:',from:1,to:dim(ym)}]};
+  alSplitPaint();
+}
+function alSplitBar(){
+  const {ym,list}=UI.alSp,dm=dim(ym),L=list.map((x,i)=>({x,i})).filter(o=>o.x.val).sort((a,b)=>a.x.from-b.x.from);
+  let h='<div class="altl" id="al-tl">';
+  L.forEach(o=>{h+='<div class="alseg" style="left:'+((o.x.from-1)/dm*100)+'%;width:'+((o.x.to-o.x.from+1)/dm*100)+'%;background:'+AL_COL[o.i%3]+'">'+esc(alValShort(o.x.val))+' · '+o.x.from+'–'+o.x.to+'</div>';});
+  for(let k=0;k<L.length-1;k++){const a=L[k],b=L[k+1];if(b.x.from===a.x.to+1)h+='<div class="alhd" data-a="'+a.i+'" data-b="'+b.i+'" style="left:'+(a.x.to/dm*100)+'%" title="Drag to change the day" role="slider" aria-label="Changeover day" aria-valuenow="'+a.x.to+'" tabindex="0"></div>';}
+  return h+'</div><div class="alscale"><span>1</span><span>'+Math.ceil(dm/2)+'</span><span>'+dm+'</span></div>';
+}
+function alSplitPaint(){
+  const {id,ym,list}=UI.alSp,it=S.interns[id],chk=alCheck(list,ym),dm=dim(ym);
+  const built=!chk.errs.length?alBuild(it,ym,list):null;
+  const note=built&&list.filter(x=>x.val).length>1?'<div class="alinfo">Notes on the sheet will show <b>'+esc(saNoteFor(list))+'</b>. On-call follows this day by day.</div>':'';
+  openModal('<h2>Split the month · '+esc(it.name)+'</h2><p class="hint" style="margin-top:0">'+esc(fmtYm(ym))+' · up to 3 placements, each with its own days. Drag the lines on the bar, or type the days.</p>'+
+   '<div class="alpr alpl"><span></span><span>Placement</span><span>From day</span><span>To day</span><span></span></div>'+
+   list.map((x,i)=>'<div class="alpr"><b>'+(i+1)+'</b><select data-alsp="'+i+'" data-f="val">'+alUnitOpts(x.val)+'</select><input type="number" min="1" max="'+dm+'" data-alsp="'+i+'" data-f="from" value="'+x.from+'" aria-label="From day"><input type="number" min="1" max="'+dm+'" data-alsp="'+i+'" data-f="to" value="'+x.to+'" aria-label="To day">'+(list.length>1?'<button class="btn sm" data-act="al-sp-del" data-i="'+i+'" aria-label="Remove placement">✕</button>':'<span></span>')+'</div>').join('')+
+   (list.length<3?'<button class="btn sm" data-act="al-sp-add">Add a placement</button>':'')+
+   '<div class="alpl" style="margin-top:12px">The month at a glance</div>'+alSplitBar()+note+
+   (chk.errs.length?'<div class="note bad small">'+chk.errs.map(esc).join('<br>')+'</div>':'')+(chk.warn.length?'<div class="note warn small">'+chk.warn.map(esc).join('<br>')+'</div>':'')+
+   '<div class="foot"><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="al-sp-save"'+(chk.errs.length?' disabled':'')+'>Save split</button></div>',true);
+}
+function saNoteFor(list){
+  const L=list.filter(x=>x.val).sort((a,b)=>a.from-b.from),ym=UI.alSp.ym,dm=dim(ym);
+  return L.length>1?L.slice(0,-1).map(x=>'*until '+x.to).join(', '):'';
+}
+function alSpRead(){
+  const m=$('modal');if(!m||!UI.alSp)return;
+  m.querySelectorAll('[data-alsp]').forEach(x=>{const p=UI.alSp.list[+x.dataset.alsp];if(!p)return;if(x.dataset.f==='val')p.val=x.value;else p[x.dataset.f]=+x.value||0;});
+}
+async function alSpSave(){
+  alSpRead();const {id,ym,list}=UI.alSp,it=S.interns[id],chk=alCheck(list,ym);if(chk.errs.length)return;
+  const b=alBuild(it,ym,list);closeModal();UI.alSp=null;
+  const ok=await savePlanEntry(id,ym,b.entry,'Changed the placements');
+  if(ok!==false&&b.sur)await sgApply(id,b.sur);
+}
+/* drag the lines on the bar (works with a finger too) */
+let ALDRAG=null;
+document.addEventListener('pointerdown',ev=>{
+  const hd=ev.target.closest&&ev.target.closest('.alhd');if(!hd||!UI.alSp)return;
+  ev.preventDefault();ALDRAG={a:+hd.dataset.a,b:+hd.dataset.b,el:hd,box:$('al-tl').getBoundingClientRect()};hd.setPointerCapture&&hd.setPointerCapture(ev.pointerId);
+});
+document.addEventListener('pointermove',ev=>{
+  if(!ALDRAG||!UI.alSp)return;
+  const {a,b,box}=ALDRAG,L=UI.alSp.list,dm=dim(UI.alSp.ym);
+  let day=Math.round((ev.clientX-box.left)/box.width*dm);day=Math.max(L[a].from,Math.min(L[b].to-1,day));
+  if(day===L[a].to)return;L[a].to=day;L[b].from=day+1;
+  const tl=$('al-tl'),sc=tl.nextElementSibling,tmp=document.createElement('div');tmp.innerHTML=alSplitBar();
+  tl.innerHTML=tmp.firstChild.innerHTML;
+  const m=$('modal');m.querySelectorAll('[data-alsp="'+a+'"][data-f=to]').forEach(x=>{x.value=day;});m.querySelectorAll('[data-alsp="'+b+'"][data-f=from]').forEach(x=>{x.value=day+1;});
+  ALDRAG.box=$('al-tl').getBoundingClientRect();
+});
+document.addEventListener('pointerup',()=>{if(ALDRAG){ALDRAG=null;if(UI.alSp){alSpRead();alSplitPaint();}}});
+document.addEventListener('keydown',ev=>{
+  const hd=ev.target&&ev.target.classList&&ev.target.classList.contains('alhd')?ev.target:null;if(!hd||!UI.alSp)return;
+  const d=ev.key==='ArrowLeft'?-1:ev.key==='ArrowRight'?1:0;if(!d)return;ev.preventDefault();
+  const a=+hd.dataset.a,b=+hd.dataset.b,L=UI.alSp.list;const day=Math.max(L[a].from,Math.min(L[b].to-1,L[a].to+d));L[a].to=day;L[b].from=day+1;alSplitPaint();
+});
+document.addEventListener('change',ev=>{
+  const t=ev.target;if(!t||!t.dataset)return;
+  if(t.dataset.aladd){const id=t.dataset.aladd,v=t.value;if(!v)return;const ym=UI.sgYm;
+    const ne=v.indexOf('F:')===0?{ym,dept:'GS',fa:v.slice(2)}:{ym,dept:'SSS',vsub:v==='O'?'Orthopedics':v.slice(2)};if(!ne.fa)delete ne.fa;
+    mut('interns',id,b=>Object.assign({},b,{plan:(b.plan||[]).filter(x=>x.ym!==ym).concat([ne]).sort((a,c)=>a.ym<c.ym?-1:1)})).then(()=>{logEv('Placed visiting intern '+S.interns[id].name+' in '+fmtYm(ym));scheduleRender();});return;}
+  if(t.dataset.alsel){alMove(t.dataset.alsel,alHalf(),t.value).then(()=>scheduleRender());return;}
+  if(t.dataset.alsp!==undefined&&UI.alSp){alSpRead();alSplitPaint();}
+});
+/* drag a row onto a block */
+document.addEventListener('dragstart',ev=>{const r=ev.target.closest&&ev.target.closest('tr[data-alrow]');if(!r)return;UI.alDrag=r.dataset.alrow;r.classList.add('aldragging');try{ev.dataTransfer.setData('text/plain',r.dataset.alrow);ev.dataTransfer.effectAllowed='move';}catch(e){}});
+document.addEventListener('dragend',ev=>{UI.alDrag=null;document.querySelectorAll('.aldragging,.aldrop').forEach(x=>x.classList.remove('aldragging','aldrop'));});
+document.addEventListener('dragover',ev=>{const b=ev.target.closest&&ev.target.closest('[data-aldrop]');if(!b||!UI.alDrag)return;ev.preventDefault();document.querySelectorAll('.aldrop').forEach(x=>{if(x!==b)x.classList.remove('aldrop');});b.classList.add('aldrop');});
+document.addEventListener('drop',ev=>{
+  const b=ev.target.closest&&ev.target.closest('[data-aldrop]');if(!b||!UI.alDrag)return;ev.preventDefault();
+  const id=UI.alDrag;UI.alDrag=null;document.querySelectorAll('.aldrop').forEach(x=>x.classList.remove('aldrop'));
+  alMove(id,alHalf(),b.dataset.aldrop).then(()=>scheduleRender());
+});
+Object.assign(ACT,{
+  'sgtab':el=>{UI.sgTab=el.dataset.v==='staff'?'staff':'alloc';},
+  'al-half':el=>{UI.sgHalf=+el.dataset.v;},
+  'al-ort':()=>{UI.alOrt=!UI.alOrt;},
+  'al-split':el=>alSplitOpen(el.dataset.id),
+  'al-sp-add':()=>{alSpRead();const {ym,list}=UI.alSp,dm=dim(ym),last=list.slice().sort((a,b)=>a.to-b.to).pop();list.push({val:'F:',from:Math.min(dm,(last?last.to:0)+1),to:dm});alSplitPaint();},
+  'al-sp-del':el=>{alSpRead();UI.alSp.list.splice(+el.dataset.i,1);alSplitPaint();},
+  'al-sp-save':()=>alSpSave()
+});
 
 /*V45-JS-END*/
 init();
