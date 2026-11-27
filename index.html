@@ -466,6 +466,7 @@ table.odT td.cv{text-align:center;font-weight:700;width:40px;color:var(--ink)}ta
 .alscale{display:flex;justify-content:space-between;font-size:.72rem;color:var(--ink3)}
 .alinfo{background:var(--accent-soft);border-radius:8px;padding:8px 12px;margin-top:10px;font-size:.86rem}
 .alvadd{display:inline-flex;gap:6px;align-items:center;margin-right:14px}.alvadd select{padding:5px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.pltbl .pln a{display:inline-block;max-width:150px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}.pltbl .pln .pllv{font-size:.68rem;overflow:hidden;text-overflow:ellipsis}
 
 /*V45-CSS-END*/
 </style>
@@ -1615,6 +1616,7 @@ function viewProfile0(id){
   const used=annualUsed(id),left=CFG.annualDays-used;
   const span=st.k==='active'?blockSpan(it,ym):[],cap=CFG.capPerMonthDays*span.length,ru=span.length?rotationUsed(it,ym):0;
   const actions=tr?'<button class="btn" data-act="edit-intern" data-id="'+id+'">Edit details</button><button class="btn" data-act="edit-plan" data-id="'+id+'">Edit plan</button>':'';
+  const addLv=(tr||(E().role==='coordinator'&&place&&myUnits().includes(place)))?'<button class="btn" data-act="add-leave" data-id="'+id+'">Add leave</button>':'';
   const tl=it.plan.map((en,ix)=>{
     let sub='';if(en.sub)sub='<div>'+esc(en.sub)+'</div>';else if(en.dept==='ELE')sub='<div>Not chosen</div>';
     if(en.dept==='SSS'&&sg&&sg.spec)sub='<div>'+esc(sg.spec)+'</div>';
@@ -1632,7 +1634,7 @@ function viewProfile0(id){
     return'<tr><td>'+chip(b,BLOCK_NAME[b])+'<div class="small muted">'+fmtYmShort(first)+(first!==last?' to '+fmtYmShort(last):'')+'</div></td>'+cells+'</tr>';
   }).join('');
   const reqBtns=(self||(PREVIEW&&PREVIEW.role==='intern'&&PREVIEW.internId===id))?'<div class="row" style="margin-bottom:12px"><button class="btn pri sm" data-act="new-leave">Request leave</button><button class="btn sm" data-act="new-elective">Request elective</button><button class="btn sm" data-act="new-freeze">Request a freeze</button></div>':'';
-  return head(it.name,'<a href="'+telHref(it.phone)+'">'+esc(it.phone)+'</a>'+(it.email?' &nbsp; <a href="mailto:'+esc(it.email)+'">'+esc(it.email)+'</a>':'')+' &nbsp; '+affilTag(affilOf(it))+' &nbsp; '+(groupsOf(it).length?'Group'+(groupsOf(it).length>1?'s ':' ')+esc(groupsLabel(it))+' &nbsp; ':''),actions)+
+  return head(it.name,'<a href="'+telHref(it.phone)+'">'+esc(it.phone)+'</a>'+(it.email?' &nbsp; <a href="mailto:'+esc(it.email)+'">'+esc(it.email)+'</a>':'')+' &nbsp; '+affilTag(affilOf(it))+' &nbsp; '+(groupsOf(it).length?'Group'+(groupsOf(it).length>1?'s ':' ')+esc(groupsLabel(it))+' &nbsp; ':''),actions+addLv)+
   (tr?codeBox('interns',it):'')+
   '<div class="cols"><section class="panel"><h2>Now</h2><p style="margin:0 0 8px">'+(st.block?chip(st.block,st.text):'<span class="tag mute">'+esc(st.text)+'</span>')+(place&&st.block==='SSS'?' in '+esc(UNIT_NAME[place])+' this half of the month':'')+'</p>'+
     (st.k==='active'&&st.block==='SSS'&&!(sg&&sg.spec)?'<div class="note warn small">The surgical subspecialty has not been assigned yet.</div>':'')+
@@ -3802,7 +3804,7 @@ document.addEventListener('change',ev=>{const t=ev.target;if(!t||!t.dataset||t.d
 /* ===================== version 4.7 additions ===================== */
 /* ---------- change log (Training, Setup page) ---------- */
 const CHANGELOG=[
- {v:'4.11',t:'Work offline, save all at once, hide drafts, one Allocation page',items:['Edits on management pages now stay on your device until you press Save all (top of the page). Nothing lags, it survives a refresh, and you can review or discard single changes. If someone else changed the same item you choose Keep mine or Take theirs.','Hide a month’s allocation and each on-call rota from interns with the Visible/Hidden switch; interns are notified when you publish.','One Allocation page replaces the three surgery tabs: firm blocks, sub-specialties, collapsible Orthopedics, visiting interns counted everywhere, 1st/2nd half.','Split button: up to 3 placements in a month with exact days (for example Firm 1 until 22 then Urology), with a draggable month bar.','Drag an intern onto another block to move them.']},
+ {v:'4.11',t:'Work offline, save all at once, hide drafts, one Allocation page',items:['Edits on management pages now stay on your device until you press Save all (top of the page). Nothing lags, it survives a refresh, and you can review or discard single changes. If someone else changed the same item you choose Keep mine or Take theirs.','Hide a month’s allocation and each on-call rota from interns with the Visible/Hidden switch; interns are notified when you publish.','One Allocation page replaces the three surgery tabs: firm blocks, sub-specialties, collapsible Orthopedics, visiting interns counted everywhere, 1st/2nd half.','Split button: up to 3 placements in a month with exact days (for example Firm 1 until 22 then Urology), with a draggable month bar.','Drag an intern onto another block to move them.','Add leave button on an intern’s page (Training, and coordinators for interns in their rotation): saved as approved straight away, counted in the balance and on-call checks, and the intern is notified.']},
  {v:'4.10',t:'Faster saving, and a light, dark or auto theme',items:['The service now keeps a ready copy of the Sheet data (refreshed whenever anything is saved or the Sheet is edited), so loading and saving no longer read every tab each time.','A small “Saving… / Saved” note appears in the corner.','Choose Auto, Light or Dark under your name in the side menu; the choice is remembered on each device.','The Surgical rota planner now has a Save draft button instead of saving by itself, so the draft can no longer be reset by a refresh; unsaved changes are flagged.','The Training department can use the Rota planner, edit drafts and publish, in addition to the Surgical coordinator and deputy.']},
  {v:'4.9',t:'Smarter rota import, easy rota editing, and new intern views',items:['On-call import now recognises names by who is rotating in that rota that day (short names, initials, duplicates), with a dropdown to fix unknown names, an option to remember spellings, and “Import anyway” for rule-blocked rows (coordinators, deputies and Training; only Training can add someone not placed in the rota).','Import reads dates like 1\\10, day-number-only sheets, place columns and late-coverage marks; skipped rows can be downloaded.','Coordinators, deputies and Training can edit Gynae, Medicine, Orthopedics, Neurosurgery and Pediatrics rotas directly as a draft and save once; interns are notified only about their own changes.','Surgical allocation: import and export the Surgical Department Interns sheet (firms, sub-specialties, # for Neurosurgery), with preview, fix dropdowns, and leave notes like L1-4 creating approved annual leave.','Places and Pediatrics morning ward distribution can be edited, imported and exported; rota downloads are Excel files in the department layouts.','Interns see every rota as a Calendar or Table with their own days highlighted, weekends and holidays shaded and approved leave shown; no counts or comparisons are shown to interns.']},
  {v:'4.8',t:'Rota planner for the Surgical coordinators',items:[
@@ -4151,7 +4153,13 @@ function plRows(ym,days,base){
   arr.sort((a,b)=>(isVisitor(a)-isVisitor(b))||(plHalf(a,ym,1)<plHalf(b,ym,1)?-1:plHalf(a,ym,1)>plHalf(b,ym,1)?1:0)||a.name.localeCompare(b.name));
   return arr.map(x=>x.id);
 }
-function plName(id,rows){const it=S.interns[id];if(!it)return'Unknown';return plHidden()?'Intern '+(rows.indexOf(id)+1):it.name;}
+let PL_SN={k:'',m:{}};
+function plShort(id,rows){const k=rows.join(',');if(PL_SN.k!==k){const L=rows.map(x=>S.interns[x]).filter(Boolean),m={},by={};
+    const sh=it=>{const p=nameParts(it.name);if(p.length<2)return p.join(' ');let li=p.length-1;while(li>1&&NAME_PARTICLES.includes(p[li-1].toLowerCase()))li--;return p[0]+' '+p[li][0].toUpperCase()+'.';};
+    L.forEach(it=>{const x=sh(it).toLowerCase();(by[x]=by[x]||[]).push(it);});
+    L.forEach(it=>{const x=sh(it);m[it.id]=it.short&&String(it.short).trim()?String(it.short).trim():by[x.toLowerCase()].length>1?shortGridName(it.name,false):x;});
+    PL_SN={k,m};}return PL_SN.m[id]||(S.interns[id]||{}).name||'';}
+function plName(id,rows){const it=S.interns[id];if(!it)return'Unknown';return plHidden()?'Intern '+(rows.indexOf(id)+1):plShort(id,rows);}
 function plLast(id,ym){
   const first=ym+'-01';let best='';
   shiftsOf(id,true).forEach(s=>{if(s.date<first&&s.date>best)best=s.date;});
@@ -4246,7 +4254,7 @@ function viewPlanner(){
     wbox='<div class="plwarn noprint" style="background:#eef2ff;border-color:#b6c3f5;color:#26307a">There is no rota for this month yet. Press “Start new version” to begin.</div>';
   }
   /* grid */
-  let th1='<tr><th rowspan="2" class="plh pln">Intern</th><th colspan="2" class="plg">Firm</th><th rowspan="2" class="plh">Last<br>call</th><th colspan="'+hd+'" class="plg thick">First half</th><th colspan="'+(n-hd)+'" class="plg thick">Second half</th><th colspan="5" class="plg">Calls</th></tr>';
+  let th1='<tr><th rowspan="2" class="plh pln">Intern</th><th colspan="2" class="plg">Firm</th><th rowspan="2" class="plh">Last</th><th colspan="'+hd+'" class="plg thick">First half</th><th colspan="'+(n-hd)+'" class="plg thick">Second half</th><th colspan="5" class="plg">Calls</th></tr>';
   let th2='<tr><th class="plh">H1</th><th class="plh">H2</th>';
   const dayCls=d=>{const date=ym+'-'+pad(d);const hol=holidayOf(date);return(hol?'hol':(isWkDay(date)?'wk':''))+(d===hd+1?' thick':'');};
   for(let d=1;d<=n;d++){const date=ym+'-'+pad(d);th2+='<th class="plh '+dayCls(d)+(UI.pDay===dk2(d)?' dsel':'')+'"><a href="#" data-act="pl-day" data-d="'+dk2(d)+'" class="plda" title="Who can still be added">'+d+'<small>'+'SMTWTFS'[dow(date)]+'</small></a></th>';}
@@ -4258,7 +4266,7 @@ function viewPlanner(){
     const near=new Set();
     if(UI.pDots!==false){
       const dates=calls.map(d=>ym+'-'+pad(d)).concat(otherDates(id,ym));
-      for(let d=1;d<=n;d++){if(mine.has(d))continue;const dt=ym+'-'+pad(d);if(dates.some(x=>{const g=Math.abs(dayCount(x,dt));return g>=1&&g<=MIN_GAP_PL-1;}))near.add(d);}
+      for(let d=1;d<=n;d++){if(mine.has(d))continue;const dt=ym+'-'+pad(d);if(dates.some(x=>{const g=Math.abs(dayCount(x,dt)-1);return g>=1&&g<=MIN_GAP_PL-1;}))near.add(d);}
     }
     const mv=df.rem.length&&df.add.length;
     const locks=(dr&&dr.locks)||{};
@@ -4289,7 +4297,7 @@ function viewPlanner(){
     if(lvr.length){const r=lvr[0];lvTxt='<div class="pllv">'+esc((KIND_NAME[r.kind]||'Leave'))+' '+(+(r.from<ym+'-01'?'01':r.from.slice(8,10)))+'–'+(+(r.to>ym+'-'+pad(n)?pad(n):r.to.slice(8,10)))+'</div>';}
     const nm=plName(id,rows);
     body+=(ri===rows.findIndex(x=>isVisitor(S.interns[x]))&&isVisitor(it)&&ri>0?'<tr class="plsep"><td colspan="'+(n+11)+'"></td></tr>':'')+
-     '<tr class="'+(sel===id?'plsel':'')+'"><td class="pln"><a href="#" data-act="pl-sel" data-i="'+id+'">'+esc(nm)+'</a>'+lvTxt+'</td><td class="plf">'+esc(plHalf(it,ym,1))+'</td><td class="plf">'+esc(plHalf(it,ym,2))+'</td><td><span class="lc '+(last.near?'lo':'lg')+'">'+esc(last.txt)+'</span></td>'+cells+
+     '<tr class="'+(sel===id?'plsel':'')+'"><td class="pln"><a href="#" data-act="pl-sel" data-i="'+id+'" title="'+esc(plHidden()?'':it.name)+'">'+esc(nm)+'</a>'+lvTxt+'</td><td class="plf">'+esc(plHalf(it,ym,1))+'</td><td class="plf">'+esc(plHalf(it,ym,2))+'</td><td><span class="lc '+(last.near?'lo':'lg')+'">'+esc(last.txt)+'</span></td>'+cells+
      '<td class="st sg">'+W+'</td><td class="st sb">'+T+'</td><td class="st sg'+(hWarn?' wn':'')+'">'+H+'</td><td class="st sg">'+(T+H)+'</td><td class="cnt'+(over?' over':(caps.length&&caps.every(c=>c.n>=c.max)?' full':''))+'">'+capTxt+'</td></tr>';
   });
   /* cover row */
@@ -5768,11 +5776,9 @@ function viewAllocation(){
   const halfSeg='<div class="seg">'+alHalves(ym).map(x=>'<button class="'+(hn===x.n?'on':'')+'" data-act="al-half" data-v="'+x.n+'">'+(x.n===1?'1st':'2nd')+' half · '+pad(x.a)+'–'+pad(x.b)+'</button>').join('')+'</div>';
   const tabs='<div class="seg"><button class="on" data-act="sgtab" data-v="alloc">Allocation</button><button data-act="sgtab" data-v="staff">Firm and subspecialty staff</button></div>';
   const btns=(edit?'<button class="btn" data-act="gs-suggest">Suggest firms</button><button class="btn" data-act="sa-import">Import allocation sheet</button>':'')+'<button class="btn" data-act="sa-export">Export allocation sheet</button>';
-  const unp=Object.values(S.interns).filter(x=>isVisitor(x)&&!entryAt(x,ym)&&(!x.startYm||x.startYm<=ym));
-  const addBar=edit&&unp.length?'<div class="bar"><span class="small"><b>Visiting interns not placed in '+esc(fmtYm(ym))+':</b></span>'+unp.map(x=>'<span class="alvadd">'+internLink(x.id)+' <select data-aladd="'+x.id+'" aria-label="Place '+esc(x.name)+'"><option value="">Place in…</option>'+alUnitOpts('')+'</select></span>').join('')+'</div>':'';
   return head('Surgical allocation','One page, laid out like the allocation sheet. Visiting interns are counted in the firms and subspecialties.','')+
    '<div class="bar">'+tabs+nav+halfSeg+'<span class="grow"></span>'+(edit?visSwitch('a','',ym):'')+btns+'</div>'+
-   addBar+(warn.length?'<div class="alwarn">⚠ '+warn.map(esc).join(' · ')+'</div>':'')+
+   (warn.length?'<div class="alwarn">⚠ '+warn.map(esc).join(' · ')+'</div>':'')+
    '<div class="altitle">'+esc(saTitle(ym,h))+'</div><div class="alsheet"><h2 class="alh">General Surgery <span class="cnt">'+plural(rows.filter(r=>r.val.indexOf('F:')===0).length,'intern')+'</span></h2><div class="algrid">'+g+'</div><h2 class="alh">Sub-specialties <span class="cnt">'+plural(rows.filter(r=>r.val.indexOf('S:')===0).length,'intern')+'</span></h2><div class="algrid">'+sb+'</div>'+
    '<details class="alort"'+(UI.alOrt?' open':'')+'><summary data-act="al-ort">Orthopedics this half <span class="cnt">· '+plural(ort.length,'intern')+' · not on the exported sheet</span></summary>'+alBlock('Orthopedics',ort,'O',ym,h,edit,n,'<div class="hint" style="margin:4px 10px">Their other half is in the sub-specialties above. Choosing a subspecialty here moves the intern up there and puts Orthopedics in the other half.</div>')+'</details>'+
    '<p class="hint"># Neurosurgery is not counted for surgical on-call. Ortho interns are on the Orthopedics rota. '+(isTr()?'The first half ends on day '+alHalves(ym)[0].b+' this month (change it in Setup).':'')+'</p></div>';
@@ -5865,9 +5871,6 @@ document.addEventListener('keydown',ev=>{
 });
 document.addEventListener('change',ev=>{
   const t=ev.target;if(!t||!t.dataset)return;
-  if(t.dataset.aladd){const id=t.dataset.aladd,v=t.value;if(!v)return;const ym=UI.sgYm;
-    const ne=v.indexOf('F:')===0?{ym,dept:'GS',fa:v.slice(2)}:{ym,dept:'SSS',vsub:v==='O'?'Orthopedics':v.slice(2)};if(!ne.fa)delete ne.fa;
-    mut('interns',id,b=>Object.assign({},b,{plan:(b.plan||[]).filter(x=>x.ym!==ym).concat([ne]).sort((a,c)=>a.ym<c.ym?-1:1)})).then(()=>{logEv('Placed visiting intern '+S.interns[id].name+' in '+fmtYm(ym));scheduleRender();});return;}
   if(t.dataset.alsel){alMove(t.dataset.alsel,alHalf(),t.value).then(()=>scheduleRender());return;}
   if(t.dataset.alsp!==undefined&&UI.alSp){alSpRead();alSplitPaint();}
 });
@@ -5889,6 +5892,63 @@ Object.assign(ACT,{
   'al-sp-del':el=>{alSpRead();UI.alSp.list.splice(+el.dataset.i,1);alSplitPaint();},
   'al-sp-save':()=>alSpSave()
 });
+
+/* firm counts include visiting interns (and split months) */
+function firmCounts(ym,override){
+  const c={a:{},b:{}};FIRMS.forEach(f=>{c.a[f]=0;c.b[f]=0;});const h=halfDay(ym),dm=dim(ym);
+  Object.values(S.interns).forEach(it=>{
+    const e=entryAt(it,ym);if(!e)return;const o=override&&override[it.id];
+    let pls;
+    if(o&&e.dept==='GS'&&!e.more&&!e.from&&!e.to)pls=[{val:'F:'+(o.fa||''),from:1,to:h},{val:'F:'+(o.fb||''),from:h+1,to:dm}];
+    else pls=alDerive(it,ym);
+    FIRMS.forEach(f=>{if(pls.some(p=>p.val==='F:'+f&&p.from<=h))c.a[f]++;if(pls.some(p=>p.val==='F:'+f&&p.to>h))c.b[f]++;});
+  });
+  return c;
+}
+
+/* ===================== 4.11-D: add leave directly ===================== */
+function dlForm(){const k=document.querySelector('input[name=dl-kind]:checked');return{kind:k?k.value:'annual',from:$('dl-from').value,to:$('dl-to').value,note:$('dl-note').value.trim()};}
+function dlCheck(id,f){
+  const it=S.interns[id],errors=[],warns=[];let days=0;
+  if(!f.from||!f.to)return{errors,warns,days,wait:true};
+  if(f.to<f.from){errors.push('The last day is before the first day.');return{errors,warns,days};}
+  days=dayCount(f.from,f.to);
+  if(ymOf(f.from)!==ymOf(f.to))errors.push('Leave has to stay inside one calendar month. Add a second entry for the next month.');
+  const en=entryAt(it,ymOf(f.from));
+  if(!en)errors.push('These dates are outside the training plan.');else if(en.dept==='FROZEN')errors.push('The internship is frozen in this month.');
+  const clash=leaveReqs(id).find(r=>r.status!=='declined'&&r.from<=f.to&&f.from<=r.to);
+  if(clash)errors.push('This overlaps other leave ('+fmtDate(clash.from)+' to '+fmtDate(clash.to)+').');
+  const e=E();
+  if(!errors.length&&e.role==='coordinator'&&!myUnits().includes(placementAt(it,f.from,S.surgery[id])))errors.push('You can add leave only on dates when the intern is in your rotation.');
+  if(f.kind==='emergency'&&!f.note)errors.push('Add a short reason for emergency leave.');
+  if(!errors.length)leaveWarnings({id:null,internId:id,kind:f.kind,from:f.from,to:f.to}).forEach(w=>warns.push(w));
+  return{errors,warns,days};
+}
+function dlMsg(id){
+  const c=dlCheck(id,dlForm()),m=$('dl-msg');if(!m)return c;
+  m.innerHTML=(c.days?'<p class="small muted" style="margin:10px 0 0">'+plural(c.days,'calendar day')+'.</p>':'')+c.errors.map(x=>'<div class="note bad">'+esc(x)+'</div>').join('')+c.warns.map(x=>'<div class="note warn small">'+esc(x)+' You can still save it.</div>').join('');
+  const b=document.querySelector('[data-act=dl-save]');if(b)b.disabled=!!(c.errors.length||c.wait);
+  return c;
+}
+function openAddLeave(id){
+  const it=S.interns[id];if(!it)return;
+  const used=annualUsed(id);
+  openModal('<h2>Add leave · '+esc(it.name)+'</h2><p class="hint" style="margin-top:0">Saved as approved straight away, counted in the yearly balance ('+used+' of '+CFG.annualDays+' days used), and '+esc(it.name.split(' ')[0])+' is notified.</p>'+
+   '<label>Type</label><div>'+['annual','sick','emergency'].map((k,i)=>'<label class="inline"><input type="radio" name="dl-kind" value="'+k+'"'+(i?'':' checked')+' data-dl="'+id+'"> '+KIND_NAME[k]+'</label>').join(' &nbsp; ')+'</div>'+
+   '<div class="grid2"><div><label for="dl-from">From</label><input type="date" id="dl-from" data-dl="'+id+'"></div><div><label for="dl-to">To</label><input type="date" id="dl-to" data-dl="'+id+'"></div></div>'+
+   '<label for="dl-note">Note (optional)</label><input type="text" id="dl-note" maxlength="200" data-dl="'+id+'">'+
+   '<div id="dl-msg"></div><div class="foot"><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="dl-save" data-id="'+id+'" disabled>Add leave</button></div>');
+}
+document.addEventListener('input',ev=>{const t=ev.target;if(t&&t.dataset&&t.dataset.dl)dlMsg(t.dataset.dl);});
+document.addEventListener('change',ev=>{const t=ev.target;if(t&&t.dataset&&t.dataset.dl)dlMsg(t.dataset.dl);});
+async function dlSave(id){
+  const it=S.interns[id],f=dlForm(),c=dlCheck(id,f);if(c.errors.length||c.wait)return;
+  const unit=placementAt(it,f.from,S.surgery[id])||'MED';
+  await put('requests',uid('r'),{type:'leave',kind:f.kind,internId:id,from:f.from,to:f.to,reason:f.note,unit,status:'approved',steps:[{role:stepRole(),by:actor(),action:'approved',at:Date.now(),note:'Added directly'}],createdAt:Date.now(),by:actor()});
+  logEv('Added '+KIND_NAME[f.kind].toLowerCase()+' for '+it.name+' ('+f.from+' to '+f.to+')');
+  closeModal();toast('Leave added. '+it.name.split(' ')[0]+' will be notified.');
+}
+Object.assign(ACT,{'add-leave':el=>openAddLeave(el.dataset.id),'dl-save':el=>dlSave(el.dataset.id)});
 
 /*V45-JS-END*/
 init();
