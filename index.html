@@ -379,11 +379,64 @@ table.wdT td{border:1px solid var(--line2);padding:8px;vertical-align:top;line-h
 table.odT td.oc{cursor:pointer;min-width:110px}table.odT td.oc.em{background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(0,0,0,.025) 6px 12px)}
 table.odT td.oc:hover{filter:brightness(.95)}table.odT td.oc:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 table.odT td.chg{background:#fff2a8!important}table.odT td.wn{box-shadow:inset 0 0 0 2px #ee8a1f}table.odT td.blk{box-shadow:inset 0 0 0 2px #d0392b;background:#fde4e0!important}
-table.odT td.cv{text-align:center;font-weight:700;width:40px;color:var(--ink)}table.odT td.cv.cg{background:#bfe8c8}table.odT td.cv.co{background:#fde3ae}table.odT td.cv.cr{background:#f6b3a8}
+table.odT td.cv{text-align:center;font-weight:700;width:40px;color:var(--ink)}table.odT td.cv.cg{background:#bfe8c8!important}table.odT td.cv.co{background:#fde3ae!important}table.odT td.cv.cr{background:#f6b3a8!important}
 .odstrip{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px}.odch{background:var(--surface2);border-radius:8px;padding:5px 8px;font-size:.74rem;display:grid;grid-template-columns:1fr auto;gap:0 6px}.odch span{font-weight:700}.odch small{grid-column:1/3;color:var(--ink3);font-size:.64rem}
 .pklist{list-style:none;margin:8px 0 0;padding:0;max-height:48vh;overflow:auto}.pkr{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--line2)}
 .plwarn li.bad{color:#a02a1f}
 @media print{.noprint,.bar,.seg,.iclv{display:none!important}table.icT td{height:18px;font-size:8px}}
+
+/* ---- 4.10 ---- */
+#savemsg{position:fixed;left:14px;bottom:14px;z-index:60;padding:6px 12px;border-radius:999px;background:var(--surface);color:var(--ink2);border:1px solid var(--line);font-size:.8rem;box-shadow:0 2px 8px rgba(0,0,0,.15);opacity:0;pointer-events:none;transition:opacity .2s}
+#savemsg.on{opacity:1}#savemsg.ok{color:var(--ok)}
+.seg.thm{margin-top:8px;display:flex}.seg.thm button{flex:1;padding:4px 6px;font-size:.78rem}
+@media print{#savemsg{display:none}}
+@media (prefers-color-scheme:dark){
+:root:not([data-theme="light"]) .iclv{background:#3a2a12;border-color:#7a5a1a;color:#ffcf7a}
+:root:not([data-theme="light"]) table.icT td.icst .lv{color:#ffcf7a}
+:root:not([data-theme="light"]) table.icT td.icst .hl{color:#b9b0ff}
+:root:not([data-theme="light"]) table.icT tr.we td{background:#2a2650}
+:root:not([data-theme="light"]) table.icT tr.hol td{background:#352c6a}
+:root:not([data-theme="light"]) table.icT tr.lvr td.d,:root:not([data-theme="light"]) table.icT tr.lvr td.dn,:root:not([data-theme="light"]) table.icT tr.lvr td.icst{background:#b27a12!important;color:#fff3d6}
+:root:not([data-theme="light"]) .ict.we{background:#2a2650;border-color:#3a3470}
+:root:not([data-theme="light"]) .ict.hol{background:#352c6a;border-color:#4a3f90}
+:root:not([data-theme="light"]) .ict .icsm{color:#b9b0ff}
+:root:not([data-theme="light"]) .ict.on{background:#232d58}
+:root:not([data-theme="light"]) .ict.on.we,:root:not([data-theme="light"]) .ict.on.hol{background:#2b3470}
+:root:not([data-theme="light"]) .ict.sel{outline-color:#93a5ff}
+:root:not([data-theme="light"]) .ict.lv ul{color:#7e8798}
+:root:not([data-theme="light"]) .ict .lvb{background:#b27a12;color:#fff3d6}
+:root:not([data-theme="light"]) table.wdT td.per{background:#3a2a44}
+:root:not([data-theme="light"]) .wl{color:#ffcf7a;background:#3a2a12}
+:root:not([data-theme="light"]) table.odT td.chg{background:#4d4410!important}
+:root:not([data-theme="light"]) table.odT td.blk{background:#47201c!important}
+:root:not([data-theme="light"]) table.odT td.cv.cg{background:#1d4a2c!important}
+:root:not([data-theme="light"]) table.odT td.cv.co{background:#4d3a12!important}
+:root:not([data-theme="light"]) table.odT td.cv.cr{background:#5a2a22!important}
+:root:not([data-theme="light"]) .plwarn li.bad{color:#ff9e92}
+}
+:root[data-theme="dark"] .iclv{background:#3a2a12;border-color:#7a5a1a;color:#ffcf7a}
+:root[data-theme="dark"] table.icT td.icst .lv{color:#ffcf7a}
+:root[data-theme="dark"] table.icT td.icst .hl{color:#b9b0ff}
+:root[data-theme="dark"] table.icT tr.we td{background:#2a2650}
+:root[data-theme="dark"] table.icT tr.hol td{background:#352c6a}
+:root[data-theme="dark"] table.icT tr.lvr td.d,:root[data-theme="dark"] table.icT tr.lvr td.dn,:root[data-theme="dark"] table.icT tr.lvr td.icst{background:#b27a12!important;color:#fff3d6}
+:root[data-theme="dark"] .ict.we{background:#2a2650;border-color:#3a3470}
+:root[data-theme="dark"] .ict.hol{background:#352c6a;border-color:#4a3f90}
+:root[data-theme="dark"] .ict .icsm{color:#b9b0ff}
+:root[data-theme="dark"] .ict.on{background:#232d58}
+:root[data-theme="dark"] .ict.on.we,:root[data-theme="dark"] .ict.on.hol{background:#2b3470}
+:root[data-theme="dark"] .ict.sel{outline-color:#93a5ff}
+:root[data-theme="dark"] .ict.lv ul{color:#7e8798}
+:root[data-theme="dark"] .ict .lvb{background:#b27a12;color:#fff3d6}
+:root[data-theme="dark"] table.wdT td.per{background:#3a2a44}
+:root[data-theme="dark"] .wl{color:#ffcf7a;background:#3a2a12}
+:root[data-theme="dark"] table.odT td.chg{background:#4d4410!important}
+:root[data-theme="dark"] table.odT td.blk{background:#47201c!important}
+:root[data-theme="dark"] table.odT td.cv.cg{background:#1d4a2c!important}
+:root[data-theme="dark"] table.odT td.cv.co{background:#4d3a12!important}
+:root[data-theme="dark"] table.odT td.cv.cr{background:#5a2a22!important}
+:root[data-theme="dark"] .plwarn li.bad{color:#ff9e92}
+.ict .ictag{position:static;display:inline-block;margin:1px 0 2px}
 
 /*V45-CSS-END*/
 </style>
@@ -500,7 +553,7 @@ function placementAt(it,date,surg){
   const e=entryAt(it,ymOf(date));if(!e||e.dept==='FROZEN')return null;
   const day=+date.slice(8,10),p=partAt(e,day);if(!p)return null;
   if(p.dept!=='SSS')return p.dept;
-  if(p!==e||e.vsub)return'SSS';
+  if(p!==e||e.vsub){const v=String(p.vsub||'').trim().toLowerCase();return /^ortho/.test(v)?'ORT':(CFG.neuroSpec&&v===String(CFG.neuroSpec).trim().toLowerCase())?'NEURO':'SSS';}
   const sub=surg&&surg.spec&&CFG.neuroSpec&&String(surg.spec).trim().toLowerCase()===String(CFG.neuroSpec).trim().toLowerCase()?'NEURO':'SSS';
   const first=surg&&surg.orthFirst?'ORT':sub,second=surg&&surg.orthFirst?sub:'ORT';
   return day<=(e.split||halfDay(e.ym))?first:second;
@@ -840,7 +893,7 @@ function cleanMobile(raw){
   return{phone:pick,flag:pick?'Not an 8-digit number, please check':'No number'};
 }
 
-const APP_VERSION='4.9';
+const APP_VERSION='4.10';
 
 /* the groups a part-time intern rotates with (one row per group in the sheet) */
 function groupsOf(it){
@@ -859,11 +912,17 @@ const UI={route:'',gridYm:null,q:'',fBlock:'',fCohort:'',fGroup:'',fAffil:'',tab
 
 /* ============ Talking to the Google script ============ */
 async function call(action,body){
+  if(LAZY.size&&action!=='save'&&action!=='ping'&&action!=='load'&&action!=='logout')await flushLazy();
   let res;
   try{
     res=await fetch(API.url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({action,token:API.token},body||{}))});
   }catch(e){const er=new Error('No connection. Check your internet and try again.');er.code='network';throw er;}
   let j;try{j=await res.json();}catch(e){const er=new Error('The service did not answer properly. Try again in a moment.');er.code='bad_response';throw er;}
+  if(!j.ok&&j.error==='unauthorized'&&!(body&&body._retry)&&API.token){
+    /* the service can briefly misread while it is saving: ask again before signing anyone out */
+    await new Promise(r=>setTimeout(r,1500));
+    return call(action,Object.assign({},body||{},{_retry:1}));
+  }
   if(!j.ok){const er=new Error(j.message||'Something went wrong.');er.code=j.error;if(j.error==='unauthorized')signedOut();throw er;}
   return j;
 }
@@ -882,16 +941,35 @@ let pollT=null,lastFull=0;
 function startPolling(){
   stopPolling();lastFull=Date.now();
   pollT=setInterval(async()=>{
-    if(document.hidden||SAVING||!API.token)return;
-    try{const j=await call('ping');if(j.v!==VER||Date.now()-lastFull>180000){lastFull=Date.now();await loadAll();}}catch(e){}
+    if(document.hidden||SAVING||PENDW||LAZY.size||!API.token)return;
+    try{const j=await call('ping');if(PENDW||LAZY.size||SAVING)return;if(j.v!==VER||Date.now()-lastFull>180000){lastFull=Date.now();await loadAll();}}catch(e){}
   },30000);
 }
 function stopPolling(){if(pollT)clearInterval(pollT);pollT=null;}
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&API.token&&LOADED&&!SAVING)call('ping').then(j=>{if(j.v!==VER)loadAll();}).catch(()=>{});});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&API.token&&LOADED&&!SAVING&&!PENDW&&!LAZY.size)call('ping').then(j=>{if(j.v!==VER&&!PENDW&&!LAZY.size&&!SAVING)loadAll();}).catch(()=>{});});
 
 /* ============ Saving ============ */
 const WQ={};
-function qwrite(path,fn){const p=(WQ[path]||Promise.resolve()).catch(()=>{}).then(fn);WQ[path]=p;return p;}
+let PENDW=0;
+function qwrite(path,fn){PENDW++;const p=(WQ[path]||Promise.resolve()).catch(()=>{}).then(fn).finally(()=>{PENDW--;});WQ[path]=p;return p;}
+/* edits to a draft are kept on the screen at once and sent to the service together a moment later, so rapid editing is not slowed by one save per click */
+const LAZY=new Map();
+function putLazy(col,id,data,ms){
+  S[col][id]={...data,id};scheduleRender();
+  const k=col+'/'+id,o=LAZY.get(k);if(o)clearTimeout(o.t);
+  LAZY.set(k,{col,id,t:setTimeout(()=>{flushOne(k);},ms||1500)});
+}
+function flushOne(k){
+  const o=LAZY.get(k);if(!o)return Promise.resolve();
+  LAZY.delete(k);clearTimeout(o.t);
+  const cur=S[o.col][o.id];if(!cur)return Promise.resolve();
+  const data=strip(cur);
+  return qwrite(k,async()=>{try{await send([{op:'set',col:o.col,id:o.id,data}]);}catch(e){}});
+}
+async function flushLazy(){await Promise.all([...LAZY.keys()].map(flushOne));}
+window.addEventListener('pagehide',()=>{flushLazy();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)flushLazy();});
+window.addEventListener('beforeunload',ev=>{if(LAZY.size){flushLazy();ev.preventDefault();ev.returnValue='';}});
 let LOGQ=[],logT=null;
 function logEv(text){LOGQ.push(text);clearTimeout(logT);logT=setTimeout(flushLog,1500);}
 async function flushLog(){
@@ -1120,9 +1198,9 @@ function navItems(){
 }
 function meBox(){
   const e=E();
-  if(e.role==='training')return'<div class="me"><b>Training department</b><span>'+esc(ME.name||'Full access')+'</span><button class="btn ghost sm" data-act="logout" style="padding:0;min-height:0;margin-top:6px;display:block">Sign out</button></div>';
-  if(e.role==='coordinator'){const p=S.people[e.personId]||{};return'<div class="me"><b>'+esc(p.name)+'</b><span>'+esc(ROLE_LABEL[p.role]||'')+'</span><button class="btn ghost sm" data-act="logout" style="padding:0;min-height:0;margin-top:6px;display:block">Sign out</button></div>';}
-  const it=S.interns[e.internId]||{};return'<div class="me"><b>'+esc(it.name)+'</b><span>Intern</span><button class="btn ghost sm" data-act="logout" style="padding:0;min-height:0;margin-top:6px;display:block">Sign out</button></div>';
+  if(e.role==='training')return'<div class="me"><b>Training department</b><span>'+esc(ME.name||'Full access')+'</span><button class="btn ghost sm" data-act="logout" style="padding:0;min-height:0;margin-top:6px;display:block">Sign out</button>'+themeSeg()+'</div>';
+  if(e.role==='coordinator'){const p=S.people[e.personId]||{};return'<div class="me"><b>'+esc(p.name)+'</b><span>'+esc(ROLE_LABEL[p.role]||'')+'</span><button class="btn ghost sm" data-act="logout" style="padding:0;min-height:0;margin-top:6px;display:block">Sign out</button>'+themeSeg()+'</div>';}
+  const it=S.interns[e.internId]||{};return'<div class="me"><b>'+esc(it.name)+'</b><span>Intern</span><button class="btn ghost sm" data-act="logout" style="padding:0;min-height:0;margin-top:6px;display:block">Sign out</button>'+themeSeg()+'</div>';
 }
 function previewBox(){
   if(ME.role!=='training')return'';
@@ -3017,7 +3095,7 @@ function whoInfo(){
   const it=S.interns[ME.internId]||{};return{name:it.name||ME.name,sub:'Intern'+(groupsOf(it).length?', Group '+groupsLabel(it):'')};
 }
 function meBox(){
-  const e=E(),out=b=>'<div class="me">'+b+'<button class="btn ghost sm" data-act="logout" style="padding:0;min-height:0;margin-top:6px;display:block">Sign out</button></div>';
+  const e=E(),out=b=>'<div class="me">'+b+'<button class="btn ghost sm" data-act="logout" style="padding:0;min-height:0;margin-top:6px;display:block">Sign out</button>'+themeSeg()+'</div>';
   if(e.role==='training'){const w=whoInfo();return out('<b>'+esc(w.sub)+'</b><span>'+esc(ME.name||'Full access')+'</span>');}
   if(e.role==='coordinator'){const p=S.people[e.personId]||{};return out('<b>'+esc(p.name)+'</b><span>'+esc(roleTitle(p))+'</span>');}
   const it=S.interns[e.internId]||{};return out('<b>'+esc(it.name)+'</b><span>Intern</span>');
@@ -3071,7 +3149,7 @@ function topbarHtml(){
       (p?'<div class="pm-det"><div class="small"><span class="muted">Contact number</span><br><b>'+esc(p.phone||'none')+'</b></div><div class="small" style="margin-top:6px"><span class="muted">Email</span><br><b>'+esc(p.email||'none')+'</b></div>'+
         (pend?'<div class="note info small" style="margin-top:8px">Change requested: '+esc([pend.phone,pend.email].filter(Boolean).join(', '))+'. Waiting for Training.</div>':'<button class="btn sm" data-act="prof-req" style="margin-top:8px;width:100%">Change my number or email</button>')+'</div>':'')+
       previewBox().replace('id="pv"','id="pv2"').replace('for="pv"','for="pv2"')+
-      '<button class="btn" data-act="logout" style="width:100%;margin-top:10px">Sign out</button><button class="btn ghost sm" data-act="logout-all" style="width:100%;margin-top:4px">Sign out on all devices</button></div>';
+      themeSeg()+'<button class="btn" data-act="logout" style="width:100%;margin-top:10px">Sign out</button><button class="btn ghost sm" data-act="logout-all" style="width:100%;margin-top:4px">Sign out on all devices</button></div>';
   }
   return'<div class="topbar"><span class="tb-title">Internship board</span><button class="pbtn" data-act="pm-toggle" aria-label="Profile menu" aria-expanded="'+(UI.pmenu?'true':'false')+'"><span><b>'+esc(w.name)+'</b><small>'+esc(w.sub)+'</small></span><span class="av">'+esc(initials(w.name))+'</span></button>'+panel+'</div>';
 }
@@ -3231,7 +3309,7 @@ function sgGs(ym,edit){
 
 /* ---------- visitors (AMH, INH, KSA): one line each ---------- */
 function visitInterns(ym){return Object.values(S.interns).filter(it=>{if(!isVisitor(it))return false;const e=entryAt(it,ym);return e&&entryParts(e).some(p=>p.dept==='GS'||p.dept==='SSS');}).sort((a,b)=>a.name.localeCompare(b.name));}
-const visitSpecs=()=>(CFG.surgSpecs||[]).filter(x=>!isNeuroSpec(x)&&!/ortho/i.test(x));
+const visitSpecs=()=>(CFG.surgSpecs||[]).filter(x=>!/ortho/i.test(x)).concat(['Orthopedics']);
 function slotVal(p){return!p?'':p.dept==='GS'?'G:'+(p.fa||''):p.dept==='SSS'?'S:'+(p.vsub||''):'K';}
 function slotSel(id,i,p,edit){
   if(p&&p.dept!=='GS'&&p.dept!=='SSS')return'<span class="chip" style="--uh:'+(HUE[p.dept]||0)+'">'+esc(BLOCK_NAME[p.dept]||p.dept)+'</span><input type="hidden" data-vp="'+id+'" data-slot="'+i+'" data-k="sel" value="K">';
@@ -3246,7 +3324,7 @@ function sgVisit(ym,edit){
     const cell=i=>{const p=parts[i];return'<td>'+slotSel(it.id,i,p,edit)+(p||i<2?'<div class="dr"><input type="number" class="dnum" min="1" max="31" data-vp="'+it.id+'" data-slot="'+i+'" data-k="from" value="'+(p&&p.from||'')+'" placeholder="from"'+(edit?'':' disabled')+' aria-label="From day"> <span class="muted">to</span> <input type="number" class="dnum" min="1" max="31" data-vp="'+it.id+'" data-slot="'+i+'" data-k="to" value="'+(p&&p.to||'')+'" placeholder="end"'+(edit?'':' disabled')+' aria-label="To day"></div>':'')+'</td>';};
     return'<tr><td>'+internLink(it.id)+' <span class="tag mute">'+esc(affilOf(it))+'</span></td>'+[0,1,2].map(cell).join('')+'</tr>';
   }).join('');
-  return'<p class="hint" style="margin-top:0">Visiting interns do part of the month in General surgery and part in subspecialties. Give each placement its days; leave the days empty for the whole month. Orthopedics and Neurosurgery do not apply to visitors.</p><div class="scroll"><table class="tbl sg"><thead><tr><th>Intern</th><th>Placement 1</th><th>Placement 2</th><th>Placement 3</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  return'<p class="hint" style="margin-top:0">Visiting interns do part of the month in General surgery and part in subspecialties. Give each placement its days; leave the days empty for the whole month. Orthopedics and Neurosurgery can be chosen too; the intern then appears on those rotas.</p><div class="scroll"><table class="tbl sg"><thead><tr><th>Intern</th><th>Placement 1</th><th>Placement 2</th><th>Placement 3</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
 }
 function planWarnings(it,ym,newEntry){
   const out=[],copy=Object.assign({},it,{plan:it.plan.map(x=>x.ym===ym?newEntry:x)});
@@ -3686,6 +3764,7 @@ document.addEventListener('change',ev=>{const t=ev.target;if(!t||!t.dataset||t.d
 /* ===================== version 4.7 additions ===================== */
 /* ---------- change log (Training, Setup page) ---------- */
 const CHANGELOG=[
+ {v:'4.10',t:'Faster saving, and a light, dark or auto theme',items:['The service now keeps a ready copy of the Sheet data (refreshed whenever anything is saved or the Sheet is edited), so loading and saving no longer read every tab each time.','A small “Saving… / Saved” note appears in the corner.','Choose Auto, Light or Dark under your name in the side menu; the choice is remembered on each device.','Draft edits stay on screen while they are sent together, and the page no longer jumps back to “Start new version”.']},
  {v:'4.9',t:'Smarter rota import, easy rota editing, and new intern views',items:['On-call import now recognises names by who is rotating in that rota that day (short names, initials, duplicates), with a dropdown to fix unknown names, an option to remember spellings, and “Import anyway” for rule-blocked rows (coordinators, deputies and Training; only Training can add someone not placed in the rota).','Import reads dates like 1\\10, day-number-only sheets, place columns and late-coverage marks; skipped rows can be downloaded.','Coordinators, deputies and Training can edit Gynae, Medicine, Orthopedics, Neurosurgery and Pediatrics rotas directly as a draft and save once; interns are notified only about their own changes.','Surgical allocation: import and export the Surgical Department Interns sheet (firms, sub-specialties, # for Neurosurgery), with preview, fix dropdowns, and leave notes like L1-4 creating approved annual leave.','Places and Pediatrics morning ward distribution can be edited, imported and exported; rota downloads are Excel files in the department layouts.','Interns see every rota as a Calendar or Table with their own days highlighted, weekends and holidays shaded and approved leave shown; no counts or comparisons are shown to interns.']},
  {v:'4.8',t:'Rota planner for the Surgical coordinators',items:[
   'New page “Rota planner”, visible only to the Surgical coordinator and deputy. Training sees the live Surgical rota only, never drafts, versions or notes.',
@@ -4224,7 +4303,7 @@ function plBalance(ym,days,rows){
 }
 
 /* ----- editing ----- */
-async function plSaveDoc(rp){return put('rotaplan',plKey(rp.ym),rp);}
+async function plSaveDoc(rp){return putLazy('rotaplan',plKey(rp.ym),rp);}
 function plEdit(fn,keepHist){
   const ym=UI.pYm,rp=plDoc(ym);if(!rp.draft)return false;
   const h=plHist(ym);if(!keepHist){h.u.push(JSON.stringify({d:rp.draft.days,l:rp.draft.locks||{}}));if(h.u.length>60)h.u.shift();h.r=[];}
@@ -4589,7 +4668,7 @@ function staffTableTab(unit,ym){
   return other+bar+wbox+h+(unit==='OBG'||unit==='PED'||true?'':'')+strip+ward;
 }
 /* ----- editing ----- */
-async function odSave(doc){return put('rotadata',odKey(doc.unit,doc.ym),doc);}
+async function odSave(doc){return putLazy('rotadata',odKey(doc.unit,doc.ym),doc);}
 function odEdit(fn,noHist){
   const unit=UI.ocUnit,ym=UI.ocYm,doc=odDoc(unit,ym);if(!doc)return false;
   const h=odHist(odKey(unit,ym)),before=odSnap(doc);
@@ -4990,7 +5069,7 @@ function saPlace(it,ym,h){
   const p=partAt(e,h.a)||partAt(e,h.b);if(!p)return null;
   if(p.dept==='GS'){const f=h.n===1?(p.fa||p.fb):(p.fb||p.fa);return{k:'GS',firm:f?String(SA_ROM[String(f).toUpperCase()]||f):'',e,p};}
   if(p.dept==='SSS'){
-    if(p.vsub)return{k:'SUB',unit:p.vsub,e,p};
+    if(p.vsub){if(/^ortho/i.test(p.vsub))return{k:'ORT',e,p};return{k:'SUB',unit:p.vsub,neuro:saIsNeuro(p.vsub),e,p};}
     const pl=placementAt(it,ym+'-'+saD2(h.n===1?h.a:h.b),S.surgery[it.id]);
     if(pl==='ORT')return{k:'ORT',e,p};
     const sp=(S.surgery[it.id]||{}).spec;
@@ -5311,6 +5390,27 @@ Object.assign(ACT,{
   'wp-imp-go':async()=>{const W=UI.wpImp;closeModal();await wpSaveDoc(W.unit,W.ym,W.periods);toast('Ward distribution imported.');},
   'wp-export':el=>{const u=el.dataset.u,ym=UI.ocYm;saveXls('ward-distribution-'+ym+'.xls','<html><head><meta charset="utf-8"></head><body>'+wpXls(u,ym)+'</body></html>');}
 });
+
+/* ===================== 4.10: theme choice and saving indicator ===================== */
+function themeGet(){try{const t=localStorage.getItem('ib_theme');return t==='light'||t==='dark'?t:'auto';}catch(e){return'auto';}}
+function themeApply(t){const r=document.documentElement;if(t==='light'||t==='dark')r.setAttribute('data-theme',t);else r.removeAttribute('data-theme');}
+function themeSeg(){
+  const t=themeGet();
+  return'<div class="seg thm" role="group" aria-label="Appearance">'+[['auto','Auto'],['light','Light'],['dark','Dark']].map(([k,l])=>'<button class="'+(t===k?'on':'')+'" data-act="theme" data-v="'+k+'" aria-pressed="'+(t===k)+'">'+l+'</button>').join('')+'</div>';
+}
+themeApply(themeGet());
+Object.assign(ACT,{'theme':el=>{const v=el.dataset.v;try{localStorage.setItem('ib_theme',v);}catch(e){}themeApply(v);}});
+/* "Saving…" / "Saved" in the corner: edits show at once, this says when they have reached the Sheet */
+(function(){
+  let box=null,was=false,hideT=null;
+  function ensure(){if(box||!document.body)return box;box=document.createElement('div');box.id='savemsg';box.setAttribute('role','status');box.setAttribute('aria-live','polite');document.body.appendChild(box);return box;}
+  setInterval(()=>{
+    const b=ensure();if(!b)return;
+    const busy=!!(SAVING||PENDW||LAZY.size);
+    if(busy){clearTimeout(hideT);b.textContent='Saving…';b.className='on';was=true;}
+    else if(was){was=false;b.textContent='Saved';b.className='on ok';clearTimeout(hideT);hideT=setTimeout(()=>{b.className='';},1600);}
+  },300);
+})();
 
 /*V45-JS-END*/
 init();
