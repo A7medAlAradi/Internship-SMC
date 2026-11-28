@@ -302,7 +302,7 @@ button.shift{cursor:pointer}
 .plwarn{background:#fff6e0;border:1px solid #efc766;color:#6b4a00;border-radius:8px;padding:8px 12px;margin:8px 0;font-size:.86rem}.plwarn ul{margin:4px 0 0 18px;padding:0}
 .plcard{overflow:auto;max-height:76vh;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
 .pltbl{border-collapse:separate;border-spacing:0;font-size:.78rem;min-width:100%}
-.pltbl th,.pltbl td{border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);padding:0;text-align:center;height:30px;min-width:23px;background:var(--surface)}
+.pltbl th,.pltbl td{border-right:1px solid var(--line2);border-bottom:1px solid var(--line2);padding:0;text-align:center;height:var(--plrh,30px);min-width:23px;background:var(--surface)}
 .pltbl thead th{position:sticky;top:0;z-index:3;background:var(--surface2);height:26px;font-weight:600}
 .pltbl thead tr:nth-child(2) th{top:26px;height:38px}
 .pltbl .pln{position:sticky;left:0;z-index:2;text-align:left;padding:0 10px;min-width:120px;max-width:170px;white-space:nowrap;background:var(--surface);border-right:2px solid var(--line)}
@@ -469,6 +469,15 @@ table.odT td.cv{text-align:center;font-weight:700;width:40px;color:var(--ink)}ta
 .pltbl .pln a{display:inline-block;max-width:150px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}.pltbl .pln .pllv{font-size:.68rem;overflow:hidden;text-overflow:ellipsis}
 .plc.xmark{background:repeating-linear-gradient(45deg,var(--line2),var(--line2) 4px,transparent 4px,transparent 8px)}.plc .xm{font-weight:800;color:var(--ink2);font-size:.8rem}
 .plnf{flex-wrap:wrap}.plnf .inline{display:inline-flex;gap:4px;align-items:center}
+.plicard .plcg{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}.plicard h2 a{font-weight:400;margin-left:8px}
+.plicard{position:fixed;right:18px;bottom:18px;width:340px;max-height:70vh;overflow:auto;z-index:30;box-shadow:0 10px 30px rgba(0,0,0,.25);margin:0}
+@media print{.plicard{display:none}}
+@media(max-width:700px){.plicard{left:10px;right:10px;width:auto}}
+.plhd{cursor:grab;color:var(--ink3);margin-right:4px;user-select:none}.plmvs{display:none;margin-right:2px}tr:hover .plmvs{display:inline-flex}.plmv{border:0;background:none;font-size:9px;padding:0 1px;color:var(--ink3);cursor:pointer}.plmv:hover{color:var(--accent)}
+.pltbl tr.pldragging{opacity:.4}.pltbl tr.pldropa td{box-shadow:inset 0 2px 0 var(--accent)}.pltbl tr.pldropb td{box-shadow:inset 0 -2px 0 var(--accent)}
+.pltbl.pln-num .pln{min-width:0;width:44px;max-width:60px;padding:0 4px;text-align:center}.pltbl.pln-num .plmvs{display:none!important}.pltbl.pln-num .plhd{margin-right:2px}
+.pltbl.pln-full .pln{max-width:240px}.pltbl.pln-full .pln a{max-width:200px}
+@media print{.plhd,.plmvs{display:none!important}}
 
 /*V45-CSS-END*/
 </style>
@@ -1391,9 +1400,9 @@ function viewRotations(){
   const cohorts=[...new Set(Object.values(S.interns).map(planStart))].sort();
   const nf=[UI.fBlock,UI.fGroup,UI.fCohort,UI.q].filter(Boolean).length,coordOn=!tr&&myUnits().length>0;
   const bar='<div class="bar"><div class="seg"><button class="'+(UI.tab==='grid'?'on':'')+'" data-act="tab" data-v="grid">Intern grid</button><button class="'+(UI.tab==='capacity'?'on':'')+'" data-act="tab" data-v="capacity">Capacity by month</button></div>'+
-    '<button class="btn" data-act="gridmove" data-n="-12" aria-label="Previous year">‹</button><button class="btn mlabel" data-act="gridmove" data-n="0" title="Back to this academic year">'+acadLabel(months[0])+'</button><button class="btn" data-act="gridmove" data-n="12" aria-label="Next year">›</button>'+
+    (UI.tab==='grid'?'<input type="search" id="gq" data-bind="q" placeholder="Search name or number" value="'+esc(UI.q)+'" aria-label="Search interns" style="width:200px;max-width:100%">':'')+'<button class="btn" data-act="gridmove" data-n="-12" aria-label="Previous year">‹</button><button class="btn mlabel" data-act="gridmove" data-n="0" title="Back to this academic year">'+acadLabel(months[0])+'</button><button class="btn" data-act="gridmove" data-n="12" aria-label="Next year">›</button>'+
     (UI.tab==='grid'?'<button class="btn'+(UI.showF||nf?' pri':'')+'" data-act="tog" data-k="showF">Filters'+(nf?' ('+nf+')':'')+'</button><button class="btn'+(UI.showKey?' pri':'')+'" data-act="tog" data-k="showKey">Key</button>'+((coordOn||isDualMe())?'<button class="btn'+(UI.focus?' pri':'')+'" data-act="tog" data-k="focus" title="Grey out the rotations that are not yours">'+(UI.focus?'Showing my rotations':'Focus on my rotations')+'</button>':''):'')+'</div>'+
-    (UI.tab==='grid'&&(UI.showF||nf)?'<div class="bar"><input type="search" id="gq" data-bind="q" placeholder="Search name or number" value="'+esc(UI.q)+'" aria-label="Search interns">'+
+    (UI.tab==='grid'&&(UI.showF||nf)?'<div class="bar">'+
     '<select data-bind="fBlock" aria-label="Rotation filter"><option value="">Any rotation</option>'+BLOCKS.map(b=>'<option value="'+b+'"'+(UI.fBlock===b?' selected':'')+'>'+BLOCK_NAME[b]+'</option>').join('')+'</select>'+(UI.fBlock?'<select data-bind="fMonth" aria-label="Month for the rotation filter">'+months.map(m=>'<option value="'+m+'"'+(fMonthOf(months)===m?' selected':'')+'>in '+fmtYm(m)+'</option>').join('')+'</select>':'')+
     '<select data-bind="fGroup" aria-label="Group filter"><option value="">Any group</option>'+PGROUPS.map(g=>'<option value="'+g+'"'+(UI.fGroup===g?' selected':'')+'>Group '+grpLabel(g)+'</option>').join('')+'</select>'+
     '<select data-bind="fCohort" aria-label="Start month filter"><option value="">Any start month</option>'+cohorts.map(c=>'<option value="'+c+'"'+(UI.fCohort===c?' selected':'')+'>Started '+fmtYm(c)+'</option>').join('')+'</select></div>':'');
@@ -3808,7 +3817,7 @@ document.addEventListener('change',ev=>{const t=ev.target;if(!t||!t.dataset||t.d
 /* ===================== version 4.7 additions ===================== */
 /* ---------- change log (Training, Setup page) ---------- */
 const CHANGELOG=[
- {v:'4.11',t:'Work offline, save all at once, hide drafts, one Allocation page',items:['Edits on management pages now stay on your device until you press Save all (top of the page). Nothing lags, it survives a refresh, and you can review or discard single changes. If someone else changed the same item you choose Keep mine or Take theirs.','Hide a month’s allocation and each on-call rota from interns with the Visible/Hidden switch; interns are notified when you publish.','One Allocation page replaces the three surgery tabs: firm blocks, sub-specialties, collapsible Orthopedics, visiting interns counted everywhere, 1st/2nd half.','Split button: up to 3 placements in a month with exact days (for example Firm 1 until 22 then Urology), with a draggable month bar.','Drag an intern onto another block to move them.','Rota drafting: Upload table (Excel or CSV) replaces the draft with the calls in your sheet, saves Leaves-column text and unmatched names as notes, then shows the rule warnings.','Rota drafting: names shown as first name and last initial.','Rota drafting: Mark X (click days an intern must not be scheduled, shown with a cross; Suggest skips them and a hand-added call gets a warning). Notes now take From and To dates, with an option to mark X for the whole range.','Cancel leave (Training): a Cancel leave button on approved leave releases the days and notifies the intern and the coordinator. Leave already started is cancelled from tomorrow.','Surgical rota columns: when you publish, interns are put into the rota columns automatically, alternating so each one rotates through them. Also an Auto-assign columns button, and a Columns button to set them.','Add leave button on an intern’s page (Training, and coordinators for interns in their rotation): saved as approved straight away, counted in the balance and on-call checks, and the intern is notified.']},
+ {v:'4.11',t:'Work offline, save all at once, hide drafts, one Allocation page',items:['Edits on management pages now stay on your device until you press Save all (top of the page). Nothing lags, it survives a refresh, and you can review or discard single changes. If someone else changed the same item you choose Keep mine or Take theirs.','Hide a month’s allocation and each on-call rota from interns with the Visible/Hidden switch; interns are notified when you publish.','One Allocation page replaces the three surgery tabs: firm blocks, sub-specialties, collapsible Orthopedics, visiting interns counted everywhere, 1st/2nd half.','Split button: up to 3 placements in a month with exact days (for example Firm 1 until 22 then Urology), with a draggable month bar.','Drag an intern onto another block to move them.','Rota drafting: Upload table (Excel or CSV) replaces the draft with the calls in your sheet, saves Leaves-column text and unmatched names as notes, then shows the rule warnings.','Rota drafting: names switch (Full name, Short name, Number; Number makes the column narrow), sort switch (By firm / SS, By name, My order), drag a row or use the arrows to reorder, Reset order, intern card when you click a name, Fit to screen, and manual matching of unmatched names after Upload table.','Rotations tab: the search box is always visible.','Rota drafting: Mark X (click days an intern must not be scheduled, shown with a cross; Suggest skips them and a hand-added call gets a warning). Notes now take From and To dates, with an option to mark X for the whole range.','Cancel leave (Training): a Cancel leave button on approved leave releases the days and notifies the intern and the coordinator. Leave already started is cancelled from tomorrow.','Surgical rota columns: when you publish, interns are put into the rota columns automatically, alternating so each one rotates through them. Also an Auto-assign columns button, and a Columns button to set them.','Add leave button on an intern’s page (Training, and coordinators for interns in their rotation): saved as approved straight away, counted in the balance and on-call checks, and the intern is notified.']},
  {v:'4.10',t:'Faster saving, and a light, dark or auto theme',items:['The service now keeps a ready copy of the Sheet data (refreshed whenever anything is saved or the Sheet is edited), so loading and saving no longer read every tab each time.','A small “Saving… / Saved” note appears in the corner.','Choose Auto, Light or Dark under your name in the side menu; the choice is remembered on each device.','The Surgical rota planner now has a Save draft button instead of saving by itself, so the draft can no longer be reset by a refresh; unsaved changes are flagged.','The Training department can use the Rota planner, edit drafts and publish, in addition to the Surgical coordinator and deputy.']},
  {v:'4.9',t:'Smarter rota import, easy rota editing, and new intern views',items:['On-call import now recognises names by who is rotating in that rota that day (short names, initials, duplicates), with a dropdown to fix unknown names, an option to remember spellings, and “Import anyway” for rule-blocked rows (coordinators, deputies and Training; only Training can add someone not placed in the rota).','Import reads dates like 1\\10, day-number-only sheets, place columns and late-coverage marks; skipped rows can be downloaded.','Coordinators, deputies and Training can edit Gynae, Medicine, Orthopedics, Neurosurgery and Pediatrics rotas directly as a draft and save once; interns are notified only about their own changes.','Surgical allocation: import and export the Surgical Department Interns sheet (firms, sub-specialties, # for Neurosurgery), with preview, fix dropdowns, and leave notes like L1-4 creating approved annual leave.','Places and Pediatrics morning ward distribution can be edited, imported and exported; rota downloads are Excel files in the department layouts.','Interns see every rota as a Calendar or Table with their own days highlighted, weekends and holidays shaded and approved leave shown; no counts or comparisons are shown to interns.']},
  {v:'4.8',t:'Rota planner for the Surgical coordinators',items:[
@@ -4132,7 +4141,7 @@ const dcopy=o=>JSON.parse(JSON.stringify(o||{}));
 const dk2=d=>'d'+pad(d);
 const callsOf=(days,i)=>Object.keys(days).filter(k=>(days[k]||[]).includes(i)).map(k=>+k.slice(1));
 function plHist(ym){UI.pHist=UI.pHist||{};return UI.pHist[ym]=UI.pHist[ym]||{u:[],r:[]};}
-function plHidden(){if(UI.pHide===undefined){try{UI.pHide=localStorage.getItem('plHide')==='1';}catch(e){UI.pHide=false;}}return UI.pHide;}
+function plHiddenOld(){if(UI.pHide===undefined){try{UI.pHide=localStorage.getItem('plHide')==='1';}catch(e){UI.pHide=false;}}return UI.pHide;}
 
 /* ----- labels ----- */
 function plHalf(it,ym,half){
@@ -4148,7 +4157,7 @@ function plOut(it,date){
   const lv=leaveReqs(it.id).find(r=>r.status==='approved'&&r.from<=date&&date<=r.to);
   return lv?(lv.kind==='annual'?'annual':'sick'):'';
 }
-function plRows(ym,days,base){
+function plRowsBase(ym,days,base){
   const set=new Set();
   [days,liveDays(ym),base||{}].forEach(m=>Object.values(m).forEach(a=>a.forEach(i=>set.add(i))));
   const n=dim(ym);
@@ -4163,7 +4172,7 @@ function plShort(id,rows){const k=rows.join(',');if(PL_SN.k!==k){const L=rows.ma
     L.forEach(it=>{const x=sh(it).toLowerCase();(by[x]=by[x]||[]).push(it);});
     L.forEach(it=>{const x=sh(it);m[it.id]=it.short&&String(it.short).trim()?String(it.short).trim():by[x.toLowerCase()].length>1?shortGridName(it.name,false):x;});
     PL_SN={k,m};}return PL_SN.m[id]||(S.interns[id]||{}).name||'';}
-function plName(id,rows){const it=S.interns[id];if(!it)return'Unknown';return plHidden()?'Intern '+(rows.indexOf(id)+1):plShort(id,rows);}
+function plName(id,rows){return plNameOf(id,rows);}
 function plLast(id,ym){
   const first=ym+'-01';let best='';
   shiftsOf(id,true).forEach(s=>{if(s.date<first&&s.date>best)best=s.date;});
@@ -4238,12 +4247,12 @@ function viewPlanner(){
   /* controls */
   const hist=plHist(ym);
   const bar='<div class="plbar noprint"><button class="btn sm" data-act="pl-m" data-v="-1" aria-label="Previous month">‹</button><b class="plmonth">'+esc(fmtYm(ym))+'</b><button class="btn sm" data-act="pl-m" data-v="1" aria-label="Next month">›</button>'+
-   '<button class="btn sm'+(plHidden()?' on':'')+'" data-act="pl-hide">Names '+(plHidden()?'hidden ✓':'shown')+'</button>'+
+   plNameSeg()+plSortSeg()+
    (base||vers.length?'<button class="btn sm'+(UI.pCmpOn!==false?' on':'')+'" data-act="pl-cmp">Compare'+(bi.label&&UI.pCmpOn!==false?' with '+esc(bi.label):'')+(UI.pCmpOn!==false?' ✓':'')+'</button>':'')+
    '<button class="btn sm'+(UI.pDots!==false?' on':'')+'" data-act="pl-dots">Free-day dots '+(UI.pDots!==false?'✓':'')+'</button>'+
    '<button class="btn sm" data-act="pl-targets">Targets</button>'+
    (edit?'<button class="btn sm" data-act="pl-undo"'+(hist.u.length?'':' disabled')+'>Undo</button><button class="btn sm" data-act="pl-redo"'+(hist.r.length?'':' disabled')+'>Redo</button><button class="btn sm'+(UI.pSwap?' on':'')+'" data-act="pl-swapmode">'+(UI.pSwap?(UI.pSwap.i?'Pick the second call…':'Pick the first call…'):'Swap two calls')+'</button><button class="btn sm" data-act="pl-suggest">Suggest</button>':'')+
-   (edit?'<button class="btn sm'+(UI.pX?' pri':'')+'" data-act="pl-xmode" aria-pressed="'+(UI.pX?'true':'false')+'" title="Click a cell to mark an intern as not available that day">Mark X'+(UI.pX?' · on':'')+'</button><button class="btn sm" data-act="pl-upload">Upload table</button>':'')+
+   '<button class="btn sm" data-act="pl-fit" title="Make every intern fit on the screen and scroll to the grid">Fit to screen</button>'+(edit?'<button class="btn sm'+(UI.pX?' pri':'')+'" data-act="pl-xmode" aria-pressed="'+(UI.pX?'true':'false')+'" title="Click a cell to mark an intern as not available that day">Mark X'+(UI.pX?' · on':'')+'</button><button class="btn sm" data-act="pl-upload">Upload table</button>':'')+
    (edit?'<button class="btn sm" data-act="pl-columns">Columns</button><button class="btn sm" data-act="pl-autocol">Auto-assign columns</button>':'')+
    '<button class="btn sm" data-act="pl-print">Print / PDF</button>'+
    '<span class="plsp"></span>'+(edit?(PLDIRTY[plKey(ym)]?'<span class="pill" style="background:var(--warn-bg);color:var(--warn)">Unsaved changes</span><button class="btn pri" data-act="pl-savedraft">Save draft</button>':'<span class="pill">Draft saved</span><button class="btn" data-act="pl-savedraft" disabled>Save draft</button>')+'<button class="btn sm" data-act="pl-discard">Discard draft</button><button class="btn pri" data-act="pl-publish">Publish…</button>':'<button class="btn pri" data-act="pl-start">Start new version</button>')+'</div>';
@@ -4307,15 +4316,15 @@ function viewPlanner(){
     let lvTxt='';const lvr=leaveReqs(id).filter(r=>r.status==='approved'&&r.from<=ym+'-'+pad(n)&&r.to>=ym+'-01'&&r.kind);
     if(lvr.length){const r=lvr[0];lvTxt='<div class="pllv">'+esc((KIND_NAME[r.kind]||'Leave'))+' '+(+(r.from<ym+'-01'?'01':r.from.slice(8,10)))+'–'+(+(r.to>ym+'-'+pad(n)?pad(n):r.to.slice(8,10)))+'</div>';}
     const nm=plName(id,rows);
-    body+=(ri===rows.findIndex(x=>isVisitor(S.interns[x]))&&isVisitor(it)&&ri>0?'<tr class="plsep"><td colspan="'+(n+11)+'"></td></tr>':'')+
-     '<tr class="'+(sel===id?'plsel':'')+'"><td class="pln"><a href="#" data-act="pl-sel" data-i="'+id+'" title="'+esc(plHidden()?'':it.name)+'">'+esc(nm)+'</a>'+lvTxt+'</td><td class="plf">'+esc(plHalf(it,ym,1))+'</td><td class="plf">'+esc(plHalf(it,ym,2))+'</td><td><span class="lc '+(last.near?'lo':'lg')+'">'+esc(last.txt)+'</span></td>'+cells+
+    body+=(ri>0&&plSepAt(rows,ri,ym)?'<tr class="plsep"><td colspan="'+(n+11)+'"></td></tr>':'')+
+     '<tr class="'+(sel===id?'plsel':'')+'" data-plrow="'+id+'"><td class="pln">'+(edit?plHandle(id):'')+'<a href="#" data-act="pl-sel" data-i="'+id+'" title="'+esc(plNameMode()==='none'?'':it.name)+'">'+esc(nm)+'</a>'+(plNameMode()==='none'?'':lvTxt)+'</td><td class="plf">'+esc(plHalf(it,ym,1))+'</td><td class="plf">'+esc(plHalf(it,ym,2))+'</td><td><span class="lc '+(last.near?'lo':'lg')+'">'+esc(last.txt)+'</span></td>'+cells+
      '<td class="st sg">'+W+'</td><td class="st sb">'+T+'</td><td class="st sg'+(hWarn?' wn':'')+'">'+H+'</td><td class="st sg">'+(T+H)+'</td><td class="cnt'+(over?' over':(caps.length&&caps.every(c=>c.n>=c.max)?' full':''))+'">'+capTxt+'</td></tr>';
   });
   /* cover row */
   let cov='<tr class="plcov"><td class="pln" colspan="4"><b>Interns covering</b></td>';
   for(let d=1;d<=n;d++){const k=dk2(d),c=(days[k]||[]).length,t=plTarget(rp,k);const cl=!t.full&&!t.adq?'':(c>=t.full&&t.full?'cg':(c>=t.adq?'co':'cr'));cov+='<td class="cv '+cl+(d===hd+1?' thick':'')+'" title="Full '+t.full+', adequate '+t.adq+'">'+c+'</td>';}
   cov+='<td colspan="5"></td></tr>';
-  const grid=rows.length?'<div class="plcard"><table class="pltbl"><thead>'+th1+th2+'</thead><tbody>'+body+cov+'</tbody></table></div>':emptyBox('No interns are in the Surgical rota in this month.');
+  const grid=rows.length?'<div class="plcard"><table class="pltbl'+(plNameMode()==='none'?' pln-num':'')+(plNameMode()==='full'?' pln-full':'')+'"><thead>'+th1+th2+'</thead><tbody>'+body+cov+'</tbody></table></div>':emptyBox('No interns are in the Surgical rota in this month.');
   const legend='<div class="pleg noprint"><span><i class="sw out2"></i>Not in surgical rota</span><span><i class="sw out"></i>Annual leave (blocked)</span><span><i class="sw sick"></i>Other approved leave</span><span><i class="sw wn"></i>Rule warning</span><span><i class="sw rest"></i>Too close to another call</span><span><i class="sw red"></i>Removed</span><span><i class="sw y1"></i>Old date of a moved call</span><span><i class="sw y2"></i>New or moved call</span><span><i class="sw cg"></i>Full</span><span><i class="sw co"></i>Adequate</span><span><i class="sw cr"></i>Short</span></div>';
   /* why short */
   let why='';
@@ -4376,7 +4385,6 @@ function plToastWarn(w){if(w&&w.length)toast('Added with a warning: '+w[0]);}
 Object.assign(ACT,{
   'pl-savedraft':async()=>{const k=plKey(UI.pYm),d=PLDIRTY[k];if(!d)return;delete PLDIRTY[k];await put('rotaplan',k,strip(d));toast('Draft saved.');},
   'pl-m':el=>{UI.pYm=ymAdd(UI.pYm||ymOf(todayStr()),+el.dataset.v);UI.pDay='';UI.pSwap=null;},
-  'pl-hide':()=>{UI.pHide=!plHidden();try{localStorage.setItem('plHide',UI.pHide?'1':'0');}catch(e){}},
   'pl-cmp':()=>{UI.pCmpOn=UI.pCmpOn===false;},
   'pl-cmpv':(el,ev)=>{ev&&ev.preventDefault();UI.pCmp=el.dataset.v;UI.pCmpOn=true;},
   'pl-dots':()=>{UI.pDots=UI.pDots===false;},
@@ -6057,24 +6065,44 @@ async function puApply(file){
   logEv('Uploaded a table into the Surgical rota draft for '+fmtYm(ym));
   await plSaveDoc(rp);
   UI.pHist[ym]=h;
-  const chk=plCheckAll(ym,rp.draft.days),n=dim(ym),need=[];
+  UI.puUn=p.rows.filter(r=>!puMatch(r.name,ym)).map((r,ix)=>({name:r.name,days:r.days,leave:r.leave,nid:notes.find(x=>x.text.indexOf('“'+r.name+'” was not matched')>0)?.id}));
+  puReport(ym,calls,matched);
+}
+function puReport(ym,calls,matched){
+  const rp=plDoc(ym),unm=UI.puUn||[];
+  const chk=plCheckAll(ym,rp.draft.days),n=dim(ym);
+  {const tot=Object.values(rp.draft.days).reduce((a,b)=>a+b.length,0),who=new Set([].concat(...Object.values(rp.draft.days)));calls=tot;matched=who.size;}
   const sorted=chk.block.map(x=>Object.assign({t:'Rule'},x)).concat(chk.warn.map(x=>Object.assign({t:'Warning'},x)));
   const nm=i=>(S.interns[i]||{}).name||'?';
   const lines=sorted.slice(0,25).map(x=>'<li><b>'+esc(nm(x.i))+'</b> · day '+(+x.k.slice(1))+' — '+esc(x.msg)+'</li>');
   const cnt={};for(let d=1;d<=n;d++){const c=(rp.draft.days[dk2(d)]||[]).length;cnt[d]=c;}
   const empty=Object.keys(cnt).filter(d=>!cnt[d]).map(Number);
   openModal('<h2>Table uploaded</h2><p><b>'+calls+'</b> calls for <b>'+matched+'</b> interns are now in the draft of '+esc(fmtYm(ym))+'. The live rota is not changed.</p>'+
-   (unm.length?'<div class="note warn"><b>'+plural(unm.length,'name')+' not matched:</b> '+unm.map(esc).join(', ')+'. Their calls and leave text are saved as notes, so nothing is lost.</div>':'')+
+   (unm.length?'<div class="note warn"><b>'+plural(unm.length,'name')+' not matched.</b> Choose the intern for each one. Their calls and leave text are saved as notes meanwhile, so nothing is lost.</div><div class="puun">'+unm.map((u,ix)=>'<div class="alpr" style="grid-template-columns:1fr 1.4fr"><span><b>'+esc(u.name)+'</b><span class="small muted"> · '+(u.days.length?'day '+u.days.join(", "):'no calls')+'</span></span><select data-puun="'+ix+'" aria-label="Intern for '+esc(u.name)+'"><option value="">Choose intern…</option>'+puOpts()+'</select></div>').join('')+'<button class="btn sm pri" data-act="pu-fix">Add these to the draft</button></div>':'')+
    (empty.length?'<div class="note warn small">'+(empty.length>8?plural(empty.length,'day')+' have no calls.':'No calls on day '+empty.join(', ')+'.')+'</div>':'')+
    (sorted.length?'<h3 style="margin:12px 0 4px">'+plural(chk.block.length,'rule problem')+' and '+plural(chk.warn.length,'warning')+'</h3><ul class="plul" style="max-height:260px;overflow:auto">'+lines.join('')+'</ul>'+(sorted.length>25?'<p class="small muted">And '+(sorted.length-25)+' more. They are marked on the grid.</p>':''):'<div class="note ok small">No rule problems found.</div>')+
    '<p class="small muted">The Leaves column text is in the Notes panel. Press Save draft to keep this.</p><div class="foot"><button class="btn pri" data-act="close">Close</button></div>',true);
   scheduleRender();
 }
+function puOpts(){return Object.values(S.interns).sort((a,b)=>a.name.localeCompare(b.name)).map(i=>'<option value="'+i.id+'">'+esc(i.name)+(isVisitor(i)?' (visiting)':'')+'</option>').join('');}
+async function puFix(){
+  const ym=UI.pYm,rp=plDoc(ym),un=UI.puUn||[],still=[];let add=0;
+  document.querySelectorAll('select[data-puun]').forEach(sel=>{
+    const u=un[+sel.dataset.puun],id=sel.value;if(!u)return;
+    if(!id){still.push(u);return;}
+    u.days.forEach(d=>{if(d>dim(ym))return;const k=dk2(d);rp.draft.days[k]=rp.draft.days[k]||[];if(!rp.draft.days[k].includes(id)){rp.draft.days[k].push(id);add++;}});
+    rp.notes=rp.notes.filter(x=>x.id!==u.nid);
+    if(u.leave)rp.notes.push({id:uid('pn'),text:'From the uploaded table, Leaves column: '+u.leave,internId:id,date:'',done:false,at:Date.now()});
+  });
+  rp.draft.days=cleanDraft(rp.draft.days);UI.puUn=still;
+  await plSaveDoc(rp);
+  puReport(ym,add,un.length-still.length);scheduleRender();
+}
 function puPick(){
   let f=document.getElementById('pu-file');if(!f){f=document.createElement('input');f.type='file';f.id='pu-file';f.accept='.xlsx,.csv,.tsv,.txt';f.style.display='none';f.addEventListener('change',()=>{const x=f.files&&f.files[0];f.value='';if(x)puApply(x);});document.body.appendChild(f);}
   f.click();
 }
-Object.assign(ACT,{'pl-upload':()=>puPick()});
+Object.assign(ACT,{'pl-upload':()=>puPick(),'pu-fix':()=>puFix()});
 
 /* ===================== 4.11-F: put on-call interns into the rota columns, alternating ===================== */
 function acSlots(unit){const out=[];placesOf(unit).forEach(p=>{for(let i=0;i<p.s;i++)out.push(p.k);});return out;}
@@ -6202,6 +6230,114 @@ stepsHtml=function(r){
   return'<ul class="steps">'+st.map(s=>'<li>'+(s.action==='approved'?'Approved':s.action==='cancelled'?'Cancelled from '+esc(fmtDate(s.from||'')):'Declined')+' by '+esc(whoName(s.by))+', '+esc(ROLE_LABEL[s.role]||s.role)+', '+fmtTs(s.at)+(s.note?'. “'+esc(s.note)+'”':'')+'</li>').join('')+'</ul>';
 };
 Object.assign(ACT,{'lv-cancel':el=>lvCancelOpen(el.dataset.id),'lv-cancel-go':el=>lvCancelGo(el.dataset.id)});
+
+/* ===================== 4.11-I: intern card in the planner ===================== */
+function plicard(rp,rows,ym){
+  const id=UI.pSel,it=id&&S.interns[id];if(!it||rows.indexOf(id)<0)return'';
+  const hid=plHidden(),days=rp.draft?rp.draft.days:liveDays(ym),calls=callsOf(days,id),n=dim(ym);
+  const caps=plCaps(id,ym,days),chk=plCheckAll(ym,days);
+  const mineW=(chk.warn||[]).concat(chk.block||[]).filter(x=>x.i===id);
+  const lv=leaveReqs(id).filter(r=>r.status==='approved'&&r.from<=ym+'-'+pad(n)&&r.to>=ym+'-01');
+  const xs=Object.keys(((rp.x||{})[id])||{}).map(k=>+k.slice(1)).sort((a,b)=>a-b);
+  const notes=rp.notes.filter(x=>!x.done&&x.internId===id);
+  const cell=(a,b)=>'<div><span class="muted small">'+a+'</span><br><b>'+b+'</b></div>';
+  let W=0,T=0,H=0;calls.forEach(d=>{const date=ym+'-'+pad(d);if(isWkDay(date))H++;else{W++;if(dow(date)===4)T++;}});
+  const dl=d=>{const date=ym+'-'+pad(d);return DAYS[dow(date)].slice(0,3)+' '+d;};
+  return'<section class="panel plicard"><h2>'+(hid?'Selected intern':esc(it.name))+' <a href="#" class="small" data-act="pl-sel" data-i="'+id+'">Close</a></h2>'+
+   '<div class="plcg">'+cell('First half',esc(plHalf(it,ym,1)))+cell('Second half',esc(plHalf(it,ym,2)))+cell('Calls',calls.length+' · cap '+caps.map(c=>c.n+'/'+c.max).join(' · '))+cell('Weekdays / Thu / Weekend',W+' / '+T+' / '+H)+'</div>'+
+   '<p class="small" style="margin:8px 0 2px"><b>Calls:</b> '+(calls.length?calls.map(dl).join(', '):'none')+'</p>'+
+   (lv.length?'<p class="small" style="margin:2px 0"><b>Leave:</b> '+lv.map(r=>esc((KIND_NAME[r.kind]||'Leave')+' '+fmtDate(r.from)+(r.to!==r.from?' to '+fmtDate(r.to):''))).join('; ')+'</p>':'')+
+   (xs.length?'<p class="small" style="margin:2px 0"><b>Not to be scheduled (X):</b> day '+xs.join(', ')+'</p>':'')+
+   (mineW.length?'<div class="note warn small">'+mineW.slice(0,6).map(x=>'Day '+(+x.k.slice(1))+': '+esc(x.msg)).join('<br>')+'</div>':'')+
+   (notes.length?'<p class="small" style="margin:6px 0 2px"><b>Notes:</b></p><ul class="plnotes">'+notes.map(x=>'<li>'+esc(x.text)+(x.date?' <span class="muted">('+esc(fmtDate(x.date))+(x.to&&x.to!==x.date?' – '+esc(fmtDate(x.to)):'')+')</span>':'')+'</li>').join('')+'</ul>':'')+
+   (hid?'':'<p class="small" style="margin:8px 0 0">'+internLink(id)+' · open the full profile</p>')+'</section>';
+}
+const _plNotesPanel=plNotesPanel;
+plNotesPanel=function(rp,rows,n,ym){return plicard(rp,rows,ym)+_plNotesPanel(rp,rows,n,ym);};
+/* fit the whole planner grid on one screen */
+function plFit(){
+  const t=document.querySelector('.pltbl');if(!t)return;
+  const rows=t.querySelectorAll('tbody tr').length;if(!rows)return;
+  const head=t.querySelectorAll('thead th').length?64:0;
+  const avail=window.innerHeight-head-24;
+  const h=Math.max(19,Math.min(30,Math.floor(avail/rows)));
+  const cur=t.style.getPropertyValue('--plrh');
+  if(cur!==h+'px')t.style.setProperty('--plrh',h+'px');
+}
+(function(){let q=0;new MutationObserver(()=>{if(q)return;q=requestAnimationFrame(()=>{q=0;plFit();});}).observe(document.body,{childList:true,subtree:true});window.addEventListener('resize',plFit);})();
+ACT['pl-fit']=()=>{plFit();const t=document.querySelector('.pltbl');if(t){const y=t.getBoundingClientRect().top+window.scrollY-8;window.scrollTo({top:y,behavior:'smooth'});}};
+const _plXmark=0;
+
+/* ===================== 4.11-J: planner names (full / short / number), sorting, drag to reorder ===================== */
+function plNameMode(){
+  if(UI.pNm)return UI.pNm;
+  let v='';try{v=localStorage.getItem('plNm')||'';if(!v&&localStorage.getItem('plHide')==='1')v='none';}catch(e){}
+  return UI.pNm=(v==='full'||v==='none')?v:'short';
+}
+function plHidden(){return plNameMode()==='none';}
+function plNameOf(id,rows){
+  const it=S.interns[id];if(!it)return'Unknown';
+  const m=plNameMode();
+  if(m==='none')return String(rows.indexOf(id)+1);
+  if(m==='full')return it.name;
+  return plShort(id,rows);
+}
+function plSortMode(){
+  if(UI.pSort)return UI.pSort;
+  let v='';try{v=localStorage.getItem('plSort')||'';}catch(e){}
+  return UI.pSort=(v==='name'||v==='mine')?v:'group';
+}
+function plOrderFor(ym){
+  const docs=Object.values(S.rotaplan).filter(d=>Array.isArray(d.order)&&d.ym&&d.ym<=ym).sort((a,b)=>a.ym<b.ym?1:-1);
+  const d=docs[0];return d&&d.order.length?d.order:null;
+}
+const PL_SPEC_ORD=['Vascular','Plastic','Urology','Pediatric','Neurosurgery'];
+function plGroupKey(it,ym){
+  let p=null;try{p=alDerive(it,ym)[0];}catch(e){}
+  const v=p?p.val:'';
+  if(v.indexOf('F:')===0){const f=FIRMS.indexOf(v.slice(2));return[0,f<0?9:f];}
+  if(v==='O')return[1,20];
+  if(v.indexOf('S:')===0){const i=PL_SPEC_ORD.indexOf(saUnitShort(v.slice(2)));return[1,i<0?10:i];}
+  return[2,0];
+}
+function plSection(id,ym){return plGroupKey(S.interns[id],ym)[0];}
+function plRows(ym,days,base){
+  const ids=plRowsBase(ym,days,base),mode=plSortMode(),nm=(a,b)=>S.interns[a].name.localeCompare(S.interns[b].name);
+  const grp=ids.slice().sort((a,b)=>{const x=plGroupKey(S.interns[a],ym),y=plGroupKey(S.interns[b],ym);return(x[0]-y[0])||(x[1]-y[1])||nm(a,b);});
+  if(mode==='name')return ids.sort(nm);
+  if(mode==='mine'){const o=plOrderFor(ym);if(o){const ix={};o.forEach((i,k)=>ix[i]=k);const known=grp.filter(i=>ix[i]!==undefined).sort((a,b)=>ix[a]-ix[b]),rest=grp.filter(i=>ix[i]===undefined);return known.concat(rest);}}
+  return grp;
+}
+function plSepAt(rows,ri,ym){return plSortMode()!=='name'&&!(plSortMode()==='mine'&&plOrderFor(ym))&&plSection(rows[ri],ym)!==plSection(rows[ri-1],ym);}
+const plSeg=(label,act,cur,opts)=>'<span class="seg sm noprint" role="group" aria-label="'+label+'">'+opts.map(o=>'<button class="'+(cur===o[0]?'on':'')+'" data-act="'+act+'" data-v="'+o[0]+'" aria-pressed="'+(cur===o[0])+'">'+o[1]+'</button>').join('')+'</span>';
+function plNameSeg(){return plSeg('Names','pl-nm',plNameMode(),[['full','Full name'],['short','Short name'],['none','Number']]);}
+function plSortSeg(){
+  const m=plSortMode(),has=!!plOrderFor(UI.pYm);
+  return plSeg('Order','pl-sort',m,[['group','By firm / SS'],['name','By name'],['mine','My order']])+(m==='mine'&&has?'<button class="btn sm" data-act="pl-sortreset">Reset order</button>':'');
+}
+const plHandle=id=>'<span class="plhd" draggable="true" data-plh="'+id+'" title="Drag to move this intern up or down" aria-hidden="true">⠿</span><span class="plmvs"><button class="plmv" data-act="pl-mv" data-i="'+id+'" data-d="-1" aria-label="Move up">▲</button><button class="plmv" data-act="pl-mv" data-i="'+id+'" data-d="1" aria-label="Move down">▼</button></span>';
+function plVisibleOrder(){return [...document.querySelectorAll('.pltbl tr[data-plrow]')].map(r=>r.dataset.plrow);}
+function plSaveOrder(order){
+  UI.pSort='mine';try{localStorage.setItem('plSort','mine');}catch(e){}
+  plEdit(r=>{r.order=order;},true);
+}
+Object.assign(ACT,{
+  'pl-nm':el=>{UI.pNm=el.dataset.v;try{localStorage.setItem('plNm',UI.pNm);localStorage.removeItem('plHide');}catch(e){}},
+  'pl-sort':el=>{UI.pSort=el.dataset.v;try{localStorage.setItem('plSort',UI.pSort);}catch(e){}},
+  'pl-sortreset':()=>{UI.pSort='group';try{localStorage.setItem('plSort','group');}catch(e){}plEdit(r=>{r.order=[];},true);toast('Order reset to firm and sub-specialty.');},
+  'pl-mv':(el,ev)=>{ev&&ev.preventDefault();const o=plVisibleOrder(),i=el.dataset.i,k=o.indexOf(i),d=+el.dataset.d;if(k<0||k+d<0||k+d>=o.length)return;o.splice(k,1);o.splice(k+d,0,i);plSaveOrder(o);}
+});
+let PLDRAG=null;
+document.addEventListener('dragstart',ev=>{const h=ev.target.closest&&ev.target.closest('.plhd');if(!h)return;PLDRAG=h.dataset.plh;const r=h.closest('tr');if(r)r.classList.add('pldragging');try{ev.dataTransfer.setData('text/plain',PLDRAG);ev.dataTransfer.effectAllowed='move';}catch(e){}});
+document.addEventListener('dragend',()=>{PLDRAG=null;document.querySelectorAll('.pldragging,.pldropa,.pldropb').forEach(x=>x.classList.remove('pldragging','pldropa','pldropb'));});
+document.addEventListener('dragover',ev=>{const r=PLDRAG&&ev.target.closest&&ev.target.closest('tr[data-plrow]');if(!r)return;ev.preventDefault();document.querySelectorAll('.pldropa,.pldropb').forEach(x=>x.classList.remove('pldropa','pldropb'));const b=r.getBoundingClientRect();r.classList.add(ev.clientY<b.top+b.height/2?'pldropa':'pldropb');});
+document.addEventListener('drop',ev=>{
+  const r=PLDRAG&&ev.target.closest&&ev.target.closest('tr[data-plrow]');if(!r)return;ev.preventDefault();
+  const id=PLDRAG,tid=r.dataset.plrow,b=r.getBoundingClientRect(),after=ev.clientY>=b.top+b.height/2;PLDRAG=null;
+  document.querySelectorAll('.pldropa,.pldropb,.pldragging').forEach(x=>x.classList.remove('pldropa','pldropb','pldragging'));
+  if(id===tid)return;
+  const o=plVisibleOrder().filter(x=>x!==id),k=o.indexOf(tid);o.splice(after?k+1:k,0,id);plSaveOrder(o);
+});
 
 /*V45-JS-END*/
 init();
