@@ -482,6 +482,11 @@ table.odT td.cv{text-align:center;font-weight:700;width:40px;color:var(--ink)}ta
 .pltbl tr.plsel td.pln a{font-weight:700}
 .pltbl tr[data-plrow] td:nth-child(-n+4){cursor:pointer}
 .plpanels .plwarn{margin:0}
+.ocT td{min-width:0!important;padding:8px 6px}.ocT th{padding:8px 8px}.ocT .ward,.ocT small{font-size:.72rem}
+.oc-cols{grid-template-columns:minmax(0,2.6fr) minmax(250px,1fr)}
+@media(max-width:1100px){.oc-cols{grid-template-columns:1fr}}
+.ocT tbody tr{height:66px}.ocT tbody td,.ocT tbody th{vertical-align:middle;height:66px}
+.ocT tbody td small,.ocT tbody td .ward{display:block;line-height:1.2;max-height:2.4em;overflow:hidden}
 
 /*V45-CSS-END*/
 </style>
@@ -2452,6 +2457,7 @@ function viewOncall0(){
 function ocTable(unit,ym,mine){
   const n=dim(ym),sur=unit==='SURGICAL';let K=4;
   for(let d=1;d<=n;d++)K=Math.max(K,dayRec(unit,ym+'-'+pad(d)).ids.length);
+  const ALLI=Object.keys(S.interns);
   let h='<div class="scroll gw"><table class="tbl stk ocT"><thead>';
   if(sur)[2,3,4].forEach(c=>{
     h+='<tr class="wr"><th>Wards ('+c+' interns)</th>';let p=0;
@@ -2462,7 +2468,7 @@ function ocTable(unit,ym,mine){
   for(let d=1;d<=n;d++){
     const date=ym+'-'+pad(d),rec=dayRec(unit,date),wk=isWkDay(date),hol=holidayOf(date);
     h+='<tr class="'+(wk?'wk ':'')+(UI.ocDay===date?'sel ':'')+'" data-act="ocday" data-d="'+date+'"><th>'+d+' '+DAYS[dow(date)]+(hol?'<span class="ward">'+esc(hol.label||'Holiday')+'</span>':'')+'</th>';
-    for(let p=0;p<K;p++){const id=rec.ids[p];h+='<td>'+(id?'<span class="'+(id===mine?'mine':'')+'">'+esc((S.interns[id]||{}).name||'?')+'</span>'+flagTag(unit,date,id)+(sur?wardLine(unit,rec,p,date):''):'<span class="muted">'+(sur?'—':'')+'</span>')+'</td>';}
+    for(let p=0;p<K;p++){const id=rec.ids[p];h+='<td>'+(id?'<span class="'+(id===mine?'mine':'')+'">'+esc(plShort(id,ALLI)||'?')+'</span>'+flagTag(unit,date,id)+(sur?wardLine(unit,rec,p,date):''):'<span class="muted">'+(sur?'—':'')+'</span>')+'</td>';}
     h+='</tr>';
   }
   return h+'</tbody></table></div><p class="hint">Friday, Saturday and flagged holidays are shaded. Select a day to change it.'+(sur?' The wards follow each intern’s place in the day.':'')+'</p>';
