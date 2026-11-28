@@ -532,6 +532,8 @@ table.odT td.cv{text-align:center;font-weight:700;width:40px;color:var(--ink)}ta
  #pdfroot table{max-height:277mm}
  #pdfroot .rt tr{height:var(--rh,7mm)}
 }
+.alpn{width:100%;margin-top:4px;font-size:.82rem;min-height:0;padding:4px 6px}
+.alpn{min-width:150px}.alb td .alnote{display:block}
 
 /*V45-CSS-END*/
 </style>
@@ -5838,7 +5840,7 @@ function alRow(r,ym,h,edit,n){
   const it=r.it,opts=alOptions(r),tag=r.vis?'<span class="alvis">'+esc(affilOf(it))+'</span>':'',dr=r.partial?'<span class="alday">days '+Math.max(r.from,h.a)+'–'+Math.min(r.to,h.b)+'</span>':'';
   const note=saNote(it,ym,h),sel=edit&&r.single?'<select data-alsel="'+it.id+'" aria-label="Placement for '+esc(it.name)+'">'+opts+'</select>':'<span class="small">'+esc(alValLabel(r.val))+'</span>';
   const w=r.val.indexOf('F:')===0&&r.single?firmWarnings(it,ym,(entryAt(it,ym)||{}).fa||'',(entryAt(it,ym)||{}).fb||''):[];
-  return'<tr'+(edit&&r.single?' draggable="true"':'')+' data-alrow="'+it.id+'"><td class="no">'+n+'</td><td><b>'+internLink(it.id)+'</b> '+tag+' '+dr+(w.length?'<div class="small" style="color:var(--warn)" title="'+esc(w.join(' '))+'">⚠ '+esc(w[0])+'</div>':'')+'</td><td>'+(note?'<span class="alnote">'+esc(note)+'</span>':'<span class="muted">—</span>')+'</td><td class="tel">'+esc(it.phone||'')+'</td><td>'+sel+'</td><td>'+(edit?'<button class="spl" data-act="al-split" data-id="'+it.id+'">Split</button>':'')+'</td></tr>';
+  return'<tr'+(edit&&r.single?' draggable="true"':'')+' data-alrow="'+it.id+'"><td class="no">'+n+'</td><td><b>'+internLink(it.id)+'</b> '+tag+' '+dr+(w.length?'<div class="small" style="color:var(--warn)" title="'+esc(w.join(' '))+'">⚠ '+esc(w[0])+'</div>':'')+'</td><td>'+(note?'<span class="alnote">'+esc(note)+'</span>':'')+(edit?'<input type="text" class="alpn" data-pn="'+pdfKey(ym,h,it.id)+'" value="'+esc((pdfManual()[pdfKey(ym,h,it.id)]||''))+'" placeholder="Add note for PDF" aria-label="Note for the PDF, '+esc(it.name)+'">':(note?'':'<span class="muted">—</span>'))+'</td><td class="tel">'+esc(it.phone||'')+'</td><td>'+sel+'</td><td>'+(edit?'<button class="spl" data-act="al-split" data-id="'+it.id+'">Split</button>':'')+'</td></tr>';
 }
 function alOptions(r){
   const e=entryAt(r.it,UI.sgYm)||{};
@@ -6567,6 +6569,113 @@ ACT['swp-go']=async el=>{
   await put('requests',uid('r'),{type:'swap',rota:unit,internId:me,peerId:peer,aDate:a,bDate:b,status:'pending_peer',steps:[],createdAt:Date.now(),by:actor()});
   logEv('Swap request from '+nmOf(me));toast('Request sent to '+nmOf(peer)+'.');scheduleRender();
 };
+
+/* real PDF export: the file is written directly (no print dialog), geometry is exact so it always fits A4 */
+const PDF_MM=72/25.4;
+let _pdfCtx=null;
+function pdfW(t,bold,fs){if(!_pdfCtx)_pdfCtx=document.createElement('canvas').getContext('2d');_pdfCtx.font=(bold?'bold ':'')+'100px Arial, Helvetica, sans-serif';return _pdfCtx.measureText(String(t)).width*fs/100;}
+function pdfEnc(t){
+  const M={8217:0x92,8216:0x91,8220:0x93,8221:0x94,8211:0x96,8212:0x97,8226:0x95,8230:0x85};
+  return String(t==null?'':t).replace(/[\r\n\t]+/g,' ').split('').map(ch=>{const c=ch.charCodeAt(0);const o=c<256?c:(M[c]||63);return String.fromCharCode(o);}).join('').replace(/([\\()])/g,'\\$1');
+}
+function pdfFit(t,bold,fs,maxW){
+  t=String(t==null?'':t);if(pdfW(t,bold,fs)<=maxW)return t;
+  while(t.length>1&&pdfW(t+'...',bold,fs)>maxW)t=t.slice(0,-1);return t+'...';
+}
+function pdfNew(){
+  const W=595.28,H=841.89,pages=[];let cur=null;
+  const f=n=>(+n).toFixed(2);
+  const col=h=>{h=h.replace('#','');return[0,2,4].map(i=>f(parseInt(h.slice(i,i+2),16)/255)).join(' ');};
+  const api={
+    W,H,
+    page(){cur=[];pages.push(cur);},
+    rect(x,y,w,h,fill,stroke,lw){cur.push((fill?col(fill)+' rg ':'')+(stroke?col(stroke)+' RG '+f(lw||0.5)+' w ':'')+f(x)+' '+f(H-y-h)+' '+f(w)+' '+f(h)+' re '+(fill&&stroke?'B':fill?'f':'S'));},
+    line(x1,y1,x2,y2,lw,c){cur.push(col(c||'#000000')+' RG '+f(lw)+' w '+f(x1)+' '+f(H-y1)+' m '+f(x2)+' '+f(H-y2)+' l S');},
+    text(t,x,y,fs,bold){cur.push('BT 0 g /'+(bold?'F2':'F1')+' '+f(fs)+' Tf '+f(x)+' '+f(H-y)+' Td ('+pdfEnc(t)+') Tj ET');},
+    cell(x,y,w,h,t,o){o=o||{};if(o.fill)api.rect(x,y,w,h,o.fill);
+      if(t!==''&&t!=null){const fs=o.fs||9,txt=pdfFit(t,o.bold,fs,w-6),tw=pdfW(txt,o.bold,fs),tx=o.align==='l'?x+3:x+(w-tw)/2,ty=y+h/2+fs*0.34;api.text(txt,tx,ty,fs,o.bold);}
+      api.rect(x,y,w,h,null,'#777777',0.5);},
+    build(){
+      const objs=[];const add=s=>{objs.push(s);return objs.length;};
+      add('<< /Type /Catalog /Pages 2 0 R >>');add('PLACEHOLDER');
+      const f1=add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>'),f2=add('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>');
+      const kids=[];
+      pages.forEach(p=>{const s=p.join('\n'),c=add('<< /Length '+s.length+' >>\nstream\n'+s+'\nendstream'),pg=add('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+f(W)+' '+f(H)+'] /Resources << /Font << /F1 '+f1+' 0 R /F2 '+f2+' 0 R >> >> /Contents '+c+' 0 R >>');kids.push(pg+' 0 R');});
+      objs[1]='<< /Type /Pages /Kids ['+kids.join(' ')+'] /Count '+kids.length+' >>';
+      let out='%PDF-1.4\n',offs=[];objs.forEach((o,i)=>{offs.push(out.length);out+=(i+1)+' 0 obj\n'+o+'\nendobj\n';});
+      const xr=out.length;out+='xref\n0 '+(objs.length+1)+'\n0000000000 65535 f \n'+offs.map(o=>String(o).padStart(10,'0')+' 00000 n \n').join('')+'trailer\n<< /Size '+(objs.length+1)+' /Root 1 0 R >>\nstartxref\n'+xr+'\n%%EOF';
+      const u=new Uint8Array(out.length);for(let i=0;i<out.length;i++)u[i]=out.charCodeAt(i)&255;return u;
+    }
+  };
+  return api;
+}
+function pdfRotaData(unit,ym){
+  const n=dim(ym),sur=unit==='SURGICAL',W=(CFG&&CFG.wards)||{};
+  const WC=sur?Object.keys(W).map(Number).filter(c=>c>=2&&c<=8&&(W[String(c)]||[]).some(Boolean)).sort((x,y)=>x-y):[];
+  let K=sur?4:1;if(WC.length)K=Math.max(K,Math.max(...WC));
+  for(let d=1;d<=n;d++)K=Math.max(K,dayRec(unit,ym+'-'+pad(d)).ids.length);
+  const ALL=Object.keys(S.interns),sn=id=>plShort(id,ALL)||'?';
+  const wards=WC.map(c=>{const cells=[];let p=0;while(p<c){const t=wardsFor(unit,c,p);let span=1;while(p+span<c&&wardsFor(unit,c,p+span)===t)span++;cells.push({t:String(t).replace(/,\s*/g,' - ')||'-',span});p+=span;}if(K>c)cells.push({t:'-',span:K-c});return{label:'Wards ('+c+' interns)',cells};});
+  const days=[];for(let d=1;d<=n;d++){const date=ym+'-'+pad(d),rec=dayRec(unit,date),hol=holidayOf(date);days.push({n:d,wd:DAYSFULL[dow(date)],wk:isWkDay(date),hol:hol?(hol.label||'Holiday'):'',names:Array.from({length:K},(_,p)=>rec.ids[p]?sn(rec.ids[p]):'')});}
+  const notes=sur?['All interns on-call must be in the hospital from 7am until 10pm.','Sick-leaves during on calls are only accepted from the emergency department in SMC.','All interns are expected to cover emergency and must attend once called for help.']:[];
+  return{title:ocName(unit)+' Interns’ Rota - '+MONTHS_LONG[+ym.slice(5,7)-1]+' '+ym.slice(0,4),K,wards,days,notes};
+}
+function pdfDrawRota(pdf,D){
+  const m=8*PDF_MM,x0=m,y0=m,w=pdf.W-2*m,h=pdf.H-2*m,rows=1+D.wards.length+D.days.length+D.notes.length,rh=Math.floor((h-1)/rows*100)/100;
+  const wNo=9*PDF_MM,wDay=27*PDF_MM,cw=(w-wNo-wDay)/D.K,G='#c9c9c9',L='#e4e4e4',WK='#d9d9d9';
+  let fs=Math.min(rh*0.56,11);
+  const fit=(t,b,mw)=>{const k=pdfW(t,b,fs);if(k>mw-6)fs=Math.max(5,fs*(mw-6)/k);};
+  D.days.forEach(d=>d.names.forEach(t=>fit(t,false,cw)));D.wards.forEach(r=>r.cells.forEach(c=>fit(c.t,true,cw*c.span)));D.notes.forEach(t=>fit('- '+t,true,w-wNo));
+  pdf.page();let y=y0;
+  pdf.cell(x0,y,w,rh,D.title,{fill:G,bold:true,fs:fs+1});y+=rh;
+  D.wards.forEach(r=>{pdf.cell(x0,y,wNo+wDay,rh,r.label,{fill:G,bold:true,fs});let x=x0+wNo+wDay;r.cells.forEach(c=>{pdf.cell(x,y,cw*c.span,rh,c.t,{fill:G,bold:true,fs});x+=cw*c.span;});y+=rh;});
+  const yd=y;
+  D.days.forEach(d=>{
+    pdf.cell(x0,y,wNo,rh,String(d.n),{fill:L,bold:true,fs});
+    pdf.cell(x0+wNo,y,wDay,rh,d.wd,{fill:d.wk?WK:null,bold:true,fs});
+    if(d.hol&&rh>=fs*2.3)pdf.text(pdfFit(d.hol,false,fs*0.55,wDay-4),x0+wNo+3,y+rh-2.2,fs*0.55,false);
+    d.names.forEach((t,i)=>pdf.cell(x0+wNo+wDay+i*cw,y,cw,rh,t,{fill:d.wk?WK:null,fs}));
+    y+=rh;});
+  pdf.line(x0+wNo+wDay,yd,x0+wNo+wDay,y,1.6);pdf.line(x0,y,x0+w,y,1.6);
+  D.notes.forEach(t=>{pdf.cell(x0,y,wNo,rh,'#',{fill:G,bold:true,fs});pdf.cell(x0+wNo,y,w-wNo,rh,'- '+t,{fill:G,bold:true,fs});y+=rh;});
+  pdf.rect(x0,y0,w,y-y0,null,'#000000',1.6);
+}
+function pdfDrawAlloc(pdf,ym,hf){
+  const r=pdfRows(ym,hf),m=8*PDF_MM,w=pdf.W-2*m,x0=m,y0=m,G='#c9c9c9',L='#e4e4e4';
+  const CW=[10,84,46,30,24].map(v=>v*PDF_MM);let rows=3;
+  const flat=[];
+  [1,2,3,4].forEach(f=>{flat.push({k:'fh',t:'Firm '+f});(r.gs[f]||[]).forEach(x=>flat.push({k:'r',x,last:f}));});
+  flat.push({k:'band',t:'Sub-specialties'},{k:'hdr',last:'Unit'});r.sub.forEach(x=>flat.push({k:'r',x,last:x.unit}));flat.push({k:'foot'});
+  rows+=flat.length;
+  const rh=Math.min(7*PDF_MM,Math.floor((pdf.H-2*m-1)/rows*100)/100);let fs=Math.min(rh*0.52,10);
+  const all=[];[1,2,3,4].forEach(f=>(r.gs[f]||[]).forEach(x=>all.push(x)));r.sub.forEach(x=>all.push(x));
+  all.forEach(x=>{const k=pdfW(x.it.name+(x.neuro?' #':''),false,fs);if(k>CW[1]-6)fs=Math.max(5,fs*(CW[1]-6)/k);});
+  pdf.page();let y=y0;const hdr=(last)=>{let x=x0;['No.','Name','Notes','Tel',last].forEach((t,i)=>{pdf.cell(x,y,CW[i],rh,t,{fill:G,bold:true,fs});x+=CW[i];});y+=rh;};
+  pdf.cell(x0,y,w,rh,saTitle(ym,hf),{fill:G,bold:true,fs:fs+1});y+=rh;
+  pdf.cell(x0,y,w,rh,'General Surgery',{fill:G,bold:true,fs});y+=rh;hdr('Firm');
+  let n=0,si=0;
+  flat.forEach(e=>{
+    if(e.k==='fh'){pdf.cell(x0,y,w,rh,e.t,{fill:L,bold:true,fs,align:'l'});y+=rh;}
+    else if(e.k==='band'){pdf.cell(x0,y,w,rh,e.t,{fill:G,bold:true,fs});y+=rh;}
+    else if(e.k==='hdr'){hdr(e.last);}
+    else if(e.k==='foot'){pdf.cell(x0,y,w,rh,'#  Neurosurgery: not counted for surgical on-call.',{fill:G,bold:true,fs:fs-1,align:'l'});y+=rh;}
+    else{const x=e.x;const isF=typeof e.last==='number';const no=isF?(++n):(++si);let xx=x0;
+      [String(no),x.it.name+(x.neuro?' #':''),x.note,x.it.phone||'',String(e.last)].forEach((t,i)=>{pdf.cell(xx,y,CW[i],rh,t,{fs,align:(i===1||i===2)?'l':'c'});xx+=CW[i];});y+=rh;}
+  });
+  pdf.rect(x0,y0,w,y-y0,null,'#000000',1.6);
+}
+function pdfSave(bytes,name){
+  const b=new Blob([bytes],{type:'application/pdf'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(a.href);},1500);
+}
+function pdfExport(){
+  const unit=UI.ocUnit,ym=UI.ocYm||ymOf(todayStr()),pdf=pdfNew();
+  pdfDrawRota(pdf,pdfRotaData(unit,ym));
+  if(unit==='SURGICAL')saHalves(ym).forEach(hf=>pdfDrawAlloc(pdf,ym,hf));
+  pdfSave(pdf.build(),ocName(unit).replace(/\s+/g,'_')+'_rota_'+ym+'.pdf');
+  toast('PDF saved to your downloads.');
+}
+ACT['oc-pdf']=()=>pdfExport();
+document.addEventListener('change',e=>{const t=e.target;if(t&&t.dataset&&t.dataset.pn&&!(t.closest&&t.closest('#modal'))){const M=pdfManual(),v=t.value.trim();if(v)M[t.dataset.pn]=v;else delete M[t.dataset.pn];pdfManualSave(M);}});
 
 /*V45-JS-END*/
 init();
