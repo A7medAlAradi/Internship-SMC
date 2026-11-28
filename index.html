@@ -564,6 +564,7 @@ table.odT td.cv{text-align:center;font-weight:700;width:40px;color:var(--ink)}ta
 .alb.aldrop td{background:var(--accent-soft)!important}
 .alsheet>.hint,.alsheet>details{margin:8px 10px}
 @media print{html{padding:8mm!important;box-sizing:border-box}}
+.lc.lr{background:#fbd5d5;color:#a10c0c;font-weight:700;border-radius:4px;padding:0 4px}.lc.la{background:#ffe1bf;color:#a34a00;font-weight:700;border-radius:4px;padding:0 4px}.lc.le{background:#e3e8f6;color:#2b3a9a;font-weight:700;border-radius:4px;padding:0 6px}
 
 /*V45-CSS-END*/
 </style>
@@ -4262,11 +4263,14 @@ function plShort(id,rows){const k=rows.join(',');if(PL_SN.k!==k){const L=rows.ma
     PL_SN={k,m};}return PL_SN.m[id]||(S.interns[id]||{}).name||'';}
 function plName(id,rows){return plNameOf(id,rows);}
 function plLast(id,ym){
-  const first=ym+'-01';let best='';
+  const first=ym+'-01',pm=ymAdd(ym,-1),it=S.interns[id];let best='';
   shiftsOf(id,true).forEach(s=>{if(s.date<first&&s.date>best)best=s.date;});
+  const pe=it&&entryAt(it,pm),elective=!!(pe&&entryParts(pe).some(p=>p.dept==='ELE'))&&!(best&&ymOf(best)===pm);
+  if(elective)return{txt:'E',near:false,cls:'le',title:'Elective last month, no calls'};
   if(!best)return{txt:'—',near:false};
-  const gap=dayCount(best,first);
-  return{txt:(+best.slice(8,10))+' '+MONTHS[+best.slice(5,7)-1],near:gap<MIN_GAP+0,gap};
+  const gap=dayCount(best,first),pl=pm+'-'+pad(dim(pm)),pl2=pm+'-'+pad(dim(pm)-1);
+  const cls=best===pl?'lr':best===pl2?'la':'';
+  return{txt:(+best.slice(8,10))+' '+MONTHS[+best.slice(5,7)-1],near:gap<MIN_GAP+0,gap,cls};
 }
 const MIN_GAP_PL=3;
 function otherDates(id,ym){return shiftsOf(id,true).filter(s=>!(s.unit===PL_UNIT&&ymOf(s.date)===ym)).map(s=>s.date);}
@@ -4405,7 +4409,7 @@ function viewPlanner(){
     if(lvr.length){const r=lvr[0];lvTxt='<div class="pllv">'+esc((KIND_NAME[r.kind]||'Leave'))+' '+(+(r.from<ym+'-01'?'01':r.from.slice(8,10)))+'–'+(+(r.to>ym+'-'+pad(n)?pad(n):r.to.slice(8,10)))+'</div>';}
     const nm=plName(id,rows);
     body+=(ri>0&&plSepAt(rows,ri,ym)?'<tr class="plsep"><td colspan="'+(n+11)+'"></td></tr>':'')+
-     '<tr class="'+(sel===id?'plsel':'')+'" data-plrow="'+id+'"><td class="pln">'+(edit?plHandle(id):'')+'<a href="#" data-act="pl-sel" data-i="'+id+'" title="'+esc(plNameMode()==='none'?'':it.name)+'">'+esc(nm)+'</a>'+(plNameMode()==='none'?'':lvTxt)+'</td><td class="plf">'+esc(plHalf(it,ym,1))+'</td><td class="plf">'+esc(plHalf(it,ym,2))+'</td><td><span class="lc '+(last.near?'lo':'lg')+'">'+esc(last.txt)+'</span></td>'+cells+
+     '<tr class="'+(sel===id?'plsel':'')+'" data-plrow="'+id+'"><td class="pln">'+(edit?plHandle(id):'')+'<a href="#" data-act="pl-sel" data-i="'+id+'" title="'+esc(plNameMode()==='none'?'':it.name)+'">'+esc(nm)+'</a>'+(plNameMode()==='none'?'':lvTxt)+'</td><td class="plf">'+esc(plHalf(it,ym,1))+'</td><td class="plf">'+esc(plHalf(it,ym,2))+'</td><td><span class="lc '+(last.cls||(last.near?'lo':'lg'))+'"'+(last.title?' title="'+esc(last.title)+'"':'')+'>'+esc(last.txt)+'</span></td>'+cells+
      '<td class="st sg">'+W+'</td><td class="st sb">'+T+'</td><td class="st sg'+(hWarn?' wn':'')+'">'+H+'</td><td class="st sg">'+(T+H)+'</td><td class="cnt'+(over?' over':(caps.length&&caps.every(c=>c.n>=c.max)?' full':''))+'">'+capTxt+'</td></tr>';
   });
   /* cover row */
@@ -5235,7 +5239,7 @@ function saSpecName(label){
 function saPlace(it,ym,h){
   const e=entryAt(it,ym);if(!e||e.noal)return null;
   const p=partAt(e,h.a)||partAt(e,h.b);if(!p)return null;
-  if(p.dept==='ELE'){const u=electiveUnit(p.sub);if(u==='GS'){const f=h.n===1?(p.fa||p.fb):(p.fb||p.fa);return{k:'GS',firm:f?String(SA_ROM[String(f).toUpperCase()]||f):'',e,p};}if(u==='SSS'){const v=p.vsub||eleSpec(p.sub)||'';if(/^ortho/i.test(v||p.sub||''))return{k:'ORT',e,p};return{k:'SUB',unit:v,neuro:saIsNeuro(v),e,p,ele:true};}return null;}
+  if(p.dept==='ELE'){const u=p.vsub?'SSS':(p.fa||p.fb)?'GS':electiveUnit(p.sub);if(p.vsub){if(/^ortho/i.test(p.vsub))return{k:'ORT',e,p};return{k:'SUB',unit:p.vsub,neuro:saIsNeuro(p.vsub),e,p,ele:true};}if(u==='GS'||p.fa||p.fb){const f=h.n===1?(p.fa||p.fb):(p.fb||p.fa);return{k:'GS',firm:f?String(SA_ROM[String(f).toUpperCase()]||f):'',e,p};}if(u==='SSS'){const v=p.vsub||eleSpec(p.sub)||'';if(/^ortho/i.test(v||p.sub||''))return{k:'ORT',e,p};return{k:'SUB',unit:v,neuro:saIsNeuro(v),e,p,ele:true};}return null;}
   if(p.dept==='GS'){const f=h.n===1?(p.fa||p.fb):(p.fb||p.fa);return{k:'GS',firm:f?String(SA_ROM[String(f).toUpperCase()]||f):'',e,p};}
   if(p.dept==='SSS'){
     if(p.vsub){if(/^ortho/i.test(p.vsub))return{k:'ORT',e,p};return{k:'SUB',unit:p.vsub,neuro:saIsNeuro(p.vsub),e,p};}
@@ -5789,8 +5793,9 @@ function alDerive(it,ym){
   const parts=entryParts(e);
   if(parts.length===1&&parts[0].dept==='ELE'&&!parts[0].from&&!parts[0].to){
     const p=parts[0],u=electiveUnit(p.sub);
-    if(u==='GS'){if(p.fa&&p.fb&&p.fa!==p.fb)return[{val:'F:'+p.fa,from:1,to:h,ele:1},{val:'F:'+p.fb,from:h+1,to:dm,ele:1}];return[{val:'F:'+(p.fa||p.fb||''),from:1,to:dm,ele:1}];}
-    if(u==='SSS')return[{val:/ortho/i.test(p.vsub||p.sub||'')?'O':'S:'+(p.vsub||eleSpec(p.sub)),from:1,to:dm,ele:1}];
+    if(p.vsub)return[{val:/^ortho/i.test(p.vsub)?'O':'S:'+p.vsub,from:1,to:dm,ele:1}];
+    if(u==='GS'||p.fa||p.fb){if(p.fa&&p.fb&&p.fa!==p.fb)return[{val:'F:'+p.fa,from:1,to:h,ele:1},{val:'F:'+p.fb,from:h+1,to:dm,ele:1}];return[{val:'F:'+(p.fa||p.fb||''),from:1,to:dm,ele:1}];}
+    if(u==='SSS')return[{val:/ortho/i.test(p.sub||'')?'O':'S:'+eleSpec(p.sub),from:1,to:dm,ele:1}];
     return[{val:'X:ELE',from:1,to:dm,fixed:true}];
   }
   if(parts.length===1){
@@ -5808,7 +5813,7 @@ function alDerive(it,ym){
     const from=p.from||1,to=p.to||dm;
     if(p.dept==='GS')out.push({val:'F:'+(p.fa||''),from,to});
     else if(p.dept==='SSS')out.push({val:/^ortho/i.test(p.vsub||'')?'O':'S:'+(p.vsub||(S.surgery[it.id]||{}).spec||''),from,to});
-    else if(p.dept==='ELE'&&(electiveUnit(p.sub)==='GS'||electiveUnit(p.sub)==='SSS')){const u=electiveUnit(p.sub);out.push({val:u==='GS'?'F:'+(p.fa||p.fb||''):(/ortho/i.test(p.vsub||p.sub||'')?'O':'S:'+(p.vsub||eleSpec(p.sub))),from,to,ele:1});}
+    else if(p.dept==='ELE'&&(p.vsub||p.fa||p.fb||electiveUnit(p.sub)==='GS'||electiveUnit(p.sub)==='SSS')){const u=p.vsub?'SSS':(p.fa||p.fb)?'GS':electiveUnit(p.sub);out.push({val:u==='GS'?'F:'+(p.fa||p.fb||''):(/ortho/i.test(p.vsub||p.sub||'')?'O':'S:'+(p.vsub||eleSpec(p.sub))),from,to,ele:1});}
     else out.push({val:'X:'+p.dept,from,to,fixed:true});
   });
   return out;
@@ -5888,6 +5893,10 @@ function alRow(r,ym,h,edit,n){
 }
 function alOptions(r){
   const e=entryAt(r.it,UI.sgYm)||{};
+  if(r.ele){
+    const specs=alSpecs().concat(CFG.neuroSpec&&!alSpecs().includes(CFG.neuroSpec)?[CFG.neuroSpec]:[]);
+    return'<optgroup label="General surgery">'+FIRMS.map(f=>'<option value="F:'+f+'"'+(r.val==='F:'+f?' selected':'')+'>'+alFirmLabel(f)+'</option>').join('')+'<option value="F:"'+(r.val==='F:'?' selected':'')+'>Firm not set</option></optgroup><optgroup label="Subspecialty">'+'<option value="O"'+(r.val==='O'?' selected':'')+'>Orthopedics</option>'+specs.map(x=>'<option value="S:'+esc(x)+'"'+(r.val==='S:'+x?' selected':'')+'>'+esc(saUnitShort(x)||x)+'</option>').join('')+(r.val==='S:'?'<option value="S:" selected>Not chosen yet</option>':'')+'</optgroup><option value="N">Not allocated (exclude)</option>';
+  }
   if(r.val.indexOf('F:')===0)return FIRMS.map(f=>'<option value="F:'+f+'"'+(r.val==='F:'+f?' selected':'')+'>'+alFirmLabel(f)+'</option>').join('')+'<option value="F:"'+(r.val==='F:'?' selected':'')+'>Firm not set</option><option value="N">Not allocated (exclude)</option>';
   const specs=alSpecs().concat(CFG.neuroSpec&&!alSpecs().includes(CFG.neuroSpec)?[CFG.neuroSpec]:[]);
   return'<option value="O"'+(r.val==='O'?' selected':'')+'>Orthopedics</option>'+specs.map(x=>'<option value="S:'+esc(x)+'"'+(r.val==='S:'+x?' selected':'')+'>'+esc(saUnitShort(x)||x)+'</option>').join('')+(r.val==='S:'?'<option value="S:" selected>Not chosen yet</option>':'')+'<option value="N">Not allocated (exclude)</option>';
