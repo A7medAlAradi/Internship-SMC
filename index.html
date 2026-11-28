@@ -6435,31 +6435,79 @@ function ocPdfHtml(unit,ym){
     for(let p=0;p<K;p++){const id=rec.ids[p];h+='<td>'+(id?nm(id):'')+'</td>';}
     h+='</tr>';
   }
-  const notes=[];
+  const notes=sur?['All interns on-call must be in the hospital from 7am until 10pm.','Sick-leaves during on calls are only accepted from the emergency department in SMC.','All interns are expected to cover emergency and must attend once called for help.']:[];
   notes.forEach(t=>{h+='<tr class="nt"><td class="dn">#</td><td colspan="'+(K+1)+'">- '+esc(t)+'</td></tr>';});
   const rows=1+WC.length+n+notes.length;
   const cw=(194-36)/K,texts=[];
   for(let d=1;d<=n;d++){const rec=dayRec(unit,ym+'-'+pad(d));rec.ids.forEach(id=>texts.push({s:sn(id),mm:cw}));}
   WC.forEach(c=>{let p=0;while(p<c){const t=wardsFor(unit,c,p);let span=1;while(p+span<c&&wardsFor(unit,c,p+span)===t)span++;texts.push({s:String(t).replace(/,\s*/g,' - '),mm:cw*span});p+=span;}});
   notes.forEach(t=>texts.push({s:'- '+t,mm:194-9}));
-  const rh=Math.floor(2790/rows)/10;
+  const rh=Math.floor(2600/rows)/10;
   return{html:h+'</tbody></table>',rh,fs:ocPdfFs(texts,cw,Math.max(6.5,Math.min(11,rh*1.3)))};
 }
 
+/* ----- notes for the allocation pages: automatic (leave + splits) and manual (kept in this browser) ----- */
+function pdfManual(){try{return JSON.parse(localStorage.getItem('pdfNotes')||'{}');}catch(e){return{};}}
+function pdfManualSave(m){try{localStorage.setItem('pdfNotes',JSON.stringify(m));}catch(e){}}
+const pdfKey=(ym,h,id)=>ym+':'+h.n+':'+id;
+function pdfAuto(it,ym,h,row){
+  const out=[],lv=saLeaveRanges(it,ym,h);if(lv.length)out.push('Leave '+lv.join(', ').replace(/L/g,''));
+  const list=(alDerive(it,ym)||[]).filter(p=>!p.fixed&&p.val).sort((a,b)=>a.from-b.from);
+  if(row&&(row.from>h.a||row.to<h.b)){
+    const idx=list.findIndex(p=>p.val===row.val&&p.from===row.from&&p.to===row.to),prev=idx>0?list[idx-1]:null,next=idx>=0&&idx<list.length-1?list[idx+1]:null;
+    if(row.from>h.a&&row.to<h.b)out.push('Days '+row.from+'–'+row.to);
+    else if(row.to<h.b)out.push('Until '+row.to+(next?', then '+alValShort(next.val):''));
+    else out.push('From '+row.from+(prev?', after '+alValShort(prev.val):''));
+  }
+  return out.join(' · ');
+}
+function pdfRows(ym,h){
+  const gs={1:[],2:[],3:[],4:[]},sub=[],M=pdfManual();
+  alRows(ym,h).forEach(r=>{
+    if(r.val==='O')return;
+    const auto=pdfAuto(r.it,ym,h,r),man=(M[pdfKey(ym,h,r.it.id)]||'').trim(),row={it:r.it,auto,man,note:[auto,man].filter(Boolean).join(' · ')};
+    if(r.val.indexOf('F:')===0){const f=+(AL_ROM_REV[r.val.slice(2)]||r.val.slice(2))||0;(gs[f]||(gs[f]=[])).push(row);}
+    else if(r.val.indexOf('S:')===0){const sp=r.val.slice(2);row.unit=saUnitShort(sp)||'Subspecialty';row.neuro=saIsNeuro(sp);sub.push(row);}
+  });
+  alElectives(ym).forEach(e=>{const man=(M[pdfKey(ym,h,e.it.id)]||'').trim();sub.push({it:e.it,auto:'Elective',man,note:['Elective',man].filter(Boolean).join(' · '),unit:e.sub||'Elective',neuro:false});});
+  const nm=(a,b)=>a.it.name.localeCompare(b.it.name),order=['Vascular','Plastic','Urology','Pediatric','Neurosurgery'];
+  Object.values(gs).forEach(a=>a.sort(nm));
+  sub.sort((a,b)=>(order.indexOf(a.unit)<0?9:order.indexOf(a.unit))-(order.indexOf(b.unit)<0?9:order.indexOf(b.unit))||nm(a,b));
+  return{gs,sub};
+}
+const AL_ROM_REV={I:1,II:2,III:3,IV:4,'1':1,'2':2,'3':3,'4':4};
 function ocPdfAlloc(ym,h){
-  const r=saRows(ym,h);let n=0,rows=1+1+1;
+  const r=pdfRows(ym,h);let n=0,rows=1+1+1;
   const th=c=>'<tr class="ah">'+c.map(x=>'<th>'+x+'</th>').join('')+'</tr>';
   let b='<tr><th colspan="5" class="ttl">'+esc(saTitle(ym,h))+'</th></tr><tr><th colspan="5" class="sec">General Surgery</th></tr>'+th(['No.','Name','Notes','Tel','Firm']);
   [1,2,3,4].forEach(f=>{const a=r.gs[f]||[];b+='<tr class="fh"><td colspan="5">Firm '+f+'</td></tr>';rows++;a.forEach(x=>{rows++;b+='<tr><td class="c">'+(++n)+'</td><td class="l">'+esc(x.it.name)+'</td><td class="l">'+esc(x.note)+'</td><td>'+esc(x.it.phone||'')+'</td><td class="c">'+f+'</td></tr>';});});
   b+='<tr><th colspan="5" class="sec">Sub-specialties</th></tr>'+th(['No.','Name','Notes','Tel','Unit']);rows+=2;
   r.sub.forEach((x,i)=>{rows++;b+='<tr><td class="c">'+(i+1)+'</td><td class="l">'+esc(x.it.name)+(x.neuro?' #':'')+'</td><td class="l">'+esc(x.note)+'</td><td>'+esc(x.it.phone||'')+'</td><td class="c">'+esc(x.unit)+'</td></tr>';});
   rows++;b+='<tr class="nt"><td colspan="5" class="l">#  Neurosurgery: not counted for surgical on-call.</td></tr>';
-  const rh=Math.min(7,Math.floor(2700/rows)/10);
-  return'<section class="pg" style="--rh:'+rh+'mm;--fs:'+Math.max(6.5,Math.min(9.5,rh*1.3))+'pt"><table class="at"><colgroup><col style="width:9mm"><col style="width:52mm"><col><col style="width:24mm"><col style="width:16mm"></colgroup>'+b+'</table></section>';
+  const rh=Math.min(7,Math.floor(2600/rows)/10);const names=[];[1,2,3,4].forEach(f=>(r.gs[f]||[]).forEach(x=>names.push({s:x.it.name,mm:84})));r.sub.forEach(x=>names.push({s:x.it.name+(x.neuro?' #':''),mm:84}));
+  const notes=[];[1,2,3,4].forEach(f=>(r.gs[f]||[]).forEach(x=>notes.push({s:x.note,mm:46})));r.sub.forEach(x=>notes.push({s:x.note,mm:46}));
+  const base=Math.max(6.5,Math.min(9.5,rh*1.3)),fsN=Math.max(5,ocPdfFs(names,84,base)),fsA=Math.min(fsN,Math.max(6.5,ocPdfFs(notes,46,base)));
+  return'<section class="pg" style="--rh:'+rh+'mm;--fs:'+fsA+'pt"><table class="at"><colgroup><col style="width:10mm"><col style="width:84mm"><col style="width:46mm"><col style="width:30mm"><col style="width:24mm"></colgroup>'+b+'</table></section>';
 }
+/* ----- the dialog that lets you add notes before exporting ----- */
+function ocPdfOpen(){
+  const unit=UI.ocUnit,ym=UI.ocYm||ymOf(todayStr());
+  if(unit!=='SURGICAL'){ocPdfRun();return;}
+  let h='<h2>Export PDF</h2><p class="hint" style="margin-top:0">Leave and split notes are added automatically (grey). Add your own notes in the boxes. They are kept in this browser for next time.</p><div style="max-height:56vh;overflow:auto">';
+  saHalves(ym).forEach(hf=>{
+    const r=pdfRows(ym,hf),all=[];[1,2,3,4].forEach(f=>(r.gs[f]||[]).forEach(x=>all.push(x)));r.sub.forEach(x=>all.push(x));
+    h+='<h3 style="margin:12px 0 4px">Allocation '+saD2(hf.a)+'–'+saD2(hf.b)+'</h3><table class="tbl" style="width:100%"><tbody>'+all.map(x=>'<tr><td style="white-space:nowrap">'+esc(x.it.name)+'</td><td class="muted small" style="width:32%">'+esc(x.auto)+'</td><td><input type="text" data-pn="'+pdfKey(ym,hf,x.it.id)+'" value="'+esc(x.man)+'" placeholder="Your note" style="width:100%"></td></tr>').join('')+(all.length?'':'<tr><td class="muted">No interns in this half.</td></tr>')+'</tbody></table>';
+  });
+  openModal(h+'</div><div class="foot"><button class="btn" data-act="close">Cancel</button><button class="btn pri" data-act="pdf-go">Export PDF</button></div>',true);
+}
+ACT['pdf-go']=()=>{
+  const M=pdfManual();document.querySelectorAll('#modal input[data-pn]').forEach(i=>{const v=i.value.trim();if(v)M[i.dataset.pn]=v;else delete M[i.dataset.pn];});
+  pdfManualSave(M);closeModal();setTimeout(ocPdfRun,80);
+};
+ACT['oc-pdf']=()=>ocPdfOpen();
 const MONTHS_LONG=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const DAYSFULL=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-ACT['oc-pdf']=()=>{
+function ocPdfRun(){
   const unit=UI.ocUnit,ym=UI.ocYm||ymOf(todayStr());
   let r=document.getElementById('pdfroot');if(r)r.remove();
   r=document.createElement('div');r.id='pdfroot';const pd=ocPdfHtml(unit,ym);r.innerHTML=pd.html;r.style.setProperty('--rh',pd.rh+'mm');r.dataset.u=unit;r.style.setProperty('--fs',Math.max(5,pd.fs)+'pt');if(unit==='SURGICAL'){try{saHalves(ym).forEach(h=>{r.insertAdjacentHTML('beforeend',ocPdfAlloc(ym,h));});}catch(e){console.log('alloc pdf',e);}}
@@ -6469,7 +6517,7 @@ ACT['oc-pdf']=()=>{
   const done=()=>{document.body.classList.remove('pdfmode');const pgx=document.getElementById('pdfpage');if(pgx)pgx.remove();const x=document.getElementById('pdfroot');if(x)x.remove();window.removeEventListener('afterprint',done);};
   window.addEventListener('afterprint',done);
   setTimeout(()=>window.print(),50);
-};
+}
 function ocPdfBtn(){
   if(UI.route!=='oncall'||UI.ocUnit==='EMERGENCY'||!UI.ocUnit||ME.role==='intern')return;
   const csv=document.querySelector('[data-act="export-oc"]');
