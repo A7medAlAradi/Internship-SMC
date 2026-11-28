@@ -566,6 +566,22 @@ table.odT td.cv{text-align:center;font-weight:700;width:40px;color:var(--ink)}ta
 @media print{html{padding:8mm!important;box-sizing:border-box}}
 .lc.lr{background:#fbd5d5;color:#a10c0c;font-weight:700;border-radius:4px;padding:0 4px}.lc.la{background:#ffe1bf;color:#a34a00;font-weight:700;border-radius:4px;padding:0 4px}.lc.le{background:#e3e8f6;color:#2b3a9a;font-weight:700;border-radius:4px;padding:0 6px}
 
+/* allocation: slimmer bars, closer to the sheet */
+.altitle{padding:6px 12px!important;font-size:.92rem;border-radius:8px 8px 0 0}
+.alsheet .alh{padding:3px 10px!important;font-size:.82rem!important;font-weight:700}
+.alsheet .alh .cnt{font-size:.72rem}
+.altbl th{padding:2px 4px!important;font-size:.72rem!important;font-weight:700}
+.altbl tr.grp td{height:21px!important;font-size:.8rem}
+.altbl tr.grp .cnt{font-size:.7rem;font-weight:400}
+.altbl td{height:25px!important}
+.alwarn{margin:6px 0}
+
+.ict ul li{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ict{padding:6px 5px}.ict ul{font-size:.64rem;letter-spacing:-.01em}.oc-cols{grid-template-columns:minmax(0,3.4fr) minmax(220px,1fr)}
+
+.icpair{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;align-items:start}@media(max-width:700px){.icpair{grid-template-columns:1fr}}
+.icpair>*{margin:0!important}
+
 /*V45-CSS-END*/
 </style>
 </head>
@@ -4732,9 +4748,10 @@ function icCal(unit,ym,me){
     const lvFirst=lv&&!mine&&!leaveDay(rs,addDays(date,-1)),lvLast=lv&&!mine&&!leaveDay(rs,addDays(date,1));
     if(lv&&!mine)cls+=(lvFirst?' lf':'')+(lvLast?' ll':'');
     cells+='<button class="'+cls+'" data-act="ic-day" data-d="'+date+'"><span class="icn">'+d+'</span>'+(mine?'<span class="ictag">On call</span>':'')+(hol&&!mine?'<span class="icsm">'+esc(hol.label||'Holiday')+'</span>':'')+
-      '<ul>'+ids.map(i=>'<li class="'+(i===me?'me':'')+'">'+esc(nmOf(i))+(lt.includes(i)&&lateOn(unit)?' '+MOON:'')+'</li>').join('')+'</ul>'+(lv&&!mine?'<span class="lvb">'+(lvFirst?esc(KIND_NAME[lv.kind]||'Leave')+' '+(+lv.from.slice(8))+'–'+(+lv.to.slice(8)):'')+'</span>':'')+'</button>';
+      '<ul>'+ids.map(i=>'<li class="'+(i===me?'me':'')+'">'+esc(plShort(i,Object.keys(S.interns)))+(lt.includes(i)&&lateOn(unit)?' '+MOON:'')+'</li>').join('')+'</ul>'+(lv&&!mine?'<span class="lvb">'+(lvFirst?esc(KIND_NAME[lv.kind]||'Leave')+' '+(+lv.from.slice(8))+'–'+(+lv.to.slice(8)):'')+'</span>':'')+'</button>';
   }
   const panel=sel?icDayPanel(unit,sel,me):'<section class="panel"><h2>Pick a day</h2><p class="muted" style="margin:0">Tap a day to see who is on call and where.</p></section>';
+  if(UI.icSplit){UI.icPanel=panel;return'<div class="icgrid">'+hdr+cells+'</div>';}
   return'<div class="cols oc-cols"><div><div class="icgrid">'+hdr+cells+'</div></div><div>'+panel+'</div></div>';
 }
 function addDays(date,n){const d=new Date(date+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10);}
@@ -5825,7 +5842,7 @@ function alBuild(it,ym,list){
   const dm=dim(ym),h=halfDay(ym),old=entryAt(it,ym)||{ym};
   const L=list.filter(x=>x.val).map(x=>({val:x.val,from:Math.max(1,+x.from||1),to:Math.min(dm,+x.to||dm)})).sort((a,b)=>a.from-b.from);
   const keep={};['note','repeat','g'].forEach(k=>{if(old[k])keep[k]=old[k];});
-  if(old.dept==='ELE'&&!old.more){
+  if(old.dept==='ELE'){
     const mk=x=>{const p={dept:'ELE'};if(old.sub)p.sub=old.sub;if(x.val.indexOf('F:')===0){if(x.val.slice(2))p.fa=x.val.slice(2);}else p.vsub=x.val==='O'?'Orthopedics':x.val.slice(2);if(x.from>1)p.from=x.from;if(x.to<dm)p.to=x.to;return p;};
     const parts=L.map(mk),ne=Object.assign({ym},keep,parts[0]||{dept:'ELE',sub:old.sub});if(parts.length>1)ne.more=parts.slice(1);
     if(parts.length===2&&L[0].from===1&&L[0].to===h&&L[1].from===h+1&&L[1].to===dm&&L.every(x=>x.val.indexOf('F:')===0)){delete ne.more;delete ne.to;ne.fa=L[0].val.slice(2);ne.fb=L[1].val.slice(2);if(!ne.fa)delete ne.fa;if(!ne.fb)delete ne.fb;}
@@ -5888,8 +5905,7 @@ function alBlockCount(rs){const v=rs.filter(r=>r.vis).length;return rs.length+(r
 function alRow(r,ym,h,edit,n){
   const it=r.it,opts=alOptions(r),tag=(r.vis?'<span class="alvis">'+esc(affilOf(it))+'</span>':'')+(r.ele?'<span class="alvis" title="'+esc(r.eleSub)+'">Elective'+(r.eleSub?': '+esc(r.eleSub):'')+'</span>':''),dr=r.partial?'<span class="alday">days '+Math.max(r.from,h.a)+'–'+Math.min(r.to,h.b)+'</span>':'';
   const note=saNote(it,ym,h),sel=edit&&r.single?'<select data-alsel="'+it.id+'" aria-label="Placement for '+esc(it.name)+'">'+opts+'</select>':'<span class="small">'+esc(alValLabel(r.val))+'</span>';
-  const w=r.val.indexOf('F:')===0&&r.single?firmWarnings(it,ym,(entryAt(it,ym)||{}).fa||'',(entryAt(it,ym)||{}).fb||''):[];
-  return'<tr'+(edit&&r.single?' draggable="true"':'')+' data-alrow="'+it.id+'"><td class="no">'+n+'</td><td><b>'+internLink(it.id)+'</b> '+tag+' '+dr+(w.length?'<div class="small" style="color:var(--warn)" title="'+esc(w.join(' '))+'">⚠ '+esc(w[0])+'</div>':'')+'</td><td>'+(note?'<span class="alnote">'+esc(note)+'</span>':'')+(edit?'<input type="text" class="alpn" data-pn="'+pdfKey(ym,h,it.id)+'" value="'+esc((pdfManual()[pdfKey(ym,h,it.id)]||''))+'" placeholder="Add note for PDF" aria-label="Note for the PDF, '+esc(it.name)+'">':(note?'':'<span class="muted">—</span>'))+'</td><td class="tel">'+esc(it.phone||'')+'</td><td>'+sel+'</td><td>'+(edit?'<button class="spl" data-act="al-split" data-id="'+it.id+'">Split</button>':'')+'</td></tr>';
+  return'<tr'+(edit&&r.single?' draggable="true"':'')+' data-alrow="'+it.id+'"><td class="no">'+n+'</td><td><b>'+internLink(it.id)+'</b> '+tag+' '+dr+'</td><td>'+(note?'<span class="alnote">'+esc(note)+'</span>':'')+(edit?'<input type="text" class="alpn" data-pn="'+pdfKey(ym,h,it.id)+'" value="'+esc((pdfManual()[pdfKey(ym,h,it.id)]||''))+'" placeholder="Add note for PDF" aria-label="Note for the PDF, '+esc(it.name)+'">':(note?'':'<span class="muted">—</span>'))+'</td><td class="tel">'+esc(it.phone||'')+'</td><td>'+sel+'</td><td>'+(edit?'<button class="spl" data-act="al-split" data-id="'+it.id+'">Split</button>':'')+'</td></tr>';
 }
 function alOptions(r){
   const e=entryAt(r.it,UI.sgYm)||{};
@@ -5906,7 +5922,7 @@ function alBlock(title,rows,drop,ym,h,edit,startN,note){
   return'<tbody class="alb" data-aldrop="'+esc(drop)+'"><tr class="grp"><td colspan="6"><b>'+esc(title)+'</b> <span class="cnt">'+alBlockCount(rows)+'</span></td></tr>'+(rows.length?rows.sort((a,b)=>plShort(a.it.id,Object.keys(S.interns)).localeCompare(plShort(b.it.id,Object.keys(S.interns)))).map(r=>alRow(r,ym,h,edit,n++)).join(''):'<tr class="aldz"><td colspan="6">'+(edit?'Drop an intern here':'Nobody')+'</td></tr>')+(note?'<tr class="alhint"><td colspan="6">'+note+'</td></tr>':'')+'</tbody>';
 }
 function alTable(body,last){
-  return'<table class="altbl"><colgroup><col style="width:34px"><col style="width:23%"><col><col style="width:96px"><col style="width:128px"><col style="width:60px"></colgroup><thead><tr><th>No.</th><th>Name</th><th>Notes</th><th>Tel</th><th>'+last+'</th><th></th></tr></thead>'+body+'</table>';
+  return'<table class="altbl"><colgroup><col style="width:4%"><col style="width:38%"><col style="width:20%"><col style="width:11%"><col style="width:17%"><col style="width:10%"></colgroup><thead><tr><th>No.</th><th>Name</th><th>Notes</th><th>Tel</th><th>'+last+'</th><th></th></tr></thead>'+body+'</table>';
 }
 function alExcluded(ym){
   return Object.values(S.interns).filter(it=>{const e=entryAt(it,ym);if(!e||!e.noal)return false;return entryParts(e).some(p=>p.dept==='GS'||p.dept==='SSS'||(p.dept==='ELE'&&['GS','SSS'].includes(electiveUnit(p.sub))));});
@@ -6628,8 +6644,8 @@ function viewInternOncall(){
   const bar='<div class="bar">'+sel+'<span class="mnav"><button class="btn" data-act="ocmonth" data-n="-1" aria-label="Previous month">‹</button><button class="btn mlabel" data-act="ocmonth" data-n="0">'+fmtYm(ym)+'</button><button class="btn" data-act="ocmonth" data-n="1" aria-label="Next month">›</button></span><span class="sp"></span><div class="seg"><button class="'+(mode==='cal'?'on':'')+'" data-act="ic-mode" data-v="cal">Calendar</button><button class="'+(mode==='table'?'on':'')+'" data-act="ic-mode" data-v="table">Table</button></div></div>';
   const lv=rs.length?'<div class="iclv"><b>Your leave:</b> '+esc(leaveText(rs))+'</div>':'';
   if(visR(unit,ym))return head('My on-call',esc(ocName(unit)),'')+bar+'<div class="note" style="margin-top:14px"><b>Not published yet.</b> The '+esc(ocName(unit))+' rota for '+esc(fmtYm(ym))+' is still being prepared. You will get a notice when it is ready.</div>';
-  const body=mode==='cal'?icCal(unit,ym,me):icTable(unit,ym,me);
-  return head('My on-call',esc(ocName(unit))+'. Everyone on the rota is shown, with your days highlighted.','')+bar+lv+'<div class="cols oc-cols"><div>'+body+'</div><div>'+swapPanel(unit,me)+'</div></div>'+wardTable(unit,ym,me,false);
+  UI.icSplit=true;const body=mode==='cal'?icCal(unit,ym,me):icTable(unit,ym,me);UI.icSplit=false;
+  return head('My on-call',esc(ocName(unit))+'. Everyone on the rota is shown, with your days highlighted.','')+bar+lv+(mode==='cal'?'<div>'+body+'</div><div class="icpair">'+UI.icPanel+swapPanel(unit,me)+'</div>':'<div class="cols oc-cols"><div>'+body+'</div><div>'+swapPanel(unit,me)+'</div></div>')+wardTable(unit,ym,me,false);
 }
 ACT['swp-go']=async el=>{
   const me=E().internId,unit=UI.ocUnit,a=el.dataset.a,peer=el.dataset.p,b=el.dataset.b,msg=document.getElementById('swp-msg');
