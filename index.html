@@ -344,7 +344,7 @@ button.shift{cursor:pointer}
 .plbal{display:flex;flex-direction:column;gap:3px}.plbr{display:grid;grid-template-columns:120px 1fr 110px;gap:8px;align-items:center}.plbb{background:var(--line2);border-radius:4px;height:8px;overflow:hidden}.plbb i{display:block;height:100%;background:#5a70d6}
 .plchips{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}.plchip{position:relative}.plchip input{position:absolute;opacity:0}.plchip span{display:inline-block;min-width:30px;text-align:center;padding:4px 0;border:1px solid var(--line);border-radius:6px;cursor:pointer}.plchip input:checked+span{background:var(--accent);color:var(--accent-ink)}
 @media print{
- @page{size:landscape;margin:8mm}
+ @page{size:landscape;margin:0}
  .side,.noprint,.topbar,.bottomnav,nav,header.mobhead,.toast{display:none!important}
  .plcard{max-height:none;overflow:visible;border:0}.pltbl{font-size:8px}.pltbl th,.pltbl td{height:18px;min-width:15px}.pltbl thead th,.pltbl .pln,.pltbl tr.plcov td{position:static}
  .pltbl *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -537,6 +537,33 @@ table.odT td.cv{text-align:center;font-weight:700;width:40px;color:var(--ink)}ta
 .ocT tr.myrow td,.ocT tr.myrow th{background:color-mix(in srgb,var(--accent) 14%,var(--surface));font-weight:600}
 .ocT tr.myrow{cursor:pointer}.ocT tr.myrow .mine{color:var(--accent);font-weight:800}
 .icoc tbody tr{height:66px}
+
+.alb td,.alb th{padding:2px 6px!important;font-size:.84rem;line-height:1.2}
+.alb td:nth-child(2){white-space:nowrap}
+.alb select{min-height:0!important;padding:2px 22px 2px 6px!important;font-size:.8rem!important;height:26px}
+.alb .alpn{min-width:110px;min-height:0;height:24px;margin-top:2px;padding:1px 6px;font-size:.78rem}
+.alb .spl{padding:2px 8px;font-size:.78rem;min-height:0}
+.alb .alday,.alb .alvis{font-size:.7rem}
+.alb .bh{padding:6px 10px}
+.alb .alpn{min-width:80px!important}.alb select{max-width:118px}
+.alb .alpn{min-width:64px!important;max-width:110px}.alb select{max-width:100px!important;font-size:.76rem!important}.alb td.tel{font-size:.76rem;white-space:nowrap}.alb td,.alb th{padding:2px 4px!important}
+
+/* allocation: one sheet-like table */
+.alsheet{padding:0!important;border-radius:0 0 10px 10px;overflow:hidden}
+.alsheet .alh{margin:0;padding:6px 10px;background:#c9c9c9;color:#111;font-size:.9rem;text-align:center;border-top:1px solid #777;border-bottom:1px solid #777}
+.alsheet .alh:first-child{border-top:0}
+.altbl{width:100%;border-collapse:collapse;table-layout:fixed;font-size:.84rem}
+.altbl th{background:#c9c9c9;color:#111;text-transform:none;font-size:.78rem;text-align:center;padding:3px 4px;border:1px solid #888}
+.altbl td{border:1px solid #bbb;padding:1px 5px!important;height:27px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.altbl td.no{text-align:center;background:#f0f0f0;color:#333}
+.altbl tr.grp td{background:#e4e4e4;border-color:#999;font-weight:700;height:24px}
+.altbl tr.aldz td,.altbl tr.alhint td{color:var(--ink3);font-size:.78rem;text-align:left;white-space:normal;height:22px}
+.altbl select{height:23px;max-width:100%!important;width:100%}
+.altbl .alpn{width:100%;max-width:none!important;min-width:0!important;height:22px;margin:0}
+.altbl td.tel{text-align:center}
+.alb.aldrop td{background:var(--accent-soft)!important}
+.alsheet>.hint,.alsheet>details{margin:8px 10px}
+@media print{html{padding:8mm!important;box-sizing:border-box}}
 
 /*V45-CSS-END*/
 </style>
@@ -5206,7 +5233,7 @@ function saSpecName(label){
 }
 /* where is this intern in the surgical allocation in this half? */
 function saPlace(it,ym,h){
-  const e=entryAt(it,ym);if(!e)return null;
+  const e=entryAt(it,ym);if(!e||e.noal)return null;
   const p=partAt(e,h.a)||partAt(e,h.b);if(!p)return null;
   if(p.dept==='ELE'){const u=electiveUnit(p.sub);if(u==='GS'){const f=h.n===1?(p.fa||p.fb):(p.fb||p.fa);return{k:'GS',firm:f?String(SA_ROM[String(f).toUpperCase()]||f):'',e,p};}if(u==='SSS'){const v=p.vsub||eleSpec(p.sub)||'';if(/^ortho/i.test(v||p.sub||''))return{k:'ORT',e,p};return{k:'SUB',unit:v,neuro:saIsNeuro(v),e,p,ele:true};}return null;}
   if(p.dept==='GS'){const f=h.n===1?(p.fa||p.fb):(p.fb||p.fa);return{k:'GS',firm:f?String(SA_ROM[String(f).toUpperCase()]||f):'',e,p};}
@@ -5758,7 +5785,7 @@ const alSpecs=()=>(CFG.surgSpecs||[]).filter(x=>!/ortho/i.test(x));
 const eleSpec=sub=>{const t=String(sub||'').toLowerCase();return(CFG.surgSpecs||[]).find(x=>{const k=String(x).toLowerCase().slice(0,4);return k&&t.indexOf(k)>=0;})||'';};
 function alDerive(it,ym){
   const e=entryAt(it,ym),dm=dim(ym),h=halfDay(ym),out=[];
-  if(!e)return out;
+  if(!e||e.noal)return out;
   const parts=entryParts(e);
   if(parts.length===1&&parts[0].dept==='ELE'&&!parts[0].from&&!parts[0].to){
     const p=parts[0],u=electiveUnit(p.sub);
@@ -5861,14 +5888,25 @@ function alRow(r,ym,h,edit,n){
 }
 function alOptions(r){
   const e=entryAt(r.it,UI.sgYm)||{};
-  if(r.val.indexOf('F:')===0)return FIRMS.map(f=>'<option value="F:'+f+'"'+(r.val==='F:'+f?' selected':'')+'>'+alFirmLabel(f)+'</option>').join('')+'<option value="F:"'+(r.val==='F:'?' selected':'')+'>Firm not set</option>';
+  if(r.val.indexOf('F:')===0)return FIRMS.map(f=>'<option value="F:'+f+'"'+(r.val==='F:'+f?' selected':'')+'>'+alFirmLabel(f)+'</option>').join('')+'<option value="F:"'+(r.val==='F:'?' selected':'')+'>Firm not set</option><option value="N">Not allocated (exclude)</option>';
   const specs=alSpecs().concat(CFG.neuroSpec&&!alSpecs().includes(CFG.neuroSpec)?[CFG.neuroSpec]:[]);
-  return'<option value="O"'+(r.val==='O'?' selected':'')+'>Orthopedics</option>'+specs.map(x=>'<option value="S:'+esc(x)+'"'+(r.val==='S:'+x?' selected':'')+'>'+esc(saUnitShort(x)||x)+'</option>').join('')+(r.val==='S:'?'<option value="S:" selected>Not chosen yet</option>':'');
+  return'<option value="O"'+(r.val==='O'?' selected':'')+'>Orthopedics</option>'+specs.map(x=>'<option value="S:'+esc(x)+'"'+(r.val==='S:'+x?' selected':'')+'>'+esc(saUnitShort(x)||x)+'</option>').join('')+(r.val==='S:'?'<option value="S:" selected>Not chosen yet</option>':'')+'<option value="N">Not allocated (exclude)</option>';
 }
 function alBlock(title,rows,drop,ym,h,edit,startN,note){
   let n=startN;
-  return'<section class="alb" data-aldrop="'+esc(drop)+'"><div class="bh"><b>'+esc(title)+'</b><span class="cnt">'+alBlockCount(rows)+'</span></div>'+(rows.length?'<table><thead><tr><th>No.</th><th>Name</th><th>Notes</th><th>Tel</th><th>'+(drop.charAt(0)==='F'?'Firm':'Unit')+'</th><th></th></tr></thead><tbody>'+rows.sort((a,b)=>a.it.name.localeCompare(b.it.name)).map(r=>alRow(r,ym,h,edit,n++)).join('')+'</tbody></table>':'<div class="aldz">'+(edit?'Drop an intern here':'Nobody')+'</div>')+(note||'')+'</section>';
+  return'<tbody class="alb" data-aldrop="'+esc(drop)+'"><tr class="grp"><td colspan="6"><b>'+esc(title)+'</b> <span class="cnt">'+alBlockCount(rows)+'</span></td></tr>'+(rows.length?rows.sort((a,b)=>plShort(a.it.id,Object.keys(S.interns)).localeCompare(plShort(b.it.id,Object.keys(S.interns)))).map(r=>alRow(r,ym,h,edit,n++)).join(''):'<tr class="aldz"><td colspan="6">'+(edit?'Drop an intern here':'Nobody')+'</td></tr>')+(note?'<tr class="alhint"><td colspan="6">'+note+'</td></tr>':'')+'</tbody>';
 }
+function alTable(body,last){
+  return'<table class="altbl"><colgroup><col style="width:34px"><col style="width:23%"><col><col style="width:96px"><col style="width:128px"><col style="width:60px"></colgroup><thead><tr><th>No.</th><th>Name</th><th>Notes</th><th>Tel</th><th>'+last+'</th><th></th></tr></thead>'+body+'</table>';
+}
+function alExcluded(ym){
+  return Object.values(S.interns).filter(it=>{const e=entryAt(it,ym);if(!e||!e.noal)return false;return entryParts(e).some(p=>p.dept==='GS'||p.dept==='SSS'||(p.dept==='ELE'&&['GS','SSS'].includes(electiveUnit(p.sub))));});
+}
+function alExclBlock(ym,edit){
+  const L=alExcluded(ym);if(!L.length)return'';
+  return'<details class="alort" open><summary>Not allocated · '+plural(L.length,'intern')+' · left out of the allocation and the exported sheet</summary><table class="altbl"><colgroup><col style="width:34px"><col style="width:30%"><col><col style="width:110px"></colgroup><tbody>'+L.map((it,i)=>{const e=entryAt(it,ym),d=entryParts(e).map(p=>p.dept==='ELE'?'Elective'+(p.sub?': '+p.sub:''):(BLOCK_NAME[p.dept]||p.dept)).join(', ');return'<tr><td class="no">'+(i+1)+'</td><td><b><a href="#intern-'+it.id+'" title="'+esc(it.name)+'">'+esc(plShort(it.id,Object.keys(S.interns)))+'</a></b></td><td class="muted">'+esc(d)+'</td><td>'+(edit?'<button class="spl" data-act="al-incl" data-id="'+it.id+'">Include again</button>':'')+'</td></tr>';}).join('')+'</tbody></table></details>';
+}
+ACT['al-incl']=async el=>{const ym=UI.sgYm,id=el.dataset.id;await mut('interns',id,b=>({...b,plan:b.plan.map(x=>{if(x.ym!==ym)return x;const y=Object.assign({},x);delete y.noal;return y;})}));logEv('Put '+((S.interns[id]||{}).name||'')+' back in the surgical allocation');};
 function viewAllocation(){
   const ym=UI.sgYm||(UI.sgYm=ymOf(todayStr())),edit=canSurg(),hn=alHalf(),h=alHalves(ym)[hn-1],rows=alRows(ym,h);
   const gs={};FIRMS.concat(['']).forEach(f=>{gs[f]=rows.filter(r=>r.val==='F:'+f);});
@@ -5884,7 +5922,7 @@ function viewAllocation(){
   let n=1;const seq=()=>n;
   let g='';FIRMS.forEach(f=>{g+=alBlock(alFirmLabel(f),gs[f],'F:'+f,ym,h,edit,n,'');n+=gs[f].length;});
   if(gs[''].length){g+=alBlock('Firm not set',gs[''],'F:',ym,h,edit,n,'');n+=gs[''].length;}
-  let sb='';specs.forEach(sp=>{sb+=alBlock(saUnitShort(sp)||sp,sub[sp],'S:'+sp,ym,h,edit,n,sp===CFG.neuroSpec?'<div class="hint" style="margin:4px 10px">Not counted for surgical on-call: on the Neurosurgery rota.</div>':'');n+=sub[sp].length;});
+  let sb='';specs.forEach(sp=>{sb+=alBlock(saUnitShort(sp)||sp,sub[sp],'S:'+sp,ym,h,edit,n,sp===CFG.neuroSpec?'Not counted for surgical on-call: on the Neurosurgery rota.':'');n+=sub[sp].length;});
   if(sub[''].length){sb+=alBlock('Not chosen yet',sub[''],'S:',ym,h,edit,n,'');n+=sub[''].length;}
   const nav='<span class="mnav"><button class="btn" data-act="sgmonth" data-n="-1" aria-label="Previous month">‹</button><button class="btn mlabel" data-act="sgmonth" data-n="0" title="Back to this month">'+fmtYm(ym)+'</button><button class="btn" data-act="sgmonth" data-n="1" aria-label="Next month">›</button></span>';
   const halfSeg='<div class="seg">'+alHalves(ym).map(x=>'<button class="'+(hn===x.n?'on':'')+'" data-act="al-half" data-v="'+x.n+'">'+(x.n===1?'1st':'2nd')+' half · '+pad(x.a)+'–'+pad(x.b)+'</button>').join('')+'</div>';
@@ -5893,9 +5931,9 @@ function viewAllocation(){
   return head('Surgical allocation','One page, laid out like the allocation sheet. Visiting interns are counted in the firms and subspecialties.','')+
    '<div class="bar">'+tabs+nav+halfSeg+'<span class="grow"></span>'+(edit?visSwitch('a','',ym):'')+btns+'</div>'+
    (warn.length?'<div class="alwarn">⚠ '+warn.map(esc).join(' · ')+'</div>':'')+
-   '<div class="altitle">'+esc(saTitle(ym,h))+'</div><div class="alsheet"><h2 class="alh">General Surgery <span class="cnt">'+plural(rows.filter(r=>r.val.indexOf('F:')===0).length,'intern')+'</span></h2><div class="algrid">'+g+'</div><h2 class="alh">Sub-specialties <span class="cnt">'+plural(rows.filter(r=>r.val.indexOf('S:')===0).length,'intern')+'</span></h2><div class="algrid">'+sb+'</div>'+
-   '<details class="alort"'+(UI.alOrt?' open':'')+'><summary data-act="al-ort">Orthopedics this half <span class="cnt">· '+plural(ort.length,'intern')+' · not on the exported sheet</span></summary>'+alBlock('Orthopedics',ort,'O',ym,h,edit,n,'<div class="hint" style="margin:4px 10px">Their other half is in the sub-specialties above. Choosing a subspecialty here moves the intern up there and puts Orthopedics in the other half.</div>')+'</details>'+
-   '<p class="hint"># Neurosurgery is not counted for surgical on-call. Ortho interns are on the Orthopedics rota. '+(isTr()?'The first half ends on day '+alHalves(ym)[0].b+' this month (change it in Setup).':'')+'</p></div>';
+   '<div class="altitle">'+esc(saTitle(ym,h))+'</div><div class="alsheet"><h2 class="alh">General Surgery <span class="cnt">'+plural(rows.filter(r=>r.val.indexOf('F:')===0).length,'intern')+'</span></h2>'+alTable(g,'Firm')+'<h2 class="alh">Sub-specialties <span class="cnt">'+plural(rows.filter(r=>r.val.indexOf('S:')===0).length,'intern')+'</span></h2>'+alTable(sb,'Unit')+''+
+   '<details class="alort"'+(UI.alOrt?' open':'')+'><summary data-act="al-ort">Orthopedics this half <span class="cnt">· '+plural(ort.length,'intern')+' · not on the exported sheet</span></summary>'+alTable(alBlock('Orthopedics',ort,'O',ym,h,edit,n,'Their other half is in the sub-specialties above. Choosing a subspecialty here moves the intern up there and puts Orthopedics in the other half.'),'Unit')+'</details>'+
+   alExclBlock(ym,edit)+'<p class="hint"># Neurosurgery is not counted for surgical on-call. Ortho interns are on the Orthopedics rota. '+(isTr()?'The first half ends on day '+alHalves(ym)[0].b+' this month (change it in Setup).':'')+'</p></div>';
 }
 function viewSurgery(){
   const tab=UI.sgTab;
@@ -5908,6 +5946,7 @@ function viewSurgery(){
 /* ----- changing a placement for the half on screen ----- */
 async function alMove(id,hn,target){
   const ym=UI.sgYm,it=S.interns[id],e=entryAt(it,ym);if(!it||!e||!canSurg())return;
+  if(target==='N'){await mut('interns',id,b=>({...b,plan:b.plan.map(x=>x.ym===ym?Object.assign({},x,{noal:1}):x)}));logEv('Took '+it.name+' out of the surgical allocation for '+fmtYm(ym));return;}
   const pls=alDerive(it,ym);
   if(entryParts(e).length!==1||e.from||e.to){toast('This intern’s month is split into parts. Use the Split button.');return;}
   if(e.dept==='ELE'){
