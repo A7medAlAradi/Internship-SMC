@@ -488,19 +488,21 @@ table.odT td.cv{text-align:center;font-weight:700;width:40px;color:var(--ink)}ta
 .ocT tbody tr{height:66px}.ocT tbody td,.ocT tbody th{vertical-align:middle;height:66px}
 .ocT tbody td small,.ocT tbody td .ward{display:block;line-height:1.2;max-height:2.4em;overflow:hidden}
 #pdfroot{display:none}
+@page pdfrota{size:A4 portrait;margin:8mm}
 @media print{
  body.pdfmode>*:not(#pdfroot){display:none!important}
- body.pdfmode #pdfroot{display:block;color:#000;background:#fff;font-family:inherit}
- #pdfroot h1{font-size:14pt;margin:0 0 6px}
- #pdfroot table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8pt}
- #pdfroot th,#pdfroot td{border:1px solid #999;padding:2px 4px;vertical-align:middle;height:5.2mm;line-height:1.15}
- #pdfroot th{text-align:left;width:70px;background:#f0f0f0}
- #pdfroot tr.wr td,#pdfroot tr.wr th{background:#e8ecf7;font-size:7pt;text-align:center}
- #pdfroot tr.wk td,#pdfroot tr.wk th{background:#fff2d9}
- #pdfroot i{display:block;font-style:normal;font-size:6.5pt;color:#444}
+ body.pdfmode #pdfroot{display:block;page:pdfrota;color:#000;background:#fff;font-family:Arial,Helvetica,sans-serif}
+ #pdfroot table{width:100%;box-sizing:border-box;border-collapse:collapse;table-layout:fixed;font-size:9.5pt}
+ #pdfroot th,#pdfroot td{border:1px solid #888;padding:0 4px;height:7.1mm;text-align:center;vertical-align:middle;line-height:1.1}
+ #pdfroot .ttl{background:#c9c9c9;font-size:11pt;height:8mm}
+ #pdfroot tr.wr th{background:#c9c9c9;font-size:10pt}
+ #pdfroot .dn{background:#e4e4e4;font-weight:700}
+ #pdfroot .dw{font-weight:700}
+ #pdfroot tr.wk td{background:#d9d9d9}
+ #pdfroot tr.nt td{background:#c9c9c9;font-weight:700;font-size:9pt}
+ #pdfroot i{display:block;font-style:normal;font-size:6.5pt;font-weight:400}
  #pdfroot *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
-@media print{#pdfroot th,#pdfroot td{height:auto!important;padding:1px 3px;line-height:1.05;font-size:7.5pt}#pdfroot i{font-size:6pt}#pdfroot h1{font-size:12pt;margin:0 0 3px}#pdfroot tr.wr td,#pdfroot tr.wr th{font-size:6.5pt}}
 
 /*V45-CSS-END*/
 </style>
@@ -6383,22 +6385,24 @@ ACT['role-switch']=()=>{
 
 /* surgical rota: export as PDF (print dialog -> Save as PDF) */
 function ocPdfHtml(unit,ym){
-  const n=dim(ym);let K=unit==='SURGICAL'?4:1;
+  const n=dim(ym),sur=unit==='SURGICAL';let K=sur?4:1;
   for(let d=1;d<=n;d++)K=Math.max(K,dayRec(unit,ym+'-'+pad(d)).ids.length);
-  const sur=unit==='SURGICAL';
-  let h='<h1>'+esc(ocName(unit))+' on-call rota · '+esc(fmtYm(ym))+'</h1><table><thead>';
-  if(sur)[2,3,4].forEach(c=>{h+='<tr class="wr"><th>Wards ('+c+' interns)</th>';let p=0;while(p<c){const t=wardsFor(unit,c,p);let span=1;while(p+span<c&&wardsFor(unit,c,p+span)===t)span++;h+='<td colspan="'+span+'">'+esc(t)+'</td>';p+=span;}if(K>c)h+='<td colspan="'+(K-c)+'">—</td>';h+='</tr>';});
-  else{h+='<tr><th>Date</th>';for(let p=0;p<K;p++)h+='<th>'+(p+1)+'</th>';h+='</tr>';}
+  const nm=id=>esc((S.interns[id]||{}).name||'?');
+  let h='<table class="rt"><colgroup><col style="width:9mm"><col style="width:27mm">'+'<col>'.repeat(K)+'</colgroup><thead><tr><th colspan="'+(K+2)+'" class="ttl">'+esc(ocName(unit))+' Interns’ Rota - '+esc(MONTHS_LONG[+ym.slice(5,7)-1]+' '+ym.slice(0,4))+'</th></tr>';
+  if(sur)[3,4].forEach(c=>{h+='<tr class="wr"><th colspan="2">Wards ('+c+' interns)</th>';let p=0;while(p<c){const t=wardsFor(unit,c,p);let span=1;while(p+span<c&&wardsFor(unit,c,p+span)===t)span++;h+='<th colspan="'+span+'">'+esc(String(t).replace(/,\s*/g,' - '))+'</th>';p+=span;}if(K>c)h+='<th colspan="'+(K-c)+'">—</th>';h+='</tr>';});
   h+='</thead><tbody>';
   for(let d=1;d<=n;d++){
     const date=ym+'-'+pad(d),rec=dayRec(unit,date),wk=isWkDay(date),hol=holidayOf(date);
-    h+='<tr class="'+(wk?'wk':'')+'"><th>'+d+' '+DAYS[dow(date)]+(hol?'<i>'+esc(hol.label||'Holiday')+'</i>':'')+'</th>';
-    for(let p=0;p<K;p++){const id=rec.ids[p];let w='';if(id&&sur){const x=wardsAt(unit,date,rec,id);w=x===null?'Absent':x?'Wards '+x:'';}
-      h+='<td>'+(id?esc((S.interns[id]||{}).name||'?')+(w?'<i>'+esc(w)+'</i>':''):'')+'</td>';}
+    h+='<tr class="'+(wk?'wk':'')+'"><td class="dn">'+d+'</td><td class="dw">'+DAYSFULL[dow(date)]+(hol?'<i>'+esc(hol.label||'Holiday')+'</i>':'')+'</td>';
+    for(let p=0;p<K;p++){const id=rec.ids[p];h+='<td>'+(id?nm(id):'—')+'</td>';}
     h+='</tr>';
   }
+  const notes=sur?['All interns on-call must be in the hospital from 7am until 10pm.','Sick-leaves during on calls are only accepted from the emergency department in SMC.','All interns are expected to cover emergency and must attend once called for help.']:[];
+  notes.forEach(t=>{h+='<tr class="nt"><td class="dn">#</td><td colspan="'+(K+1)+'">- '+esc(t)+'</td></tr>';});
   return h+'</tbody></table>';
 }
+const MONTHS_LONG=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAYSFULL=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 ACT['oc-pdf']=()=>{
   const unit=UI.ocUnit,ym=UI.ocYm||ymOf(todayStr());
   let r=document.getElementById('pdfroot');if(r)r.remove();
