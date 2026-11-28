@@ -523,6 +523,7 @@ table.odT td.cv{text-align:center;font-weight:700;width:40px;color:var(--ink)}ta
  #pdfroot .at tr.fh td{background:#e4e4e4;font-weight:700;text-align:left}
  #pdfroot .at tr.nt td{font-size:calc(var(--fs,9pt) - 1pt);border-top:2px solid #000}
 }
+.swpanel label{display:block;margin:10px 0 3px;font-size:.82rem;color:var(--muted)}.swp-pend{margin-top:14px;border-top:1px solid var(--line);padding-top:8px;font-size:.88rem}.swp-pend b{display:block;margin-bottom:4px}
 
 /*V45-CSS-END*/
 </style>
@@ -6423,8 +6424,8 @@ function ocPdfHtml(unit,ym){
   }
   const notes=sur?['All interns on-call must be in the hospital from 7am until 10pm.','Sick-leaves during on calls are only accepted from the emergency department in SMC.','All interns are expected to cover emergency and must attend once called for help.']:[];
   notes.forEach(t=>{h+='<tr class="nt"><td class="dn">#</td><td colspan="'+(K+1)+'">- '+esc(t)+'</td></tr>';});
-  const rows=1+WC.length+n+notes.length+(sur?0:1);
-  return{html:h+'</tbody></table>',rh:Math.min(8,Math.floor(2700/rows)/10)};
+  const rows=1+WC.length+n+notes.length;
+  return{html:h+'</tbody></table>',rh:Math.floor(2790/rows)/10};
 }
 
 function ocPdfAlloc(ym,h){
@@ -6443,7 +6444,7 @@ const DAYSFULL=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Sat
 ACT['oc-pdf']=()=>{
   const unit=UI.ocUnit,ym=UI.ocYm||ymOf(todayStr());
   let r=document.getElementById('pdfroot');if(r)r.remove();
-  r=document.createElement('div');r.id='pdfroot';const pd=ocPdfHtml(unit,ym);r.innerHTML=pd.html;r.style.setProperty('--rh',pd.rh+'mm');r.dataset.u=unit;r.style.setProperty('--fs',Math.max(6.5,Math.min(9.5,pd.rh*1.25))+'pt');if(unit==='SURGICAL'){try{saHalves(ym).forEach(h=>{r.insertAdjacentHTML('beforeend',ocPdfAlloc(ym,h));});}catch(e){console.log('alloc pdf',e);}}
+  r=document.createElement('div');r.id='pdfroot';const pd=ocPdfHtml(unit,ym);r.innerHTML=pd.html;r.style.setProperty('--rh',pd.rh+'mm');r.dataset.u=unit;r.style.setProperty('--fs',Math.max(6.5,Math.min(11,pd.rh*1.3))+'pt');if(unit==='SURGICAL'){try{saHalves(ym).forEach(h=>{r.insertAdjacentHTML('beforeend',ocPdfAlloc(ym,h));});}catch(e){console.log('alloc pdf',e);}}
   document.body.appendChild(r);
   document.body.classList.add('pdfmode');
   const done=()=>{document.body.classList.remove('pdfmode');const x=document.getElementById('pdfroot');if(x)x.remove();window.removeEventListener('afterprint',done);};
@@ -6456,6 +6457,49 @@ function ocPdfBtn(){
   if(csv&&!document.querySelector('[data-act="oc-pdf"]')){const b=document.createElement('button');b.className='btn';b.dataset.act='oc-pdf';b.textContent='Export PDF';csv.parentNode.insertBefore(b,csv);}
 }
 try{new MutationObserver(ocPdfBtn).observe(document.getElementById('root')||document.body,{childList:true,subtree:true});}catch(e){}
+
+/* intern on-call page: table with a "Switch a call" panel on the right */
+function swapMine(rota,me){
+  const today=todayStr(),out=[];
+  Object.values(S.oncall).filter(d=>d.unit===rota).forEach(d=>Object.keys(d.days||{}).forEach(k=>{const date=d.ym+'-'+k.slice(1);if(date>=today&&(d.days[k].ids||[]).includes(me))out.push(date);}));
+  return out.sort();
+}
+function swapPanel(unit,me){
+  const mine=swapMine(unit,me),m=swapColleagues(unit,me),ids=Object.keys(m).sort((a,b)=>nmOf(a).localeCompare(nmOf(b)));
+  let h='<section class="panel swpanel"><h2>Switch a call</h2>';
+  if(!mine.length)return h+'<p class="muted">You have no upcoming '+esc(ocName(unit))+' calls to switch.</p></section>';
+  if(!ids.length)return h+'<p class="muted">No other intern has an upcoming call on this rota.</p></section>';
+  const my=mine.includes(UI.swMine)?UI.swMine:mine[0],peer=ids.includes(UI.swPeer)?UI.swPeer:ids[0],list=m[peer]||[],pd=list.some(x=>x.date===UI.swDate)?UI.swDate:(list[0]||{}).date;
+  const pend=Object.values(S.requests).filter(r=>r.type==='swap'&&r.internId===me&&r.rota===unit&&!['approved','declined'].includes(r.status));
+  h+='<p class="muted small" style="margin:0 0 10px">Swap one of your calls with another intern. They agree first, then the coordinator approves.</p>'+
+    '<label for="swp-my">Your call</label><select id="swp-my" data-bind="swMine" style="width:100%">'+mine.map(d=>'<option value="'+d+'"'+(d===my?' selected':'')+'>'+esc(fmtDate(d))+'</option>').join('')+'</select>'+
+    '<label for="swp-peer">Swap with</label><select id="swp-peer" data-bind="swPeer" style="width:100%">'+ids.map(i=>'<option value="'+i+'"'+(i===peer?' selected':'')+'>'+esc(nmOf(i))+'</option>').join('')+'</select>'+
+    '<label for="swp-date">Their call you would take</label><select id="swp-date" data-bind="swDate" style="width:100%">'+list.map(x=>'<option value="'+x.date+'"'+(x.date===pd?' selected':'')+'>'+esc(fmtDate(x.date))+'</option>').join('')+'</select>'+
+    '<button class="btn pri" data-act="swp-go" data-a="'+my+'" data-p="'+peer+'" data-b="'+(pd||'')+'" style="width:100%;margin-top:12px">Request switch with '+esc(nmOf(peer))+'</button><div id="swp-msg"></div>'+
+    (pend.length?'<div class="swp-pend"><b>Waiting</b>'+pend.map(r=>'<div>'+esc(fmtDate(r.aDate))+' ↔ '+esc(nmOf(r.peerId))+' '+esc(fmtDate(r.bDate))+' <span class="muted small">'+esc(String(r.status).replace('pending_','waiting for ').replace(/_/g,' '))+'</span></div>').join('')+'</div>':'');
+  return h+'</section>';
+}
+function viewInternOncall(){
+  const e=E();
+  if(!UI.ocUnit||!ocUnits().includes(UI.ocUnit))UI.ocUnit=defaultOcUnit();
+  const unit=UI.ocUnit,ym=UI.ocYm||(UI.ocYm=ymOf(todayStr()));
+  if(unit==='EMERGENCY')return viewOncall0();
+  const me=e.internId,mode=icMode(),rs=leaveRanges(me,ym);
+  const sel='<select class="ocsel" data-bind="ocUnit" aria-label="Rota">'+ocUnits().map(u=>'<option value="'+u+'"'+(u===unit?' selected':'')+'>'+esc(ocName(u))+'</option>').join('')+'</select>';
+  const bar='<div class="bar">'+sel+'<span class="mnav"><button class="btn" data-act="ocmonth" data-n="-1" aria-label="Previous month">‹</button><button class="btn mlabel" data-act="ocmonth" data-n="0">'+fmtYm(ym)+'</button><button class="btn" data-act="ocmonth" data-n="1" aria-label="Next month">›</button></span><span class="sp"></span><div class="seg"><button class="'+(mode==='cal'?'on':'')+'" data-act="ic-mode" data-v="cal">Calendar</button><button class="'+(mode==='table'?'on':'')+'" data-act="ic-mode" data-v="table">Table</button></div></div>';
+  const lv=rs.length?'<div class="iclv"><b>Your leave:</b> '+esc(leaveText(rs))+'</div>':'';
+  if(visR(unit,ym))return head('My on-call',esc(ocName(unit)),'')+bar+'<div class="note" style="margin-top:14px"><b>Not published yet.</b> The '+esc(ocName(unit))+' rota for '+esc(fmtYm(ym))+' is still being prepared. You will get a notice when it is ready.</div>';
+  const body=mode==='cal'?icCal(unit,ym,me):icTable(unit,ym,me);
+  return head('My on-call',esc(ocName(unit))+'. Everyone on the rota is shown, with your days highlighted.','')+bar+lv+'<div class="cols oc-cols"><div>'+body+'</div><div>'+swapPanel(unit,me)+'</div></div>'+wardTable(unit,ym,me,false);
+}
+ACT['swp-go']=async el=>{
+  const me=E().internId,unit=UI.ocUnit,a=el.dataset.a,peer=el.dataset.p,b=el.dataset.b,msg=document.getElementById('swp-msg');
+  if(!a||!peer||!b){if(msg)msg.innerHTML='<div class="note bad">Choose your call, a colleague and their call.</div>';return;}
+  const dup=Object.values(S.requests).some(r=>r.type==='swap'&&r.internId===me&&r.aDate===a&&r.rota===unit&&!['approved','declined'].includes(r.status));
+  if(dup){if(msg)msg.innerHTML='<div class="note bad">You already have a switch waiting for this call.</div>';return;}
+  await put('requests',uid('r'),{type:'swap',rota:unit,internId:me,peerId:peer,aDate:a,bDate:b,status:'pending_peer',steps:[],createdAt:Date.now(),by:actor()});
+  logEv('Swap request from '+nmOf(me));toast('Request sent to '+nmOf(peer)+'.');scheduleRender();
+};
 
 /*V45-JS-END*/
 init();
