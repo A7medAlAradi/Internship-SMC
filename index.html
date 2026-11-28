@@ -4195,7 +4195,7 @@ function plRowsBase(ym,days,base){
 }
 let PL_SN={k:'',m:{}};
 function plShort(id,rows){const k=rows.join(',');if(PL_SN.k!==k){const L=rows.map(x=>S.interns[x]).filter(Boolean),m={},by={};
-    const sh=it=>{const p=nameParts(it.name);if(p.length<2)return p.join(' ');let li=p.length-1;while(li>1&&NAME_PARTICLES.includes(p[li-1].toLowerCase()))li--;return p[0]+' '+p[li][0].toUpperCase()+'.';};
+    const sh=it=>{const p=nameParts(it.name);if(p.length<2)return p.join(' ');let li=p.length-1;while(li>1&&NAME_PARTICLES.includes(p[li-1].toLowerCase()))li--;return p[0]+' '+p.slice(li).join(' ');};
     L.forEach(it=>{const x=sh(it).toLowerCase();(by[x]=by[x]||[]).push(it);});
     L.forEach(it=>{const x=sh(it);m[it.id]=it.short&&String(it.short).trim()?String(it.short).trim():by[x.toLowerCase()].length>1?shortGridName(it.name,false):x;});
     PL_SN={k,m};}return PL_SN.m[id]||(S.interns[id]||{}).name||'';}
