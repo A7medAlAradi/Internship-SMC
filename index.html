@@ -478,6 +478,9 @@ table.odT td.cv{text-align:center;font-weight:700;width:40px;color:var(--ink)}ta
 .pltbl.pln-num .pln{min-width:0;width:44px;max-width:60px;padding:0 4px;text-align:center}.pltbl.pln-num .plmvs{display:none!important}.pltbl.pln-num .plhd{margin-right:2px}
 .pltbl.pln-full .pln{max-width:240px}.pltbl.pln-full .pln a{max-width:200px}
 @media print{.plhd,.plmvs{display:none!important}}
+.pltbl tr.plsel td{background-image:linear-gradient(rgba(43,58,155,.14),rgba(43,58,155,.14));box-shadow:inset 0 2px 0 var(--accent),inset 0 -2px 0 var(--accent)}
+.pltbl tr.plsel td.pln a{font-weight:700}
+.pltbl tr[data-plrow] td:nth-child(-n+4){cursor:pointer}
 
 /*V45-CSS-END*/
 </style>
@@ -6258,12 +6261,18 @@ plNotesPanel=function(rp,rows,n,ym){return plicard(rp,rows,ym)+_plNotesPanel(rp,
 function plFit(){
   const t=document.querySelector('.pltbl');if(!t)return;
   const rows=t.querySelectorAll('tbody tr').length;if(!rows)return;
-  const head=t.querySelectorAll('thead th').length?64:0;
-  const avail=window.innerHeight-head-24;
-  const h=Math.max(19,Math.min(30,Math.floor(avail/rows)));
+  const top=t.getBoundingClientRect().top+window.scrollY,head=(t.querySelector('thead')||{}).offsetHeight||64;
+  const avail=window.innerHeight-top-head-14;
+  const h=Math.max(18,Math.min(30,Math.floor(avail/rows)));
   const cur=t.style.getPropertyValue('--plrh');
   if(cur!==h+'px')t.style.setProperty('--plrh',h+'px');
 }
+/* tapping the left part of a row (name, firms, last) selects that intern */
+document.addEventListener('click',ev=>{
+  const td=ev.target.closest&&ev.target.closest('.pltbl tr[data-plrow] td');if(!td||td.cellIndex>3)return;
+  if(ev.target.closest('a,button,[data-act]'))return;
+  const tr=td.parentNode;ev.preventDefault();ACT['pl-sel']({dataset:{i:tr.dataset.plrow}},ev);scheduleRender();
+});
 (function(){let q=0;new MutationObserver(()=>{if(q)return;q=requestAnimationFrame(()=>{q=0;plFit();});}).observe(document.body,{childList:true,subtree:true});window.addEventListener('resize',plFit);})();
 ACT['pl-fit']=()=>{plFit();const t=document.querySelector('.pltbl');if(t){const y=t.getBoundingClientRect().top+window.scrollY-8;window.scrollTo({top:y,behavior:'smooth'});}};
 const _plXmark=0;
