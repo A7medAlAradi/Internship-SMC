@@ -6435,7 +6435,7 @@ function ocPdfHtml(unit,ym){
     for(let p=0;p<K;p++){const id=rec.ids[p];h+='<td>'+(id?nm(id):'')+'</td>';}
     h+='</tr>';
   }
-  const notes=sur?['All interns on-call must be in the hospital from 7am until 10pm.','Sick-leaves during on calls are only accepted from the emergency department in SMC.','All interns are expected to cover emergency and must attend once called for help.']:[];
+  const notes=[];
   notes.forEach(t=>{h+='<tr class="nt"><td class="dn">#</td><td colspan="'+(K+1)+'">- '+esc(t)+'</td></tr>';});
   const rows=1+WC.length+n+notes.length;
   const cw=(194-36)/K,texts=[];
