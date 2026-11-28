@@ -481,6 +481,7 @@ table.odT td.cv{text-align:center;font-weight:700;width:40px;color:var(--ink)}ta
 .pltbl tr.plsel td{background-image:linear-gradient(rgba(43,58,155,.14),rgba(43,58,155,.14));box-shadow:inset 0 2px 0 var(--accent),inset 0 -2px 0 var(--accent)}
 .pltbl tr.plsel td.pln a{font-weight:700}
 .pltbl tr[data-plrow] td:nth-child(-n+4){cursor:pointer}
+.plpanels .plwarn{margin:0}
 
 /*V45-CSS-END*/
 </style>
@@ -1263,6 +1264,7 @@ function previewBox(){
 }
 function previewBanner(){
   if(!PREVIEW||ME.role!=='training')return'';
+  if(isDualMe()&&PREVIEW.personId===ME.personId)return'';
   const who=PREVIEW.role==='intern'?(S.interns[PREVIEW.internId]||{}).name:(S.people[PREVIEW.personId]||{}).name;
   return'<div class="note info row"><span>Previewing as <b>'+esc(who)+'</b>. What you do here is saved under their name, with you as the person who did it.</span><span class="sp"></span><button class="btn sm" data-act="endpreview">Back to Training view</button></div>';
 }
@@ -3151,7 +3153,7 @@ function whoInfo(){
   const it=S.interns[ME.internId]||{};return{name:it.name||ME.name,sub:'Intern'+(groupsOf(it).length?', Group '+groupsLabel(it):'')};
 }
 function meBox(){
-  const e=E(),out=b=>'<div class="me">'+b+'<button class="btn ghost sm" data-act="logout" style="padding:0;min-height:0;margin-top:6px;display:block">Sign out</button>'+themeSeg()+'</div>';
+  const e=E(),out=b=>'<div class="me">'+b+'<button class="btn ghost sm" data-act="logout" style="padding:0;min-height:0;margin-top:6px;display:block">Sign out</button>'+roleSwitchBtn()+themeSeg()+'</div>';
   if(e.role==='training'){const w=whoInfo();return out('<b>'+esc(w.sub)+'</b><span>'+esc(ME.name||'Full access')+'</span>');}
   if(e.role==='coordinator'){const p=S.people[e.personId]||{};return out('<b>'+esc(p.name)+'</b><span>'+esc(roleTitle(p))+'</span>');}
   const it=S.interns[e.internId]||{};return out('<b>'+esc(it.name)+'</b><span>Intern</span>');
@@ -3205,7 +3207,7 @@ function topbarHtml(){
       (p?'<div class="pm-det"><div class="small"><span class="muted">Contact number</span><br><b>'+esc(p.phone||'none')+'</b></div><div class="small" style="margin-top:6px"><span class="muted">Email</span><br><b>'+esc(p.email||'none')+'</b></div>'+
         (pend?'<div class="note info small" style="margin-top:8px">Change requested: '+esc([pend.phone,pend.email].filter(Boolean).join(', '))+'. Waiting for Training.</div>':'<button class="btn sm" data-act="prof-req" style="margin-top:8px;width:100%">Change my number or email</button>')+'</div>':'')+
       previewBox().replace('id="pv"','id="pv2"').replace('for="pv"','for="pv2"')+
-      themeSeg()+'<button class="btn" data-act="logout" style="width:100%;margin-top:10px">Sign out</button><button class="btn ghost sm" data-act="logout-all" style="width:100%;margin-top:4px">Sign out on all devices</button></div>';
+      roleSwitchBtn(true)+themeSeg()+'<button class="btn" data-act="logout" style="width:100%;margin-top:10px">Sign out</button><button class="btn ghost sm" data-act="logout-all" style="width:100%;margin-top:4px">Sign out on all devices</button></div>';
   }
   return'<div class="topbar"><span class="tb-title">Internship board</span><button class="pbtn" data-act="pm-toggle" aria-label="Profile menu" aria-expanded="'+(UI.pmenu?'true':'false')+'"><span><b>'+esc(w.name)+'</b><small>'+esc(w.sub)+'</small></span><span class="av">'+esc(initials(w.name))+'</span></button>'+panel+'</div>';
 }
@@ -4333,9 +4335,9 @@ function viewPlanner(){
   let why='';
   if(UI.pDay&&edit)why=plWhy(ym,rp,days,rows,UI.pDay);
   /* panels */
-  const panels='<div class="plpanels noprint">'+plNotesPanel(rp,rows,n,ym)+plVersPanel(ym,rp,vers,bi)+plBalance(ym,days,rows)+'</div>';
+  const panels='<div class="plpanels noprint">'+plNotesPanel(rp,rows,n,ym)+plVersPanel(ym,rp,vers,bi)+wbox+'</div>';
   const title='<header class="phead"><div><h1>Rota planner · Surgical</h1><p>'+(edit?'Draft for '+esc(fmtYm(ym))+'. Interns see nothing until you publish.':'Live rota for '+esc(fmtYm(ym))+(vers.length?' · last version '+esc(vers[vers.length-1].label):''))+'</p></div></header>';
-  return title+bar+wbox+why+grid+legend+panels;
+  return title+bar+why+grid+legend+panels;
 }
 function plCaps(id,ym,days){
   const it=S.interns[id],calls=callsOf(days,id);if(!calls.length){return[{n:0,max:CFG.shiftMonthMax,split:false}];}
@@ -6347,6 +6349,17 @@ document.addEventListener('drop',ev=>{
   if(id===tid)return;
   const o=plVisibleOrder().filter(x=>x!==id),k=o.indexOf(tid);o.splice(after?k+1:k,0,id);plSaveOrder(o);
 });
+
+/* two roles: switch between Training and Coordinator view */
+function roleSwitchBtn(wide){
+  if(!isDualMe()||!ME.personId||!(ME.units||[]).length)return'';
+  const co=PREVIEW&&PREVIEW.personId===ME.personId;
+  return'<button class="btn'+(co?'':' pri')+' sm" data-act="role-switch" style="width:100%;margin-top:8px">'+(co?'Switch to Training view':'Switch to '+esc(roleTitle(S.people[ME.personId]||{}).replace(/^Training and /,''))+' view')+'</button>';
+}
+ACT['role-switch']=()=>{
+  const co=PREVIEW&&PREVIEW.personId===ME.personId;
+  setPreview(co?'':'p:'+ME.personId);UI.pmenu=false;scheduleRender();
+};
 
 /*V45-JS-END*/
 init();
