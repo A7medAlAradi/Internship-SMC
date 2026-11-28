@@ -534,6 +534,9 @@ table.odT td.cv{text-align:center;font-weight:700;width:40px;color:var(--ink)}ta
 }
 .alpn{width:100%;margin-top:4px;font-size:.82rem;min-height:0;padding:4px 6px}
 .alpn{min-width:150px}.alb td .alnote{display:block}
+.ocT tr.myrow td,.ocT tr.myrow th{background:color-mix(in srgb,var(--accent) 14%,var(--surface));font-weight:600}
+.ocT tr.myrow{cursor:pointer}.ocT tr.myrow .mine{color:var(--accent);font-weight:800}
+.icoc tbody tr{height:66px}
 
 /*V45-CSS-END*/
 </style>
@@ -4671,7 +4674,7 @@ const nmOf=id=>(S.interns[id]||{}).name||'?';
 function nameHtml(c,unit){return esc(nmOf(c.id))+(c.late&&lateOn(unit)?' '+MOON:'');}
 
 /* ----- the intern's table ----- */
-function icTable(unit,ym,me){
+function icTableBase(unit,ym,me){
   const n=dim(ym),days=liveDaysFull(unit,ym),om=omOf(unit,ym),cols=ocLayout(unit,ym,days,om),rs=leaveRanges(me,ym);
   const grp=[];cols.forEach(c=>{if(c.first)grp.push(c);});
   let h='<div class="scroll gw"><table class="icT"><thead><tr><th colspan="2">Date</th><th class="icst">My day</th>'+(cols[0]&&cols[0].seq?'<th colspan="'+cols.length+'">On call</th>':grp.map(c=>'<th colspan="'+c.span+'">'+esc(c.n)+'</th>').join(''))+'<th class="icsw"></th></tr></thead><tbody>';
@@ -6588,6 +6591,28 @@ ACT['swp-go']=async el=>{
   await put('requests',uid('r'),{type:'swap',rota:unit,internId:me,peerId:peer,aDate:a,bDate:b,status:'pending_peer',steps:[],createdAt:Date.now(),by:actor()});
   logEv('Swap request from '+nmOf(me));toast('Request sent to '+nmOf(peer)+'.');scheduleRender();
 };
+
+/* surgical rota for interns: same table as Training and coordinators, own days highlighted */
+function icOcTable(unit,ym,me){
+  const n=dim(ym),sur=unit==='SURGICAL',ALL=Object.keys(S.interns);let K=4;
+  for(let d=1;d<=n;d++)K=Math.max(K,dayRec(unit,ym+'-'+pad(d)).ids.length);
+  let h='<div class="scroll gw"><table class="tbl stk ocT icoc"><thead>';
+  if(sur)[2,3,4].forEach(c=>{
+    h+='<tr class="wr"><th>Wards ('+c+' interns)</th>';let p=0;
+    while(p<c){const t=wardsFor(unit,c,p);let span=1;while(p+span<c&&wardsFor(unit,c,p+span)===t)span++;h+='<td colspan="'+span+'">'+esc(t)+'</td>';p+=span;}
+    if(K>c)h+='<td colspan="'+(K-c)+'" class="muted">—</td>';h+='</tr>';
+  });
+  h+='</thead><tbody>';
+  for(let d=1;d<=n;d++){
+    const date=ym+'-'+pad(d),rec=dayRec(unit,date),wk=isWkDay(date),hol=holidayOf(date),mine=rec.ids.includes(me);
+    h+='<tr class="'+(wk?'wk ':'')+(mine?'myrow ':'')+(UI.swMine===date?'sel ':'')+'"'+(mine&&date>=todayStr()?' data-act="swp-pick" data-d="'+date+'"':'')+'><th>'+d+' '+DAYS[dow(date)]+(hol?'<span class="ward">'+esc(hol.label||'Holiday')+'</span>':'')+'</th>';
+    for(let p=0;p<K;p++){const id=rec.ids[p];h+='<td>'+(id?'<span class="'+(id===me?'mine':'')+'">'+esc(plShort(id,ALL))+'</span>'+flagTag(unit,date,id)+(sur?wardLine(unit,rec,p,date):''):'<span class="muted">'+(sur?'—':'')+'</span>')+'</td>';}
+    h+='</tr>';
+  }
+  return h+'</tbody></table></div><p class="hint">Your days are highlighted. Select one of your days to switch it.</p>';
+}
+ACT['swp-pick']=el=>{UI.swMine=el.dataset.d;};
+function icTable(unit,ym,me){return unit==='SURGICAL'?icOcTable(unit,ym,me):icTableBase(unit,ym,me);}
 
 /* real PDF export: the file is written directly (no print dialog), geometry is exact so it always fits A4 */
 const PDF_MM=72/25.4;
