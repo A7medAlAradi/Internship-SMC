@@ -6779,7 +6779,9 @@ function pdfExport(){
   const unit=UI.ocUnit,ym=UI.ocYm||ymOf(todayStr()),pdf=pdfNew();
   pdfDrawRota(pdf,pdfRotaData(unit,ym));
   if(unit==='SURGICAL')saHalves(ym).forEach(hf=>pdfDrawAlloc(pdf,ym,hf));
-  pdfSave(pdf.build(),ocName(unit).replace(/\s+/g,'_')+'_rota_'+ym+'.pdf');
+  const vk='pdfver_'+unit+'_'+ym;let vn=0;try{vn=+(localStorage.getItem(vk)||-1)+1;localStorage.setItem(vk,String(vn));}catch(e){vn=0;}
+  const nm=(unit==='SURGICAL'?'Surgery':ocName(unit))+' - '+MONTHS_LONG[+ym.slice(5)-1]+' '+ym.slice(0,4)+' - v1.'+vn;
+  pdfSave(pdf.build(),nm+'.pdf');
   toast('PDF saved to your downloads.');
 }
 ACT['oc-pdf']=()=>pdfExport();
