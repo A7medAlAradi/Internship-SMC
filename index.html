@@ -1353,7 +1353,7 @@ function electiveUnit(sub){
   if(/pediatr|paed/.test(s))return'PED';
   if(/obst|gyn|obg/.test(s))return'OBG';
   if(/emerg|a&e|a\/e/.test(s))return'EM';
-  if(/surg|ortho|urolog|vascular/.test(s))return/general/.test(s)||!/ortho|neuro|urolog|vascular|plastic|pediatric/.test(s)?'GS':'SSS';
+  if(/surg|\bortho|\burolog|\bvascular|\bplastic/.test(s))return/general/.test(s)||!/\bortho|neuro|\burolog|\bvascular|\bplastic|pediatric/.test(s)?'GS':'SSS';
   if(/medic|cardio|gastro|nephro|neurolog|pulmo|endocrin|haemat|hemat|oncol|rheum|infect/.test(s))return'MED';
   return'';
 }
