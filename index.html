@@ -487,6 +487,20 @@ table.odT td.cv{text-align:center;font-weight:700;width:40px;color:var(--ink)}ta
 @media(max-width:1100px){.oc-cols{grid-template-columns:1fr}}
 .ocT tbody tr{height:66px}.ocT tbody td,.ocT tbody th{vertical-align:middle;height:66px}
 .ocT tbody td small,.ocT tbody td .ward{display:block;line-height:1.2;max-height:2.4em;overflow:hidden}
+#pdfroot{display:none}
+@media print{
+ body.pdfmode>*:not(#pdfroot){display:none!important}
+ body.pdfmode #pdfroot{display:block;color:#000;background:#fff;font-family:inherit}
+ #pdfroot h1{font-size:14pt;margin:0 0 6px}
+ #pdfroot table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:8pt}
+ #pdfroot th,#pdfroot td{border:1px solid #999;padding:2px 4px;vertical-align:middle;height:5.2mm;line-height:1.15}
+ #pdfroot th{text-align:left;width:70px;background:#f0f0f0}
+ #pdfroot tr.wr td,#pdfroot tr.wr th{background:#e8ecf7;font-size:7pt;text-align:center}
+ #pdfroot tr.wk td,#pdfroot tr.wk th{background:#fff2d9}
+ #pdfroot i{display:block;font-style:normal;font-size:6.5pt;color:#444}
+ #pdfroot *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+@media print{#pdfroot th,#pdfroot td{height:auto!important;padding:1px 3px;line-height:1.05;font-size:7.5pt}#pdfroot i{font-size:6pt}#pdfroot h1{font-size:12pt;margin:0 0 3px}#pdfroot tr.wr td,#pdfroot tr.wr th{font-size:6.5pt}}
 
 /*V45-CSS-END*/
 </style>
@@ -6366,6 +6380,40 @@ ACT['role-switch']=()=>{
   const co=PREVIEW&&PREVIEW.personId===ME.personId;
   setPreview(co?'':'p:'+ME.personId);UI.pmenu=false;scheduleRender();
 };
+
+/* surgical rota: export as PDF (print dialog -> Save as PDF) */
+function ocPdfHtml(unit,ym){
+  const n=dim(ym);let K=unit==='SURGICAL'?4:1;
+  for(let d=1;d<=n;d++)K=Math.max(K,dayRec(unit,ym+'-'+pad(d)).ids.length);
+  const sur=unit==='SURGICAL';
+  let h='<h1>'+esc(ocName(unit))+' on-call rota · '+esc(fmtYm(ym))+'</h1><table><thead>';
+  if(sur)[2,3,4].forEach(c=>{h+='<tr class="wr"><th>Wards ('+c+' interns)</th>';let p=0;while(p<c){const t=wardsFor(unit,c,p);let span=1;while(p+span<c&&wardsFor(unit,c,p+span)===t)span++;h+='<td colspan="'+span+'">'+esc(t)+'</td>';p+=span;}if(K>c)h+='<td colspan="'+(K-c)+'">—</td>';h+='</tr>';});
+  else{h+='<tr><th>Date</th>';for(let p=0;p<K;p++)h+='<th>'+(p+1)+'</th>';h+='</tr>';}
+  h+='</thead><tbody>';
+  for(let d=1;d<=n;d++){
+    const date=ym+'-'+pad(d),rec=dayRec(unit,date),wk=isWkDay(date),hol=holidayOf(date);
+    h+='<tr class="'+(wk?'wk':'')+'"><th>'+d+' '+DAYS[dow(date)]+(hol?'<i>'+esc(hol.label||'Holiday')+'</i>':'')+'</th>';
+    for(let p=0;p<K;p++){const id=rec.ids[p];let w='';if(id&&sur){const x=wardsAt(unit,date,rec,id);w=x===null?'Absent':x?'Wards '+x:'';}
+      h+='<td>'+(id?esc((S.interns[id]||{}).name||'?')+(w?'<i>'+esc(w)+'</i>':''):'')+'</td>';}
+    h+='</tr>';
+  }
+  return h+'</tbody></table>';
+}
+ACT['oc-pdf']=()=>{
+  const unit=UI.ocUnit,ym=UI.ocYm||ymOf(todayStr());
+  let r=document.getElementById('pdfroot');if(r)r.remove();
+  r=document.createElement('div');r.id='pdfroot';r.innerHTML=ocPdfHtml(unit,ym);document.body.appendChild(r);
+  document.body.classList.add('pdfmode');
+  const done=()=>{document.body.classList.remove('pdfmode');const x=document.getElementById('pdfroot');if(x)x.remove();window.removeEventListener('afterprint',done);};
+  window.addEventListener('afterprint',done);
+  setTimeout(()=>window.print(),50);
+};
+function ocPdfBtn(){
+  if(UI.route!=='oncall'||UI.ocUnit==='EMERGENCY'||!UI.ocUnit||ME.role==='intern')return;
+  const csv=document.querySelector('[data-act="export-oc"]');
+  if(csv&&!document.querySelector('[data-act="oc-pdf"]')){const b=document.createElement('button');b.className='btn';b.dataset.act='oc-pdf';b.textContent='Export PDF';csv.parentNode.insertBefore(b,csv);}
+}
+try{new MutationObserver(ocPdfBtn).observe(document.getElementById('root')||document.body,{childList:true,subtree:true});}catch(e){}
 
 /*V45-JS-END*/
 init();
